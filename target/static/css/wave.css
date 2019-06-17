@@ -1,0 +1,178 @@
+body,div
+{
+    position:fixed;
+    margin:0;padding:0;
+    height:100%;
+    width:100%;
+}
+/*登录信息*/
+.login
+{
+    float:left;
+    position:relative;
+    font-size:18px;
+    top:0%;
+    height:3%;
+    width:100%;
+}
+/*主界面*/
+.main
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:1%;
+    height:90%;
+}
+/*播放窗口*/
+.wave
+{
+    position:relative;
+    float:left;
+    height:6%;
+    width:98%;
+    overflow-y:auto;
+}
+
+/*全局音高标注*/
+#pitches
+{
+    float:left;
+    position:relative;
+    height:25%;
+    width:98%;
+}
+/*曲调及定弦*/
+#strings
+{
+    float:left;
+    position:relative;
+    font-size:18px;
+    top:0%;
+    height:7%;
+    width:98%;
+    border-width:1px;
+    border-style:solid;
+    border-color:red;
+    overflow-y:auto;
+}
+/*局部音高窗口*/
+#pitch
+{
+    position:relative;
+    float:left;
+    width: 98%;
+    height:35%;
+    top:0%;
+    left:1%;
+}
+/*主要信息框架*/
+.primary_frame
+{
+    position:relative;
+    float:left;
+    top:2%;
+    width:100%;
+    height:80%;
+}
+/*clip框架*/
+.clips
+{
+    position:relative;
+    float:left;
+    top:2%;
+    width:20%;
+    height:66%;
+}
+#clip_title
+{
+    position:relative;
+    float:left;
+    width:98%;
+    height:10%;
+}
+#clip
+{
+    position:relative;
+    float:left;
+    width:98%;
+    height:90%;
+    overflow-y:scroll;
+    background-color:black;
+    color:white;
+}
+/*中间布局为图表*/
+.medium
+{
+    position:relative;
+    float:left;
+    width: 36%;
+    height:66%;
+    top:2%;
+    left:0%;
+}
+#fft
+{
+    position:relative;
+    float:left;
+    width: 98%;
+    height:37%;
+    top:0%;
+    left:1%;
+}
+
+#info
+{
+    position:relative;
+    float:left;
+    width: 98%;
+    height:25%;
+    top:2%;
+    left:1%;
+    overflow-y:scroll;
+}
+/*关注的片段信息*/
+.marked_phrases
+{
+    position:relative;
+    float:left;
+    top:2%;
+    width:20%;
+    height:66%;
+}
+#phrase_title{
+    position:relative;
+    float:left;
+    width:98%;
+    height:10%;
+}
+#marked_phrase{
+    position:relative;
+    float:left;
+    width:98%;
+    height:88%;
+    overflow-y:auto;
+}
+/*音调及指法标注*/
+.tones
+{
+    position:relative;
+    float:left;
+    top:2%;
+    left:1%;
+    width:20%;
+    height:66%;
+}
+#tone_title{
+    position:relative;
+    float:left;
+    width:98%;
+    height:10%;
+}
+#tone{
+    position:relative;
+    float:left;
+    width:98%;
+    height:88%;
+    overflow-y:auto;
+}

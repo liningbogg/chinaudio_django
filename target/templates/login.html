@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+</head>
+<body>
+{% load staticfiles %}
+{% block content %}
+    <div class="container">
+        <div class="col-md-4 col-md-offset-4">
+          <form action="/login/" class='login_form' method="post">
+              {% csrf_token %}
+              {% if message %}
+                  <div class="alert alert-warning">{{ message }}</div>
+              {% endif %}
+
+              <h2 class="text-center">欢迎登录/    <a href="../register">注册</a> </h2>
+              <div class="form-group">
+                  {{ login_form.username.errors }}
+                  {{ login_form.username.label_tag }}
+                  {{ login_form.username}}
+              </div>
+              <div class="form-group">
+                  {{ login_form.username.errors }}
+                  {{ login_form.password.label_tag }}
+                  {{ login_form.password }}
+              </div>
+              {% if message %}
+              <div class="form-group">
+                  {{ login_form.captcha.errors }}
+                  {{ login_form.captcha.label_tag }}
+                  {{ login_form.captcha }}
+              </div>
+              {% endif %}
+
+              <button class="btn btn-default pull-left" type="reset">重置</button>
+              <button class="btn btn-primary pull-right" type="submit">提交</button>
+
+          </form>
+        </div>
+    </div> <!-- /container -->
+{% endblock %}
+</body>
+</html>

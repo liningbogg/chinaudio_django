@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据：{{wave.title}}</title>
+    <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://code.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="/static/js/wave.js?time='+new Date().getTime()+'"></script>
+    <link href="/static/css/wave.css" rel="stylesheet" type="text/css" />
+    <link rel="icon" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
+	<link rel="bookmark" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
+</head>
+<body style="font-size:15px">
+
+<div class="login" id="login" style="border-width:1px; color:blue">
+    <a href="../index/">主页</a>
+    {% include "login_info_base.html" %}
+</div>
+
+{% load static %}
+<div class="main" id="main_frm">
+    <h2 align="justify" class="wave" id="wave">
+        曲目：{{wave.title}}
+        <audio controls="controls" id="song" >
+            您的浏览器不支持html5的audio标签
+        </audio>
+    </h2>
+    <div id="strings"> </div>
+    <script>
+        function load_stringInfo(divName){
+            var string_hzes={{string_hzes|safe}};
+            var string_notes={{string_notes|safe}};
+            var divItem=document.getElementById(divName);
+            var string_do='{{string_do|safe}}';
+            for (var i=0;i<string_hzes.length;++i){
+                divItem.innerHTML+="("+(i+1)+")"+":"+string_hzes[i].toFixed(2)+"    ";
+            }
+            divItem.innerHTML+="<br>";
+            for (var i=0;i<string_notes.length;++i){
+                divItem.innerHTML+=string_notes[i]+" ";
+            }
+            divItem.innerHTML+="do= "+string_do;
+        }
+        load_stringInfo("strings");
+    </script>
+    <div class="pitches" id="pitches" style="border-width:1px; border-style:solid; border-color:green;">
+    </div>
+    <script>
+         var pitchesArray = {{pitches|safe}};
+         new AddWavePitchesChart('{{wave.title|safe}}', pitchesArray, "pitches")//添加pitches chart
+    </script>
+    <div class="primary_frame">
+        <div class="clips" style="border-width:1px; border-style:solid; border-color:yellow;">
+            <div id="clip_title">
+                时刻 主基频 当前选择
+            </div>
+            <div id="clip" style="border-width:1px; border-style:solid; border-color:blue; ">
+                {% for clip in clips %}
+                <h2>
+                    {{clip.startingPos}}
+                    {% for tar in clip.tar%}
+                    {{tar}}
+                    {% endfor %}
+                    <input name="clip_select"
+                           onchange="selectClip('{{clip.title}}', {{clip.startingPos}},{{clip.id}},
+                           '{{clip.possiblePos|safe}}',{{wave.fs|safe}},{{wave.nfft|safe}},
+                           {{wave.frameNum|safe}})"
+                           type="radio">
+                    {% if perms.target.delete_clip%}
+                        <button onclick="deleteTone('delete', 'clip', {{clip.id}})">delete</button>
+                    {% endif %}
+
+                </h2>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="medium">
+            <div id="fft" style="border-width:1px; border-style:solid; border-color:blue;">
+                频谱图
+            </div>
+            <div id="pitch" style="border-width:1px; border-style:solid; border-color:blue;">
+                局部音高图
+            </div>
+            <div id="info" style="border-width:1px; border-style:solid; border-color:green;">
+                clip信息
+            </div>
+        </div>
+
+        <div class="marked_phrases" style="border-width:1px; border-style:solid; border-color:blue;">
+            <div id="phrase_title">
+                段落位置 段落长度 下载 标记信息 播放
+            </div>
+            <div id="marked_phrase">
+                {% for phrase in marked_phrases %}
+                <h2>
+                    {{phrase.start}}
+                    {{phrase.length}}
+                    <button onclick="download_phrase('{{phrase.title}}',{{phrase.start}},{{phrase.length}}+
+                    {{phrase.start}}, '{{phrase.mark}}', {{wave.fs}}, {{wave.nfft}})">
+                        下载
+                    </button>
+                    <button onclick="post_phrase('{{phrase.title}}',{{phrase.start}},{{phrase.length}}+{{phrase.start}}
+                    , '{{phrase.mark}}', {{wave.fs}}, {{wave.nfft}})">
+                        分享
+                    </button>
+                    {{phrase.mark}}
+                    <!--这里不是表格因此不在迁移到js文件-->
+                    <script>
+                    var playWaveDiv = document.getElementById("marked_phrase");  //获取播放器div
+                    var start={{phrase.start}};
+                    var length={{phrase.length}};
+                    var opt = {'title': '{{wave.title}}', 'fs':{{wave.fs}}, 'nfft':{{wave.nfft}}, 'start': start, 'end':start+length};
+                    new playPhrase(playWaveDiv, opt);  //添加wave播放器
+                    </script>
+                </h2>
+                {% endfor %}
+            </div>
+
+        </div>
+        <div class="tones" style="border-width:1px; border-style:solid; border-color:blue;">
+            <div id="tone_title">
+                start length pitch tone
+            </div>
+            <div id="tone">
+                {% for tone in tones %}
+                <h2>
+                    {{tone.pos}}
+                    {{tone.length}}
+                    {{tone.pitch}}
+                    {{tone.note}}
+                    {{tone.tone}}
+                    {{tone.anote}}
+                    <button onclick="deleteTone('delete', 'tone', {{tone.id}})">delete</button>
+                </h2>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+</script>
+<script>
+    //添加曲目播放器
+    add_wave("{{wave.waveFile}}");
+    var clip_select = document.getElementsByName("clip_select");
+    var radioLength = clip_select.length;
+    if(radioLength>0){
+        clip_select[radioLength-1].click();
+    }
+    // 总是滚动到最低端
+    function top_set(divName){
+        var clipDiv = document.getElementById(divName);
+        clipDiv.scrollTop = clipDiv.scrollHeight;
+    }
+    top_set("clip");
+    top_set("tone");
+</script>
+
+</body>
+</html>

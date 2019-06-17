@@ -1,0 +1,184 @@
+$color-border-light: #D8D8D8;
+$color-border-dark: #676767;
+
+$color-bg-dark: #777;
+$color-bg-light: #EAEAEA;
+
+div.tree-multiselect {
+  border: 2px solid $color-border-light;
+  border-radius: 5px;
+  display: table;
+  height: inherit;
+  width: 100%;
+
+  > div.selected,
+  > div.selections {
+    display: inline-block;
+    box-sizing: border-box;
+    overflow: auto;
+    padding: 1%;
+    vertical-align: top;
+    width: 50%;
+  }
+
+  > div.selections {
+    border-right: solid 2px $color-border-light;
+
+    div.item {
+      margin-left: 16px;
+
+      label {
+        cursor: pointer;
+        display: inline;
+        &.disabled {
+          color: $color-border-light;
+        }
+      }
+    }
+
+    *[searchhit=false] {
+      display: none;
+    }
+
+    &.no-border {
+      border-right: none;
+    }
+  }
+
+  > div.selected {
+    > div.item {
+      background: $color-bg-light;
+      border-radius: 2px;
+      padding: 2px 5px;
+      overflow: auto;
+    }
+
+    &.ui-sortable > div.item:hover {
+      cursor: move;
+    }
+  }
+
+  div.section {
+    > div.section,
+    > div.item {
+      padding-left: 20px;
+    }
+
+    &.collapsed {
+      > div.title span.collapse-section {
+        &:after {
+          content: "+";
+        }
+      }
+
+      &:not([searchhit]) {
+        > .item,
+        > .section {
+          display: none;
+        }
+      }
+    }
+  }
+
+  div.title,
+  div.item {
+    margin-bottom: 2px;
+  }
+
+  div.title {
+    background: $color-bg-dark;
+    color: white;
+    padding: 2px;
+
+    > * {
+      display: inline-block;
+    }
+
+    > span.collapse-section {
+      margin: 0 3px;
+      width: 8px;
+
+      &:after {
+        content: "-";
+      }
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  input[type=checkbox] {
+    display: inline;
+    margin-right: 5px;
+
+    &:not([disabled]):hover {
+      cursor: pointer;
+    }
+  }
+
+  span.remove-selected,
+  span.description {
+    background: $color-bg-dark;
+    border-radius: 2px;
+    color: white;
+    margin-right: 5px;
+    padding: 0 3px;
+  }
+
+  span.remove-selected {
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  span.description {
+    &:hover {
+      cursor: help;
+    }
+  }
+
+  div.temp-description-popup {
+    background: $color-bg-light;
+    border: 2px solid $color-border-dark;
+    border-radius: 3px;
+    padding: 5px;
+  }
+
+  span.section-name {
+    float: right;
+    font-style: italic;
+  }
+
+  .auxiliary {
+    display: table;
+    width: 100%;
+
+    input.search {
+      border: 2px solid $color-border-light;
+      display: table-cell;
+      margin: 0;
+      padding: 5px;
+      width: 100%;
+    }
+
+    .select-all-container {
+      display: table-cell;
+      text-align: right;
+
+      span.select-all,
+      span.unselect-all {
+        margin-right: 5px;
+        padding-right: 5px;
+
+        &:hover {
+          cursor: pointer;
+        }
+      }
+
+      span.select-all {
+        border-right: 2px solid $color-border-light;
+      }
+    }
+  }
+}

@@ -1,0 +1,383 @@
+body,div
+{
+    position:fixed;
+    margin:0;padding:0;
+    height:100%;
+    width:100%;
+}
+/*登录信息*/
+.login
+{
+    float:left;
+    position:relative;
+    font-size:18px;
+    top:0%;
+    height:3%;
+    width:24%;
+}
+
+/*主界面*/
+.main
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:1%;
+    height:98%;
+}
+/*显示部分*/
+.display
+{
+    position:relative;
+    float:left;
+    width:70%;
+    top:1%;
+    height:96%;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+/*端点检测信息*/
+.vad
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:1%;
+    height:15%;
+}
+
+/*局部音高参考*/
+.local_pitch
+{
+    position:relative;
+	float:left;
+	left:1%;
+    width:98%;
+    top:0%;
+    height:15%;
+}
+/*局部音高标记*/
+.local_target
+{
+    position:relative;
+	float:left;
+	left:1%;
+    width:98%;
+    top:1%;
+    height:15%;
+}
+/*fft及其中间结果*/
+.sampling_data
+{
+    position:relative;
+    float:left;
+	left:1%;
+    width:98%;
+    top:2%;
+    height:15%;
+}
+/*fft*/
+.sampling_fft
+{
+    position:relative;
+    float:left;
+	left:0.5%;
+    width:49%;
+    top:1%;
+    height:98%;
+}
+/*中间结果*/
+.sampling_medium
+{
+    position:relative;
+    float:left;
+	left:1.5%;
+    width:49%;
+    top:1%;
+    height:98%;
+}
+/*定弦设置*/
+.strings_set
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:4%;
+    font-size:16px;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+
+.strings_set tr td
+{
+    font-size:14px;
+	line-height:1;
+	width:12%;
+}
+.strings_set tr td input
+{
+    width:98%;
+	table-layout:fixed;
+	font-size:14px;
+	line-height:1;
+}
+
+/*提交定弦*/
+.sub_strings_set
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:2%;
+    font-size:16px;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+.sub_strings_set input
+{
+    font-size:16px;
+	line-height:1;
+	width:100%;
+}
+
+/*定弦信息*/
+.strings_info
+{
+    position:relative;
+    float:left;
+    display:table-row;
+	left:1%;
+    width:98%;
+    top:2.5%;
+    height:4%;
+    font-size:16px;
+}
+.strings_info strings_info_table
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:1%;
+    width:98%;
+    top:2.5%;
+    height:4%;
+    font-size:16px;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+.strings_info_table tr td
+{
+    font-size:16px;
+	line-height:1;
+	width:10%;
+}
+
+/*标记参考，包括历史信息和当前帧指法推测*/
+.ref_info
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:1%;
+    width:98%;
+    top:3%;
+    height:4%;
+    font-size:16px;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+.ref_info table{
+    width:98%;
+}
+
+/*音阶信息*/
+.tone_info
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:1%;
+    width:98%;
+    top:3%;
+    height:4%;
+    font-size:14px;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+.tone_info table{
+    width:100%;
+}
+.tone_info tr td{
+	font-size:16px;
+	width:9%;
+	line-height:1;
+}
+/*指法*/
+.fingering
+{
+    position:relative;
+    float:top;
+	left:1%;
+    width:98%;
+    height:9%;
+    top:5%;
+    font-size:14px;
+    overflow-y:auto;
+
+}
+.fingering table{
+    width:100%;
+}
+.fingering tr td{
+    width:12.5%;
+}
+.fingering tr td input{
+    width:100%;
+}
+/*参数设置及其他操作*/
+.opt{
+    position:relative;
+    float:left;
+	left:0.5%;
+    width:29%;
+    top:1%;
+    height:96%;
+    overflow-y:auto;
+}
+/*参数信息*/
+.info
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:40%;
+	overflow-y:auto;
+}
+.table_info
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:100%;
+    top:0%;
+    height:100%;
+	overflow-y:auto;
+}
+/*info 中table样式*/
+.table_info tr td{
+	font-size:16px;
+	line-height:1;
+	width:50%;
+}
+.table_info tr td input{
+	width:98%;
+	table-layout:fixed;
+	font-size:16px;
+	line-height:1;
+}
+/*参考音高参数设置*/
+.ref_set
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:2%;
+	overflow-y:auto;
+}
+.ref_set input
+{
+    width:22%;
+	table-layout:fixed;
+	font-size:14px;
+	line-height:1;
+}
+/*fft过滤参数设置*/
+.filter_set
+{
+    position:relative;
+	float:left;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:2%;
+    display:table;
+	overflow-y:auto;
+}
+.filter_set input
+{
+    width:22%;
+	table-layout:fixed;
+	font-size:14px;
+	line-height:1;
+}
+/*播放片段*/
+.play_clips
+{
+    position:relative;
+	float:left;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:2%;
+    display:table;
+	overflow-y:auto;
+}
+.play_clips input
+{
+    width:17%;
+	table-layout:fixed;
+	font-size:14px;
+	line-height:1;
+}
+.mark_clips{
+    position:relative;
+	float:left;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:2%;
+    display:table-row;
+	overflow-y:auto;
+}
+/*clips显示和设置*/
+.clips{
+    position:relative;
+	float:left;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:22%;
+    display:table-row;
+	overflow-y:auto;
+}
+.clips table{
+    width:100%;
+}
+.clips tr td{
+    width:12%;
+}
+.clips tr td input
+{
+    width:95%;
+}
+
+/*去除num小箭头*/
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"]{-moz-appearance:textfield;}

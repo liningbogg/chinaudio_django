@@ -1,0 +1,50 @@
+{% block title %}注册{% endblock %}
+
+ 
+{% block content %}
+    <div class="container">
+        <div class="col-md-4 col-md-offset-4">
+          <form action="/register/" class='form-register' method="post">
+ 
+              {% if message %}
+                  <div class="alert alert-warning">{{ message }}</div>
+              {% endif %}
+
+              {% csrf_token %}
+              <h2 class="text-center">欢迎注册</h2>
+ 
+              <div class="form-group">
+                  {{ register_form.username.label_tag }}
+                  {{ register_form.username}}
+              </div>
+              <div class="form-group">
+                  {{ register_form.password1.label_tag }}
+                  {{ register_form.password1 }}
+              </div>
+              <div class="form-group">
+                  {{ register_form.password2.label_tag }}
+                  {{ register_form.password2 }}
+              </div>
+              <div class="form-group">
+                  {{ register_form.email.errors }}
+                  {{ register_form.email.label_tag }}
+                  {{ register_form.email }}
+              </div>
+              <div class="form-group">
+                  {{ register_form.sex.errors }}
+                  {{ register_form.sex.label_tag }}
+                  {{ register_form.sex }}
+              </div>
+              <div class="form-group">
+                  {{ register_form.captcha.errors }}
+                  {{ register_form.captcha.label_tag }}
+                  {{ register_form.captcha }}
+              </div>
+ 
+              <button class="btn btn-default pull-left" type="reset">重置</button>
+              <button class="btn btn-primary pull-right" type="submit">提交</button>
+ 
+          </form>
+        </div>
+    </div> <!-- /container -->
+{% endblock %}

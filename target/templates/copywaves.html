@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/tree-multiselect/dist/jquery.tree-multiselect.min.css">
+    <script src="/static/tree-multiselect/vendor/jquery-1.11.3.min.js"></script>
+    <script src="/static/tree-multiselect/vendor/jquery-ui.min.js"></script>
+    <script src="/static/tree-multiselect/dist/jquery.tree-multiselect.js"></script>
+
+    <script src="/static/js/copywaves.js?time='+new Date().getTime()+'"></script>
+</head>
+<body>
+
+<div class="login" id="login" style="border-width:1px; color:blue">
+    <a href="../index/">主页</a>
+    {% include "login_info_base.html" %}
+</div>
+
+
+
+<select id="user_wave" multiple="multiple">
+
+</select>
+
+<div id="subSelectRs" style="border-width:1px; border-style:solid; border-color:green;">
+    <button onclick="copywaves()">复制wave</button>
+</div>
+
+<script>
+function copywaves(){
+    var waves_selected = [];
+    $("#user_wave option:selected").each(function () {
+        var user_id=$(this).attr("data-section");
+        var wave_title=$(this).attr("value");
+        var wave_item={"user_id":user_id, "wave_title":wave_title};
+        waves_selected.push(wave_item);
+    });
+    console.log(waves_selected);
+    var msg = "确定要复制？\n\n请确认！";
+    if (confirm(msg)==false){
+        return;
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'sub_and_execute/?'+"waves_selected="+JSON.stringify(waves_selected), true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var result = xhr.response;
+            //是否复制删除
+            if(result == "copy completed"){
+                window.location.href='/index/';
+            }
+            console.log(result);
+
+        }
+    };
+}
+</script>
+
+
+
+<script >
+    var $select = $('#user_wave');
+    var test={{waves|safe}};
+    for (var wave in test){
+        console.log(test[wave].fields.title);
+        var $option = $('<option value="'+test[wave].fields.title+'" data-section="'+test[wave].fields.create_user_id
+        +  '"selected="selected">'+test[wave].fields.title+'</option>');
+        $select.append($option);
+    }
+    console.log($select)
+    var tree1 = $select.treeMultiselect({ enableSelectAll: true, sortable: true, hideSidePanel: false, searchable: true, startCollapsed: true});
+
+</script>
+<script>
+
+    //console.log(test);
+</script>
+</body>
+</html>

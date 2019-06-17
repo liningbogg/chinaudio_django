@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据：{{title}}</title>
+    <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://code.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+    <script src="/static/js/labeling.js?time='+new Date().getTime()+'"></script>
+    <link href="/static/css/labeling.css?time='+new Date().getTime()+'" rel="stylesheet" type="text/css" />
+	<link rel="icon" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
+	<link rel="bookmark" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
+</head>
+<div class="login" id="login" style="border-width:1px; color:blue">
+    <a href="../index/">主页</a>
+    {% include "login_info_base.html" %}
+</div>
+
+<div class="main" id="main">
+	<div class="display" name="display" style="border-width:1px; border-style:solid; border-color:green">
+		<div  class="vad" id="vad" style="border-width:1px; color:blue">
+		</div>
+		<div class="local_pitch" id="local_pitch" style="border-width:1px; border-style:solid; border-color:blue;">
+		</div>
+		<div class="local_target" id="local_target" style="border-width:1px; border-style:solid; border-color:red;">
+		</div>
+		<div class="sampling_data" id="sampling_data" style="border-width:1px; border-style:solid; border-color:purple;">
+			<div class="sampling_fft" id="sampling_fft" style="border-width:1px; border-style:solid; border-color:green;">
+			</div>
+			<div class="sampling_medium" id="sampling_medium" style="border-width:1px; border-style:solid; border-color:green;">
+			</div>
+		</div>
+		<div class="strings_info" id="strings_info" style="border-width:1px; border-style:solid; border-color:red;">
+		</div>
+		<div class="ref_info" id="ref_info" style="border-width:1px; border-style:solid; border-color:blue;">
+			{{possiblePos|safe}}
+		</div>
+		<div class="tone_info" id="tone_info" style="border-width:1px; border-style:solid; border-color:red;">
+		</div>
+		<div class="fingering" id="fingering" style="border-width:1px; border-style:solid; border-color:green;">
+		</div>
+	</div>
+
+	<div class = "opt" name="opt" >
+		<div class="info" id="info" style="border-width:1px; border-style:solid; border-color:green;">
+			<table border="" class="table_info" id="table_info" >
+				<thead>
+					<tr>
+						<th >属性</th>
+						<th >数值</th>
+					</tr>
+				</thead>
+				<tr>
+					<td>title</td>
+					<td>
+						<input type="text" id="title" readonly="true" value={{title|safe}} />
+					</td>
+				</tr>
+				<tr>
+					<td>frameNum</td>
+					<td>
+						<input type="text" id="frame_num" readonly="true" value={{frame_num|safe}} />
+					</td>
+				</tr>
+				<tr>
+					<td style="font-size:16px;line-height:1;color:green">current_frame</td>
+					<td>
+						<input type="text" id="current_frame" readonly="true" value={{current_frame|safe}} style="color:green" />
+					</td>
+				</tr>
+				<tr>
+					<td>manual_pos</td>
+					<td>
+						<input type="number" id="manual_pos"  value={{manual_pos|safe}} placeholder="指定下次标记的位置，否则置为负数"/>
+					</td>
+				</tr>
+				<tr>
+					<td>nfft</td>
+					<td>
+						<input type="text" id="nfft" readonly="true" value={{nfft|safe}} />
+					</td>
+				</tr>
+				<tr>
+					<td>extend_rad</td>
+					<td>
+						<input type="number" id="extend_rad" value={{extend_rad|safe}} placeholder="当前标记视窗半径"/>
+					</td>
+				</tr>
+				<tr>
+					<td>tone_extend_rad</td>
+					<td>
+						<input type="number" id="tone_extend_rad" value={{tone_extend_rad|safe}} placeholder="音符参考半径"/>
+					</td>
+				</tr>
+				<tr>
+					<td>vad_thrart_EE</td>
+					<td>
+						<input type="number" id="vad_thrart_EE" value={{vad_thrart_EE|safe}} placeholder="起始位置判定熵阈值"/>
+					</td>
+				</tr>
+				<tr>
+					<td>vad_throp_EE</td>
+					<td>
+						<input type="number" id="vad_throp_EE" value={{vad_throp_EE|safe}} placeholder="终止位置判定熵阈值"/>
+					</td>
+				</tr>
+				<tr>
+					<td>vad_thrart_RMSE</td>
+					<td>
+						<input type="number" id="vad_thrart_RMSE" value={{vad_thrart_RMSE|safe}} placeholder="起始位置判定能量阈值"/>
+					</td>
+				</tr>
+				<tr>
+					<td>create_user_id</td>
+					<td>
+						<input type="text" readonly="true" id="create_user_id" value={{create_user_id|safe}} />
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div class="strings_set" id="strings_set" style="border-width:1px; border-style:solid; border-color:blue;">
+			<table border="" class="strings_set_table" id="strings_set_table">
+				<tr>
+					<td>1弦</td><td>2弦</td><td>3弦</td><td>4弦</td><td>5弦</td><td>6弦</td><td>7弦</td><td>do</td>
+				</tr>
+				<tr>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+
+				</tr>
+			</table>
+		</div>
+		<div class="sub_strings_set" id="sub_strings_set" style="border-width:1px; border-style:solid; border-color:blue;">
+			<input type="button" name="sub_chin_strings"  value="设置strings" onclick="sub_strings('{{title}}')" style="float:right;"/>
+		</div>
+		<div class="ref_set" id="ref_set" style="border-width:1px; border-style:solid; border-color:red;">
+			音高
+			<input type="number" id="primary_pitch" onfocus="if(this.value==this.defaultValue){this.value=''}"
+				   onblur="if(this.value==''){this.value=this.defaultValue}"
+				   value={{current_tar|safe}} placeholder="待预测音位的音高"/>
+			<input type="button" name="sub_primary_pitch" onclick="cal_pitch_pos('{{title}}')" value="音位估算"
+				   style="float:right;">
+		</div>
+		<div class="filter_set" id="filter_set" style="border-width:1px; border-style:solid; border-color:red;">
+				频率
+				<input type="number" id="filter_frq" onfocus="if(this.value==this.defaultValue){this.value=''}"
+					   onblur="if(this.value==''){this.value=this.defaultValue}" value={{current_tar|safe}} placeholder="fft过滤频率"/>
+				带宽
+				<input type="number" id="filter_width" onfocus="if(this.value==this.defaultValue){this.value=''}"
+					   onblur="if(this.value==''){this.value=this.defaultValue}" value={{filter_rad|safe}} placeholder="fft过滤宽度设置"/>
+				<input type="button" id="sub_filter_opt" style="float:right"
+					   onclick="filter_fft({{srcFFT|safe}},'{{title|safe}}',{{current_frame|safe}},{{nfft|safe}},{{fs|safe}})" value="重新过滤">
+		</div>
+		<div class="play_clips" id="play_clips" style="border-width:1px; border-style:solid; border-color:red;">
+				start
+				<input type="number" id="play_start" onfocus="if(this.value==this.defaultValue){this.value=''}"
+					   onblur="if(this.value==''){this.value=this.defaultValue}"  placeholder="起始帧"/>
+				end
+				<input type="number" id="play_end" onfocus="if(this.value==this.defaultValue){this.value=''}"
+					   onblur="if(this.value==''){this.value=this.defaultValue}"  placeholder="终止帧"/>
+				fs
+				<input type="number" id="play_fs" onfocus="this.value=''"
+					   onblur="if(this.value==''){this.value=this.defaultValue}" value={{play_fs|safe}}
+					   placeholder="采样率" list="play_fs_list"/>
+				<datalist id="play_fs_list">
+					<option value="44100"></option>
+					<option value="22050"></option>
+					<option value="13230"></option>
+					<option value="8820"></option>
+					<option value="4410"></option>
+				</datalist>
+				<input type="button" id="sub_play_clips" style="float:right;width:22%"
+					   onclick="play_clips('{{title|safe}}',{{nfft|safe}})" value="播放">
+		</div>
+		<div class="mark_clips" id="mark_clips" style="border-width:1px; border-style:solid; border-color:blue;">
+
+		</div>
+		<div class="clips" id="clips" style="border-width:1px; border-style:solid; border-color:blue;">
+
+		</div>
+	</div>
+</div>
+<script>
+    //关于端点检测的字典数组
+    var vadChartDictSeries={"spectral_entropy":{{ee|safe}},"rmse":{{rmse|safe}}};
+    var vadChartDictLine={
+		"stopPos":{{stopPos|safe}},
+        "startPos":{{startPos|safe}}	
+	};
+	var current_frame = {{current_frame|safe}};
+	var extend_rad = {{extend_rad|safe}};
+	var start_pos = Math.max(0,current_frame-extend_rad);
+	var frame_end = {{frame_num|safe}};
+	start_pos = Math.min(start_pos,frame_end);
+	var end_pos = Math.max(0,current_frame+extend_rad);
+	end_pos = Math.min(end_pos,frame_end);
+    addChart("",vadChartDictSeries,vadChartDictLine, current_frame,"vad",start_pos,end_pos);
+</script>
+<script>
+	//comb及combDescan用户提供的参考标记
+	var refChartDictSeries={"combDescan1":{{combDescanPrimary|safe}},"combdeScan2":{{combDescanSecondary|safe}},"comb":{{comb|safe}}};
+    var refChartDictLine={
+		"stopPos":{{stopPos|safe}},
+        "startPos":{{startPos|safe}}	
+	};
+	var current_frame = {{current_frame|safe}};
+	var extend_rad = {{extend_rad|safe}};
+	var start_pos = Math.max(0,current_frame-extend_rad);
+	var frame_end = {{frame_num|safe}};
+	start_pos = Math.min(start_pos,frame_end);
+	var end_pos = Math.max(0,current_frame+extend_rad);
+	end_pos = Math.min(end_pos,frame_end);
+    addChart("",refChartDictSeries,refChartDictLine, current_frame,"local_pitch",start_pos,end_pos);
+</script>
+<script>
+	//已标记音高信息
+	var targetArr={{target|safe}};
+	var targetChartDictSeries={"target1":targetArr[0],"target2":targetArr[1],"target3":targetArr[2]};
+    var targetChartDictLine={
+		"stopPos":{{stopPos|safe}},
+        "startPos":{{startPos|safe}}	
+	};
+	var current_frame = {{current_frame|safe}};
+	var extend_rad = {{extend_rad|safe}};
+	var start_pos = Math.max(0,current_frame-extend_rad);
+	var frame_end = {{frame_num|safe}};
+	start_pos = Math.min(start_pos,frame_end);
+	var end_pos = Math.max(0,current_frame+extend_rad);
+	end_pos = Math.min(end_pos,frame_end);
+    addChart("",targetChartDictSeries,targetChartDictLine, current_frame,"local_target",start_pos,end_pos);
+</script>
+<script>
+	//fft显示
+	var srcChartDictSeries={"fft":{{srcFFT|safe}},"filter_fft":{{filter_fft|safe}}};
+	var nfft={{nfft|safe}};
+	var fs={{fs|safe}};
+	srcChartDictLine=[];
+    addChart("",srcChartDictSeries,srcChartDictLine,440*nfft/fs,"sampling_fft",0,parseInt(4000*nfft/fs));
+</script>
+<script>
+	//medium梳状投影
+	var mediumChartDictSeries={"medium":{{medium|safe}}};
+	var fs={{fs|safe}};
+	mediumChartDictLine=[];
+    addChart("",mediumChartDictSeries,mediumChartDictLine,440*441000/fs,"sampling_medium",0,mediumChartDictSeries["medium"].length);
+</script>
+<script>
+	//播放音乐片段
+	var current_frame = {{current_frame|safe}};
+	var extend_rad = {{extend_rad|safe}};
+	var start_pos = Math.max(0,current_frame-extend_rad);
+	var frame_end = {{frame_num|safe}};
+	start_pos = Math.min(start_pos,frame_end);
+	var end_pos = Math.max(0,current_frame+extend_rad);
+	end_pos = Math.min(end_pos,frame_end);
+	document.getElementById('play_start').defaultValue=start_pos;
+	document.getElementById('play_end').defaultValue=end_pos;
+</script>
+<script>
+	//显示tones
+	var tones_local_var={{tones_local|safe}};
+	var table_str="<table border='' class='table_tones' id='table_tones' >";
+	table_str=table_str+"<tr><td>pos</td>";
+	for (tone in tones_local_var)
+	{
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.pos+'</td>';
+	}
+	table_str=table_str+"</tr>";
+	table_str=table_str+"<tr><td>len</td>";
+	for (tone in tones_local_var)
+	{
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.length+'</td>';
+	}
+	table_str=table_str+"</tr>";
+	table_str=table_str+"<tr><td>tone</td>";
+	for (tone in tones_local_var)
+	{
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.tone+'</td>';
+	}
+	table_str=table_str+"</tr>";
+	table_str=table_str+"</table>"
+	document.getElementById('tone_info').innerHTML=table_str;
+</script>
+<script>
+	//显示tones(全部信息，且可编辑)
+	var tones_local_var={{tones_local|safe}};
+	var table_str="<table border='' class='table_fingering' id='table_fingering' >";
+	for (tone in tones_local_var)
+	{
+		table_str=table_str+'<tr>';
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.pos+'</td>';
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.length+'</td>';
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.pitch+'</td>';
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.note+'</td>';
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.tone+'</td>';
+		table_str=table_str+'<td>'+tones_local_var[tone].fields.anote+'</td>';
+		table_str=table_str+'<td><input type="button" value="删除" onclick="deleteTone(tones_local_var[tone])"/></td>';
+		table_str=table_str+'<td><input type="button" value="重置"/></td>';
+		table_str=table_str+'</tr>';
+	}
+	table_str=table_str+"</table>"
+	document.getElementById('fingering').innerHTML=table_str;
+</script>
+<script>
+	//显示定弦信息
+    var string_notes={{string_notes|safe}};
+    var divItem=document.getElementById("strings_info");
+    var string_do='{{string_do|safe}}';
+    var pitch_scaling = {{pitch_scaling|safe}};
+    var strings_info_table="<table border='1' class='strings_info_table'　id='strings_info_table'><tr>";
+    for (var i=0;i<string_notes.length;++i){
+    	strings_info_table+="<td>"+string_notes[i]+"</td>";
+    }
+    strings_info_table+="<td>do= "+string_do+"</td>";
+    strings_info_table+="<td>scaling="+pitch_scaling.toString()+"</td>";
+    strings_info_table+="</tr></table>";
+    divItem.innerHTML=strings_info_table;
+</script>
+<script>
+	//设置定弦信息
+    var string_hzes={{string_hzes|safe}};
+    var string_do='{{string_do|safe}}';
+    var table_row=document.getElementById("strings_set_table").rows[1];
+    for (var i=0;i<string_hzes.length;++i){
+    	var item=table_row.cells[i].getElementsByTagName("INPUT")[0];
+    	item.defaultValue=string_hzes[i].toFixed(2);
+    }
+	var divItem=table_row.cells[string_hzes.length].getElementsByTagName("INPUT")[0];
+    divItem.defaultValue=string_do;
+</script>
+<script>
+	var clipsLocal={{clipsLocal|safe}};
+	var clips_str="<table border='' class='table_clips_local' id='table_clips_local' >";
+	for(var i=0;i<clipsLocal.length;i++)
+	{
+		clips_str+="<tr>";
+		clips_str+="<td>"+clipsLocal[i]["startingPos"]+"</td>";
+		clips_str+="<td>"+clipsLocal[i]["length"]+"</td>";
+		var index=3;
+		for (pitch in clipsLocal[i]["tar"])
+		{
+			clips_str+='<td><input type="number" value="'+clipsLocal[i]["tar"][pitch].toString()+'"</td>'
+			index--;
+		}
+		for(var j=0;j<index;++j)
+		{
+			clips_str+='<td><input type="number" /></td>';
+		}
+		clips_str+='<td><input type="button" value="删除" onclick="deleteClip(clipsLocal[i])"/></td>';
+		clips_str+="</tr>";
+	}
+	clips_str+="<tr>";
+	clips_str+="<td><input type='number'/></td><td><input type='number' value='1'/>"+
+	"</td><td><input type='number' /></td> <td><input type='number' /></td><td><input type='number' /></td>"+
+	"<td><input type='button' value='插入'/></td><td><input type='button' value='移动到'/></td>";
+	clips_str+="</tr>";
+	clips_str+="</table>";
+	var divItem=document.getElementById("clips");
+	divItem.innerHTML=clips_str;
+</script>
+<script>
+    // 总是滚动到最低端
+    function top_set(divName){
+        var clipDiv = document.getElementById(divName);
+        clipDiv.scrollTop = clipDiv.scrollHeight;
+    }
+    top_set("fingering");
+    top_set("clips");
+</script>
+</body>
+</html>
