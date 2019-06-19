@@ -11,6 +11,7 @@ body,div
     float:left;
     position:relative;
     font-size:18px;
+    display:table;
     top:0%;
     height:3%;
     width:24%;
@@ -21,9 +22,10 @@ body,div
 {
     position:relative;
     float:left;
-    width:100%;
+    width:99%;
     top:1%;
-    height:98%;
+    height:95%;
+    border-color:red;
 }
 /*显示部分*/
 .display
@@ -41,7 +43,8 @@ body,div
 {
     position:relative;
     float:left;
-    width:100%;
+    left:1%;
+    width:98%;
     top:1%;
     height:15%;
 }
@@ -53,7 +56,7 @@ body,div
 	float:left;
 	left:1%;
     width:98%;
-    top:0%;
+    top:1%;
     height:15%;
 }
 /*局部音高标记*/
@@ -151,11 +154,11 @@ body,div
 {
     position:relative;
     float:left;
-    display:table-row;
+    display:table;
 	left:1%;
     width:98%;
     top:2.5%;
-    height:4%;
+    height:2%;
     font-size:16px;
 }
 .strings_info strings_info_table
@@ -349,7 +352,7 @@ body,div
     width:99%;
     top:0%;
     height:2%;
-    display:table-row;
+    display:table;
 	overflow-y:auto;
 }
 /*clips显示和设置*/
@@ -371,8 +374,44 @@ body,div
 }
 .clips tr td input
 {
-    width:95%;
+    width:99%;
+    font-size:14px;
 }
+.add_tone{
+    position:relative;
+	float:left;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:2%;
+    display:table;
+	overflow-y:auto;
+}
+.add_tone_table_div{
+    position:relative;
+	float:left;
+	left:0%;
+    width:87%;
+    top:0%;
+    height:100%;
+    display:table;
+	overflow-y:auto;
+}
+.add_tone_table_div table{
+    width:100%;
+}
+.add_tone_sub
+{
+    position:relative;
+	float:left;
+	left:0%;
+    width:12%;
+    top:0%;
+    height:100%;
+    display:table;
+	overflow-y:auto;
+}
+
 
 /*去除num小箭头*/
 input::-webkit-outer-spin-button,

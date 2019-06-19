@@ -11,14 +11,14 @@
 	<link rel="icon" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
 	<link rel="bookmark" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
 </head>
-<div class="login" id="login" style="border-width:1px; color:blue">
+<div class="login" id="login" style="border-width:1px; border-style:solid; border-color:red">
     <a href="../index/">主页</a>
     {% include "login_info_base.html" %}
 </div>
 
-<div class="main" id="main">
+<div class="main" id="main" style="border-style:solid; border-color:red">
 	<div class="display" name="display" style="border-width:1px; border-style:solid; border-color:green">
-		<div  class="vad" id="vad" style="border-width:1px; color:blue">
+		<div  class="vad" id="vad" style="border-width:1px; border-style:solid; border-color:red">
 		</div>
 		<div class="local_pitch" id="local_pitch" style="border-width:1px; border-style:solid; border-color:blue;">
 		</div>
@@ -41,7 +41,7 @@
 		</div>
 	</div>
 
-	<div class = "opt" name="opt" >
+	<div class = "opt" name="opt"  style="border-width:1px; border-style:solid; border-color:blue;">
 		<div class="info" id="info" style="border-width:1px; border-style:solid; border-color:green;">
 			<table border="" class="table_info" id="table_info" >
 				<thead>
@@ -203,11 +203,63 @@
 					   onclick="play_clips('{{title|safe}}',{{nfft|safe}})" value="播放">
 		</div>
 		<div class="mark_clips" id="mark_clips" style="border-width:1px; border-style:solid; border-color:blue;">
-
+			fs
+			<input type="number" id="mark_fs" onfocus="this.value=''"
+					   onblur="if(this.value==''){this.value=this.defaultValue}" value=44100
+					   placeholder="采样率" list="play_fs_list" style="width:16%">
+			anote
+			<input type="text" id="mark_anote" placeholder='注释'
+					  style="width:48%">
+			<input type="button" id="sub_mark_clips" style="float:right;width:22%"
+					   onclick="mark_clips('{{title|safe}}',{{nfft|safe}})" value="mark标记">
 		</div>
 		<div class="clips" id="clips" style="border-width:1px; border-style:solid; border-color:blue;">
 
 		</div>
+		<div class="add_tone" id="add_tone" style="border-width:1px; border-style:solid; border-color:red;"k>
+			<div class="add_tone_table_div" id="add_tone_table_div" style="border-width:1px; border-style:solid; border-color:blue;">
+				<table border="" class="add_tone_table" id="add_tone_table">
+					<tr>
+						<td style="width:16%;">起始帧</td>
+						<td style="width:16%;">终止帧</td>
+						<td style="width:16%;">频率</td>
+						<td style="width:48%;">指法</td>
+					</tr>
+					<tr>
+						<td style="width:16%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+						<td style="width:16%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+						<td style="width:16%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+						<td style="width:48%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+					</tr>
+					<tr>
+						<td style="width:16%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+						<td style="width:16%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+						<td style="width:16%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+						<td style="width:48%;">
+							<input type="number" style="width:100%;"/>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="add_tone_sub" >
+				<input type="button" style="width:100%; height:100%; border-color:red; " value="提交(T)"/>
+			</div>
+		</div>
+
 	</div>
 </div>
 <script>
@@ -377,12 +429,18 @@
 			clips_str+='<td><input type="number" /></td>';
 		}
 		clips_str+='<td><input type="button" value="删除" onclick="deleteClip(clipsLocal[i])"/></td>';
+		clips_str+='<td><input type="button" value="重置" onclick="resetClip(clipsLocal[i])"/></td>';
 		clips_str+="</tr>";
 	}
 	clips_str+="<tr>";
-	clips_str+="<td><input type='number'/></td><td><input type='number' value='1'/>"+
-	"</td><td><input type='number' /></td> <td><input type='number' /></td><td><input type='number' /></td>"+
-	"<td><input type='button' value='插入'/></td><td><input type='button' value='移动到'/></td>";
+	clips_str+="<td><input type='number' style='color:blue;font-size:16px' value='"+
+	{{current_frame|safe}}+"' /></td><td><input type='number' style='color:blue;font-size:16px' value='"
+	+{{current_frame|safe}}+"'/>"+
+	"</td><td><input type='number' style='color:blue;font-size:16px' value='-1'/></td>"+
+	" <td><input type='number' style='color:blue;font-size:16px'/></td>"+
+	"<td><input type='number' style='color:blue;font-size:16px'/></td>"+
+	"<td><input type='button' style='color:blue;font-size:16px' value='插入(P)'/></td>"+
+	"<td><input type='button' style='color:blue;font-size:16px' value='移动到'/></td>";
 	clips_str+="</tr>";
 	clips_str+="</table>";
 	var divItem=document.getElementById("clips");

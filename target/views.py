@@ -500,6 +500,50 @@ class TargetView(View):
 		return render(request, 'index.html', context)
 
 	@classmethod
+	def handle_upload_file(cls, upload_file, path, user_id):
+		print(upload_file)
+		print(path)
+		print(user_id)
+		if not os.path.exists(path):
+			os.makedirs(path)
+			print("文件夹已经创建:"+path)
+		else:
+			file_name = path + upload_file.name
+			print(file_name)
+			wave_name=upload_file.name.split(".")[0]
+			print(wave_name)
+			already = Wave.objects.filter(create_user_id=user_id, title=wave_name) #已经存在的wave
+			if already.count() == 0:
+				try:
+					destination = open(file_name, 'wb+')
+					for chunk in upload_file.chunks():
+						destination.write(chunk)
+					destination.close()
+					# 插入数据库
+
+					return "success"
+				except Exception as e:
+					print(e)
+					return "err"
+			else:
+				print(wave_name + " already existed")
+				return "err"
+
+
+	@classmethod
+	@method_decorator(login_required)
+	def addwaves(cls, request):
+		if request.method == 'POST':
+			content = request.FILES.getlist("upload_wave")
+			if not content:
+				return HttpResponse("没有上传内容")
+			user_id = str(request.user)
+			path = "/home/liningbo/waveFiles/"+user_id+"/"
+			for wave in content:
+				cls.handle_upload_file(wave, path, user_id)
+		return HttpResponse("add waves done")
+
+	@classmethod
 	@method_decorator(login_required)
 	def copywaves(cls, request):
 		"""

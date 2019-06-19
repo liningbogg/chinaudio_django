@@ -26,6 +26,7 @@ admin.autodiscover()
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('index/', target_view.index),
+    path('addwaves/', target_view.addwaves),
     path('copywaves/', target_view.copywaves),
     path('copywaves/sub_and_execute/', target_view.sub_and_execute_copywaves),
     path('wave/', target_view.wave_view),

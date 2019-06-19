@@ -1,0 +1,76 @@
+body,div
+{
+    position:fixed;
+    margin:0;padding:0;
+    height:100%;
+    width:100%;
+}
+.login
+{
+    position:relative;
+    float:left;
+    width:99%;
+    height:3%;
+    display:table;
+    font-size:24px;
+    border-color:blue;
+    border-width:1px;
+    border-style:solid;
+}
+.main
+{
+    position:relative;
+    float:left;
+    width:99%;
+    top:0%;
+    height:96%;
+    border-color:red;
+    border-width:1px;
+    border-style:solid;
+    overflow-y:auto;
+}
+/*从其他用户复制waves*/
+.copy_from_others
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:3%;
+    display:table;
+    font-size:32px;
+    border-color:red;
+    border-width:1px;
+    border-style:solid;
+}
+/*添加waves*/
+.add_waves
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:3%;
+    display:table;
+    border-color:green;
+    border-width:1px;
+    border-style:solid;
+}
+.add_waves input
+{
+    font-size:24px;
+    color:green;
+}
+/*进度信息*/
+.process
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:80%;
+    border-color:blue;
+    border-width:1px;
+    border-style:solid;
+    overflow-y:auto;
+}
