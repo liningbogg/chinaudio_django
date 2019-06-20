@@ -4,45 +4,45 @@
     <meta charset="UTF-8">
     <title>数据：{{title}}</title>
     <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="https://code.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
     <script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>
     <script src="/static/js/labeling.js?time='+new Date().getTime()+'"></script>
     <link href="/static/css/labeling.css?time='+new Date().getTime()+'" rel="stylesheet" type="text/css" />
-	<link rel="icon" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
+	<link rel="icon" href="/static/image/favicon.ico" mce_href=”/static/image/ favicon.ico” type=”image/x-icon”>
 	<link rel="bookmark" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
 </head>
-<div class="login" id="login" style="border-width:1px; border-style:solid; border-color:red">
+<div class="login" id="login" >
     <a href="../index/">主页</a>
     {% include "login_info_base.html" %}
 </div>
 
-<div class="main" id="main" style="border-style:solid; border-color:red">
-	<div class="display" name="display" style="border-width:1px; border-style:solid; border-color:green">
-		<div  class="vad" id="vad" style="border-width:1px; border-style:solid; border-color:red">
+<div class="main" id="main">
+	<div class="display" name="display">
+		<div  class="vad" id="vad">
 		</div>
-		<div class="local_pitch" id="local_pitch" style="border-width:1px; border-style:solid; border-color:blue;">
+		<div class="local_pitch" id="local_pitch" >
 		</div>
-		<div class="local_target" id="local_target" style="border-width:1px; border-style:solid; border-color:red;">
+		<div class="local_target" id="local_target" >
 		</div>
-		<div class="sampling_data" id="sampling_data" style="border-width:1px; border-style:solid; border-color:purple;">
-			<div class="sampling_fft" id="sampling_fft" style="border-width:1px; border-style:solid; border-color:green;">
+		<div class="sampling_data" id="sampling_data" >
+			<div class="sampling_fft" id="sampling_fft">
 			</div>
-			<div class="sampling_medium" id="sampling_medium" style="border-width:1px; border-style:solid; border-color:green;">
+			<div class="sampling_medium" id="sampling_medium" >
 			</div>
 		</div>
-		<div class="strings_info" id="strings_info" style="border-width:1px; border-style:solid; border-color:red;">
+		<div class="strings_info" id="strings_info">
 		</div>
-		<div class="ref_info" id="ref_info" style="border-width:1px; border-style:solid; border-color:blue;">
+		<div class="ref_info" id="ref_info" >
 			{{possiblePos|safe}}
 		</div>
-		<div class="tone_info" id="tone_info" style="border-width:1px; border-style:solid; border-color:red;">
+		<div class="tone_info" id="tone_info" >
 		</div>
-		<div class="fingering" id="fingering" style="border-width:1px; border-style:solid; border-color:green;">
+		<div class="fingering" id="fingering" >
 		</div>
 	</div>
 
-	<div class = "opt" name="opt"  style="border-width:1px; border-style:solid; border-color:blue;">
-		<div class="info" id="info" style="border-width:1px; border-style:solid; border-color:green;">
+	<div class = "opt" name="opt" >
+		<div class="info" id="info">
 			<table border="" class="table_info" id="table_info" >
 				<thead>
 					<tr>
@@ -63,7 +63,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td style="font-size:16px;line-height:1;color:green">current_frame</td>
+					<td style="font-size:1rem;line-height:1;color:green">current_frame</td>
 					<td>
 						<input type="text" id="current_frame" readonly="true" value={{current_frame|safe}} style="color:green" />
 					</td>
@@ -118,7 +118,7 @@
 				</tr>
 			</table>
 		</div>
-		<div class="strings_set" id="strings_set" style="border-width:1px; border-style:solid; border-color:blue;">
+		<div class="strings_set" id="strings_set">
 			<table border="" class="strings_set_table" id="strings_set_table">
 				<tr>
 					<td>1弦</td><td>2弦</td><td>3弦</td><td>4弦</td><td>5弦</td><td>6弦</td><td>7弦</td><td>do</td>
@@ -160,10 +160,10 @@
 				</tr>
 			</table>
 		</div>
-		<div class="sub_strings_set" id="sub_strings_set" style="border-width:1px; border-style:solid; border-color:blue;">
+		<div class="sub_strings_set" id="sub_strings_set" >
 			<input type="button" name="sub_chin_strings"  value="设置strings" onclick="sub_strings('{{title}}')" style="float:right;"/>
 		</div>
-		<div class="ref_set" id="ref_set" style="border-width:1px; border-style:solid; border-color:red;">
+		<div class="ref_set" id="ref_set">
 			音高
 			<input type="number" id="primary_pitch" onfocus="if(this.value==this.defaultValue){this.value=''}"
 				   onblur="if(this.value==''){this.value=this.defaultValue}"
@@ -171,7 +171,7 @@
 			<input type="button" name="sub_primary_pitch" onclick="cal_pitch_pos('{{title}}')" value="音位估算"
 				   style="float:right;">
 		</div>
-		<div class="filter_set" id="filter_set" style="border-width:1px; border-style:solid; border-color:red;">
+		<div class="filter_set" id="filter_set" >
 				频率
 				<input type="number" id="filter_frq" onfocus="if(this.value==this.defaultValue){this.value=''}"
 					   onblur="if(this.value==''){this.value=this.defaultValue}" value={{current_tar|safe}} placeholder="fft过滤频率"/>
@@ -181,7 +181,7 @@
 				<input type="button" id="sub_filter_opt" style="float:right"
 					   onclick="filter_fft({{srcFFT|safe}},'{{title|safe}}',{{current_frame|safe}},{{nfft|safe}},{{fs|safe}})" value="重新过滤">
 		</div>
-		<div class="play_clips" id="play_clips" style="border-width:1px; border-style:solid; border-color:red;">
+		<div class="play_clips" id="play_clips" >
 				start
 				<input type="number" id="play_start" onfocus="if(this.value==this.defaultValue){this.value=''}"
 					   onblur="if(this.value==''){this.value=this.defaultValue}"  placeholder="起始帧"/>
@@ -202,7 +202,7 @@
 				<input type="button" id="sub_play_clips" style="float:right;width:22%"
 					   onclick="play_clips('{{title|safe}}',{{nfft|safe}})" value="播放">
 		</div>
-		<div class="mark_clips" id="mark_clips" style="border-width:1px; border-style:solid; border-color:blue;">
+		<div class="mark_clips" id="mark_clips">
 			fs
 			<input type="number" id="mark_fs" onfocus="this.value=''"
 					   onblur="if(this.value==''){this.value=this.defaultValue}" value=44100
@@ -213,11 +213,8 @@
 			<input type="button" id="sub_mark_clips" style="float:right;width:22%"
 					   onclick="mark_clips('{{title|safe}}',{{nfft|safe}})" value="mark标记">
 		</div>
-		<div class="clips" id="clips" style="border-width:1px; border-style:solid; border-color:blue;">
-
-		</div>
-		<div class="add_tone" id="add_tone" style="border-width:1px; border-style:solid; border-color:red;"k>
-			<div class="add_tone_table_div" id="add_tone_table_div" style="border-width:1px; border-style:solid; border-color:blue;">
+		<div class="add_tone" id="add_tone">
+			<div class="add_tone_table_div" id="add_tone_table_div" >
 				<table border="" class="add_tone_table" id="add_tone_table">
 					<tr>
 						<td style="width:16%;">起始帧</td>
@@ -258,6 +255,9 @@
 			<div class="add_tone_sub" >
 				<input type="button" style="width:100%; height:100%; border-color:red; " value="提交(T)"/>
 			</div>
+		</div>
+		<div class="clips" id="clips" >
+
 		</div>
 
 	</div>
@@ -433,14 +433,14 @@
 		clips_str+="</tr>";
 	}
 	clips_str+="<tr>";
-	clips_str+="<td><input type='number' style='color:blue;font-size:16px' value='"+
-	{{current_frame|safe}}+"' /></td><td><input type='number' style='color:blue;font-size:16px' value='"
+	clips_str+="<td><input type='number' style='color:blue;font-size:1rem' value='"+
+	{{current_frame|safe}}+"' /></td><td><input type='number' style='color:blue;font-size:1rem' value='"
 	+{{current_frame|safe}}+"'/>"+
-	"</td><td><input type='number' style='color:blue;font-size:16px' value='-1'/></td>"+
-	" <td><input type='number' style='color:blue;font-size:16px'/></td>"+
-	"<td><input type='number' style='color:blue;font-size:16px'/></td>"+
-	"<td><input type='button' style='color:blue;font-size:16px' value='插入(P)'/></td>"+
-	"<td><input type='button' style='color:blue;font-size:16px' value='移动到'/></td>";
+	"</td><td><input type='number' style='color:blue;font-size:1rem' value='-1'/></td>"+
+	" <td><input type='number' style='color:blue;font-size:1rem'/></td>"+
+	"<td><input type='number' style='color:blue;font-size:1rem'/></td>"+
+	"<td><input type='button' style='color:blue;font-size:1rem' value='插入(P)'/></td>"+
+	"<td><input type='button' style='color:blue;font-size:1rem' value='移动到'/></td>";
 	clips_str+="</tr>";
 	clips_str+="</table>";
 	var divItem=document.getElementById("clips");

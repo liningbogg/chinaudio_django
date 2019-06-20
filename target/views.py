@@ -10,6 +10,7 @@ from email.mime.application import MIMEApplication
 from io import BytesIO
 import threading
 import librosa.display
+import librosa.core
 import numpy as np
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
@@ -31,13 +32,14 @@ from target.models import Tone
 from target.models import Wave
 from target.models import Labeling
 from .forms import RegisterForm
-from .forms import UserForm
+from chin import Chin
 from .forms import UserFormWithoutCaptcha
 from .targetTools import RWLock
 from abc import abstractmethod
 import scipy
 from target.targetTools import targetTools
 from baseFrqComb import BaseFrqDetector
+from scipy.interpolate import interp1d
 
 # 归一化函数
 def MaxMinNormalization(x, minv, maxv):
@@ -494,7 +496,8 @@ class TargetView(View):
 				completion = round(candidateFrame / candidateFrameNum * 100, 1)
 				completion = min(100,completion)
 			wave.completion = completion
-			wave.save()
+			wave.save(update_fields=["completion"])
+
 		waves = Wave.objects.filter(create_user_id=request.user).order_by('frameNum')
 		context = {'waves': waves}
 		return render(request, 'index.html', context)
@@ -520,7 +523,20 @@ class TargetView(View):
 						destination.write(chunk)
 					destination.close()
 					# 插入数据库
-
+					stream, stream_fs = librosa.load(file_name, mono=False, sr=None)
+					duration = librosa.core.get_duration(y=stream[0],sr=stream_fs)
+					nfft = round(stream_fs/10)
+					speech_stft, phase = librosa.magphase(
+						librosa.stft(stream[0], n_fft=nfft, hop_length=nfft, window=scipy.signal.hamming))
+					speech_stft = np.transpose(speech_stft)  # stft转置
+					frameNum = np.size(speech_stft,0)
+					#chin 设置
+					chin = Chin()
+					chin.set_ahz(440)
+					wave=Wave(create_user_id=user_id,title=wave_name,waveFile=file_name, frameNum=frameNum, duration=duration,
+							  chin=pickle.dumps(chin), stft=pickle.dumps(speech_stft), fs=stream_fs,nfft=nfft,completion=0)
+					wave.save()
+					print(wave)
 					return "success"
 				except Exception as e:
 					print(e)
@@ -600,6 +616,7 @@ class TargetView(View):
 
 	@method_decorator(login_required)
 	def labeling(self, request):
+
 		title = request.GET.get('title')
 		user_id = str(request.user)
 		wave = Wave.objects.get(create_user_id=user_id, title=title)
@@ -639,6 +656,8 @@ class TargetView(View):
 			pass			
 		labelinfo.current_frame=current_frame
 		labelinfo.save()
+
+
 		# 收集tones
 		tones_start = max(current_frame-tone_extend_rad, 0)
 		tones_end = min(current_frame+tone_extend_rad, wave.frameNum)
@@ -647,8 +666,10 @@ class TargetView(View):
 		# comb及combDescan音高参考
 		combRef=np.zeros(wave.frameNum)
 		combDescanRef=[[0] * wave.frameNum, [0] * wave.frameNum]
+		time_start = time.time()
 		try:
-			clips = Clip.objects.filter(title=title, create_user_id="combDescan", startingPos__lt=wave.frameNum)
+			clips = Clip.objects.filter(title=title, create_user_id="combDescan",
+										startingPos__range=(current_frame-extend_rad, current_frame+extend_rad))
 			for clip in clips:
 				pos=clip.startingPos
 				tar=pickle.loads(clip.tar)
@@ -656,7 +677,9 @@ class TargetView(View):
 				for pitch in tar:
 					combDescanRef[index][pos]=pitch
 					index=index+1
-			clips = Clip.objects.filter(title=title, create_user_id="comb", startingPos__lt=wave.frameNum)
+			clips = Clip.objects.filter(title=title, create_user_id="comb",
+										startingPos__range=(current_frame-extend_rad, current_frame+extend_rad))
+
 			for clip in clips:
 				pos=clip.startingPos
 				tar=pickle.loads(clip.tar)
@@ -664,6 +687,8 @@ class TargetView(View):
 		except Exception as e:
 			print(e)
 		# 已标记音高
+		time_end = time.time()
+		print(time_end - time_start)
 		target = [[0] * wave.frameNum, [0] * wave.frameNum, [0] * wave.frameNum]  # 存储前三个音高的二维数组
 		try:
 			clips = Clip.objects.filter(title=title, create_user_id=request.user, startingPos__lt=wave.frameNum)
@@ -689,21 +714,44 @@ class TargetView(View):
 		detectorDescan = BaseFrqDetector(True)  # 去扫描线算法
 		pitchCombDescan=detectorDescan.getpitch(srcFFT, fs, nfft, False)
 		medium=pitchCombDescan[2]
+		# 重新采样(降低采样)
+		isResampling = labelinfo.medium_resampling
+		if isResampling is True:
+			processingX=np.arange(0,len(medium))
+			len_processingX=len(processingX)
+			processingY=medium
+			finterp = interp1d(processingX,processingY,kind="linear")
+			x_pred = np.linspace(0, processingX[len_processingX-1]*1.0, int(processingX[len_processingX-1]/10)+1)
+			resamplingY=finterp(x_pred)
+			medium=resamplingY
+
 		# 可能的位置
 		if wave.chin is not None:
 			# 获得chin class
-			chin = pickle.loads(wave.chin)
-			string_hzes = chin.get_hzes()
-			string_notes = chin.get_notes()
-			string_do = chin.get_do()
-			pitch_scaling = chin.get_scaling()
-			a4_hz = chin.get_ahz()
-			print(a4_hz)
+			try:
+				chin = pickle.loads(wave.chin)
+				a4_hz = chin.get_ahz()
+				string_hzes = chin.get_hzes()
+				string_notes = chin.get_notes()
+				string_do = chin.get_do()
+				pitch_scaling = chin.get_scaling()
+				print(a4_hz)
+			except Exception as e:
+				string_notes=None
+				string_hzes=None
+				string_do=None
+				pitch_scaling=1
+
+				print(e)
 		else:
 			# chin class 不存在
 			chin = None
 		if chin is not None:
-			possiblePos = chin.cal_possiblepos(current_tar)[1].replace("\n", "<br>")
+			try:
+				possiblePos = chin.cal_possiblepos(current_tar)[1].replace("\n", "<br>")
+			except Exception as e:
+				possiblePos = ""
+				print(e)
 		else:
 			possiblePos = "尚未设置chin信息"
 		clipsLocalOri=Clip.objects.filter(title=title, create_user_id=user_id,
@@ -712,15 +760,17 @@ class TargetView(View):
 		for clip in clipsLocalOri:
 			clipsLocal.append({"id": clip.id, "startingPos":clip.startingPos,
 									"length": clip.length, "tar": list(pickle.loads(clip.tar))})
+
 		context = {'title': title,'fs':fs,'nfft': nfft, 'ee': ee, 'rmse': rmse, 'stopPos': list(vadrs['stopPos']),
 					'manual_pos':manual_pos, 'combDescanPrimary':list(combDescanRef[0]), 'tones_local':tones_local,
 					'combDescanSecondary':list(combDescanRef[1]), 'comb':list(combRef),'target':target,
-					'startPos': list(vadrs['startPos']),'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),
+					'startPos': list(vadrs['startPos']), 'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),
 					'filter_fft':list(filter_fft), 'current_tar':current_tar,"filter_rad":filter_rad,'a4_hz':a4_hz,
 					'string_hzes': string_hzes, 'string_notes': string_notes, 'string_do': string_do,'pitch_scaling':pitch_scaling,
 					"medium":list(medium),"current_frame":current_frame,"extend_rad":extend_rad,'play_fs':labelinfo.play_fs,
 					"tone_extend_rad":tone_extend_rad, "frame_num":end, 'vad_thrart_EE':thrartEE,"clipsLocal": clipsLocal,
 					'vad_thrart_RMSE':thrartRmse, 'vad_throp_EE':throp, 'create_user_id':user_id,'possiblePos': possiblePos}
+
 		return render(request, 'labeling.html', context)
 
 	@method_decorator(login_required)
@@ -807,9 +857,15 @@ class TargetView(View):
 			items.append(item)
 
 		if wave.chin is not None:
-			string_hzes = chin.get_hzes()
-			string_notes = chin.get_notes()
-			string_do = chin.get_do()
+			try:
+				string_hzes = chin.get_hzes()
+				string_notes = chin.get_notes()
+				string_do = chin.get_do()
+			except Exception as e:
+				string_hzes=None
+				string_notes=None
+				string_do=None
+				print(e)
 
 		context = {'clips': items, 'wave': wave, 'pitches': pitchesArr, 'marked_phrases': marked_phrases,
 				   'tones': tones, 'string_hzes': string_hzes, 'string_notes': string_notes, 'string_do': string_do}

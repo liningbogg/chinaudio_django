@@ -20,13 +20,14 @@
     </div>
     <div class="add_waves" id="add_waves">
         <form enctype="multipart/form-data" action="/addwaves/" method="POST">
-        {% csrf_token %}
+            {% csrf_token %}
            <input type="file" name="upload_wave" multiple="multiple"/>
+            {% csrf_token %}
            <input type="submit" value="上传"/>
         </form>
     </div>
     <div class="process" id="process">
-        <table border="1" width="600">
+        <table border="1" >
             <thead>
                 <tr style="font-size:24px;line-height:1">
                     <th>曲目</th>
@@ -47,6 +48,14 @@
                 <td style="color:blue;font-size:24px;line-height:2"><a href="../labeling/?title={{wave.title}}">标注</a></td>
             </tr>
             {% endfor %}
+        </table>
+    </div>
+    <div class="tune_preset" id="tune_preset" >
+        <table border="1">
+            <tr>
+                <td>tune_name</td><td>a4_hz</td><td>do</td><td>note1</td><td>note2</td><td>note3</td><td>note4</td>
+                <td>note5</td><td>note6</td><td>note7</td><td>opt</td>
+            </tr>
         </table>
     </div>
 </div>

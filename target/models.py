@@ -47,6 +47,7 @@ class Labeling(BaseModel):
     vad_throp_EE = models.FloatField(default=0.1)
     filter_rad = models.FloatField(default=30)
     play_fs = models.IntegerField(default=44100)  # 用于记录当前片段播放的fs
+    medium_resampling = models.BooleanField(default=True)
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
 
@@ -75,7 +76,6 @@ class Wave(BaseModel):
     frameNum = models.IntegerField(default=0)
     duration = models.FloatField()
     chin = models.BinaryField(null=True)
-    stft = models.BinaryField(null=True)
     ee = models.BinaryField(null=True)
     rmse = models.BinaryField(null=True)
     fs = models.IntegerField()
@@ -85,6 +85,19 @@ class Wave(BaseModel):
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
 
+class Tune(BaseModel):
+    tune_name = models.CharField(max_length=255)
+    a4_hz = models.FloatField(default=440.0)
+    do = models.CharField(max_length=16)
+    note1 = models.CharField(max_length=16)
+    note2 = models.CharField(max_length=16)
+    note3 = models.CharField(max_length=16)
+    note4 = models.CharField(max_length=16)
+    note5 = models.CharField(max_length=16)
+    note6 = models.CharField(max_length=16)
+    note7 = models.CharField(max_length=16)
+    class Meta:
+        unique_together = ["tune_name", "create_user_id"]
 
 class Log(BaseModel):
     """

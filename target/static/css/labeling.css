@@ -1,3 +1,7 @@
+html
+{
+    font-size: calc(100vw/1920*16);
+}
 body,div
 {
     position:fixed;
@@ -10,11 +14,18 @@ body,div
 {
     float:left;
     position:relative;
-    font-size:18px;
+    font-size:1.5rem;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
     display:table;
     top:0%;
     height:3%;
     width:24%;
+}
+.login input
+{
+    font-size:1.5rem;
 }
 
 /*主界面*/
@@ -25,6 +36,8 @@ body,div
     width:99%;
     top:1%;
     height:95%;
+    border-width:0.0625rem;
+    border-style:solid;
     border-color:red;
 }
 /*显示部分*/
@@ -35,6 +48,9 @@ body,div
     width:70%;
     top:1%;
     height:96%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
     overflow-y:auto;
     overflow-x:auto;
 }
@@ -47,6 +63,9 @@ body,div
     width:98%;
     top:1%;
     height:15%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
 }
 
 /*局部音高参考*/
@@ -58,6 +77,9 @@ body,div
     width:98%;
     top:1%;
     height:15%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
 }
 /*局部音高标记*/
 .local_target
@@ -68,6 +90,9 @@ body,div
     width:98%;
     top:1%;
     height:15%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
 }
 /*fft及其中间结果*/
 .sampling_data
@@ -78,6 +103,9 @@ body,div
     width:98%;
     top:2%;
     height:15%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:purple;
 }
 /*fft*/
 .sampling_fft
@@ -88,6 +116,9 @@ body,div
     width:49%;
     top:1%;
     height:98%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
 }
 /*中间结果*/
 .sampling_medium
@@ -98,6 +129,9 @@ body,div
     width:49%;
     top:1%;
     height:98%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:green;
 }
 /*定弦设置*/
 .strings_set
@@ -109,14 +143,17 @@ body,div
     width:99%;
     top:0%;
     height:4%;
-    font-size:16px;
+    font-size:1rem;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
     overflow-y:auto;
     overflow-x:auto;
 }
 
 .strings_set tr td
 {
-    font-size:14px;
+    font-size:0.875rem;
 	line-height:1;
 	width:12%;
 }
@@ -124,7 +161,7 @@ body,div
 {
     width:98%;
 	table-layout:fixed;
-	font-size:14px;
+	font-size:0.875rem;
 	line-height:1;
 }
 
@@ -138,13 +175,14 @@ body,div
     width:99%;
     top:0%;
     height:2%;
-    font-size:16px;
+    font-size:1rem;
+    style="border-width:1px; border-style:solid; border-color:blue;"
     overflow-y:auto;
     overflow-x:auto;
 }
 .sub_strings_set input
 {
-    font-size:16px;
+    font-size:1rem;
 	line-height:1;
 	width:100%;
 }
@@ -159,7 +197,10 @@ body,div
     width:98%;
     top:2.5%;
     height:2%;
-    font-size:16px;
+    font-size:1rem;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:purple;
 }
 .strings_info strings_info_table
 {
@@ -170,13 +211,13 @@ body,div
     width:98%;
     top:2.5%;
     height:4%;
-    font-size:16px;
+    font-size:1rem;
     overflow-y:auto;
     overflow-x:auto;
 }
 .strings_info_table tr td
 {
-    font-size:16px;
+    font-size:1rem;
 	line-height:1;
 	width:10%;
 }
@@ -191,9 +232,12 @@ body,div
     width:98%;
     top:3%;
     height:4%;
-    font-size:16px;
+    font-size:1rem;
     overflow-y:auto;
     overflow-x:auto;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
 }
 .ref_info table{
     width:98%;
@@ -209,7 +253,10 @@ body,div
     width:98%;
     top:3%;
     height:4%;
-    font-size:14px;
+    font-size:0.875rem;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
     overflow-y:auto;
     overflow-x:auto;
 }
@@ -217,7 +264,7 @@ body,div
     width:100%;
 }
 .tone_info tr td{
-	font-size:16px;
+	font-size:1rem;
 	width:9%;
 	line-height:1;
 }
@@ -230,7 +277,10 @@ body,div
     width:98%;
     height:9%;
     top:5%;
-    font-size:14px;
+    font-size:0.875rem;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:green;
     overflow-y:auto;
 
 }
@@ -239,9 +289,11 @@ body,div
 }
 .fingering tr td{
     width:12.5%;
+    font-size:0.875rem;
 }
 .fingering tr td input{
     width:100%;
+    font-size:0.875rem;
 }
 /*参数设置及其他操作*/
 .opt{
@@ -251,6 +303,9 @@ body,div
     width:29%;
     top:1%;
     height:96%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
     overflow-y:auto;
 }
 /*参数信息*/
@@ -263,6 +318,9 @@ body,div
     width:99%;
     top:0%;
     height:40%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
 	overflow-y:auto;
 }
 .table_info
@@ -278,14 +336,14 @@ body,div
 }
 /*info 中table样式*/
 .table_info tr td{
-	font-size:16px;
+	font-size:1rem;
 	line-height:1;
 	width:50%;
 }
 .table_info tr td input{
 	width:98%;
 	table-layout:fixed;
-	font-size:16px;
+	font-size:1rem;
 	line-height:1;
 }
 /*参考音高参数设置*/
@@ -298,13 +356,16 @@ body,div
     width:99%;
     top:0%;
     height:2%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
 	overflow-y:auto;
 }
 .ref_set input
 {
     width:22%;
 	table-layout:fixed;
-	font-size:14px;
+	font-size:0.875rem;
 	line-height:1;
 }
 /*fft过滤参数设置*/
@@ -317,13 +378,16 @@ body,div
     top:0%;
     height:2%;
     display:table;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:green;
 	overflow-y:auto;
 }
 .filter_set input
 {
     width:22%;
 	table-layout:fixed;
-	font-size:14px;
+	font-size:0.875rem;
 	line-height:1;
 }
 /*播放片段*/
@@ -336,13 +400,16 @@ body,div
     top:0%;
     height:2%;
     display:table;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
 	overflow-y:auto;
 }
 .play_clips input
 {
     width:17%;
 	table-layout:fixed;
-	font-size:14px;
+	font-size:0.875rem;
 	line-height:1;
 }
 .mark_clips{
@@ -352,6 +419,9 @@ body,div
     width:99%;
     top:0%;
     height:2%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:green;
     display:table;
 	overflow-y:auto;
 }
@@ -364,6 +434,9 @@ body,div
     top:0%;
     height:22%;
     display:table-row;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
 	overflow-y:auto;
 }
 .clips table{
@@ -375,7 +448,7 @@ body,div
 .clips tr td input
 {
     width:99%;
-    font-size:14px;
+    font-size:0.875rem;
 }
 .add_tone{
     position:relative;
@@ -385,20 +458,26 @@ body,div
     top:0%;
     height:2%;
     display:table;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
 	overflow-y:auto;
 }
 .add_tone_table_div{
     position:relative;
 	float:left;
 	left:0%;
-    width:87%;
+    width:86%;
     top:0%;
     height:100%;
     display:table;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
 	overflow-y:auto;
 }
 .add_tone_table_div table{
-    width:100%;
+    width:99%;
 }
 .add_tone_sub
 {
@@ -408,10 +487,11 @@ body,div
     width:12%;
     top:0%;
     height:100%;
-    display:table;
 	overflow-y:auto;
 }
-
+.add_tone_sub input{
+    font-size:0.875rem;
+}
 
 /*去除num小箭头*/
 input::-webkit-outer-spin-button,
