@@ -19,6 +19,8 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
 from target.views import TargetView
+from django.contrib.staticfiles.views import serve
+
 
 target_view = TargetView()
 admin.autodiscover()
@@ -41,6 +43,7 @@ urlpatterns = [
     path('wave/get_clipFFT/', target_view.get_clipfft),
     path('labeling/cal_pitch_pos/', target_view.cal_pitch_pos),
     path('labeling/filter_fft/', target_view.filter_fft),
+    path('favicon.ico', serve, {'path': 'image/favicon.ico'}),
     url(r'^captcha', include('captcha.urls')),
     url('^$', target_view.index),
 ]

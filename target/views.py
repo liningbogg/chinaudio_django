@@ -623,10 +623,7 @@ class TargetView(View):
 		fs = wave.fs
 		nfft = wave.nfft
 		end = wave.frameNum
-		ee = self.wave_mem_spectrumEntropy.achieve(user_id, title, fs, nfft, 0, end)
-		ee = list(ee)
-		rmse = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, end)
-		rmse = list(rmse)
+
 		try:
 			labelinfo = Labeling.objects.get(create_user_id=user_id, title=title)
 		except Exception as e:
@@ -636,14 +633,13 @@ class TargetView(View):
 		thrartEE = labelinfo.vad_thrart_EE
 		thrartRmse = labelinfo.vad_thrart_RMSE
 		throp = labelinfo.vad_throp_EE
-		vadrs = targetTools.vad(ee, rmse, thrartEE, thrartRmse, throp) 
-		extend_rad = labelinfo.extend_rad
+
 		tone_extend_rad = labelinfo.tone_extend_rad
 		manual_pos= labelinfo.manual_pos
 		if manual_pos<0:
 			# 计算位置
 			clips = Clip.objects.filter(title=title, create_user_id=request.user,nfft=nfft)
-			if clips.count()==0:
+			if clips.count() == 0:
 				current_frame = 0
 			else:
 				candidateFrame = clips.aggregate(Max('startingPos'))['startingPos__max']
@@ -657,6 +653,13 @@ class TargetView(View):
 		labelinfo.current_frame=current_frame
 		labelinfo.save()
 
+		extend_rad = labelinfo.extend_rad
+		ee = self.wave_mem_spectrumEntropy.achieve(user_id, title, fs, nfft,
+												   max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
+		ee = list(ee)
+		rmse = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, end)
+		rmse = list(rmse)
+		vadrs = targetTools.vad(ee, rmse, thrartEE, thrartRmse, throp)
 
 		# 收集tones
 		tones_start = max(current_frame-tone_extend_rad, 0)
