@@ -18,7 +18,6 @@ class Clip(BaseModel):
     title:曲名
     startingPos:数据起始位置
     length:数据长度,单位帧数
-    timestamp:时间戳
     src:数据源（fft）
     tar:标签
     """
@@ -32,6 +31,30 @@ class Clip(BaseModel):
     
     class Meta:
         unique_together = ["title", "startingPos", "length", "create_user_id", "nfft"]
+
+
+class Algorithms_clips(BaseModel):
+    """
+    算法形成的数据
+    title:曲名
+    startingPos:数据起始位置
+    algorithms:算法名称
+    length:数据长度,单位帧数
+    fs:帧率
+    nfft:短时傅里叶帧长
+    tar:标签
+    """
+    title = models.CharField(max_length=255)
+    algorithms = models.CharField(max_length=255)
+    startingPos = models.IntegerField()
+    length = models.IntegerField()
+    tar = models.BinaryField(null=True)
+    anote = models.CharField(max_length=255)
+    nfft = models.IntegerField()
+    fs = models.IntegerField()
+
+    class Meta:
+        unique_together = ["title", "algorithms", "startingPos", "length", "create_user_id", "nfft"]
 
 
 class Labeling(BaseModel):
@@ -50,6 +73,15 @@ class Labeling(BaseModel):
     medium_resampling = models.BooleanField(default=True)
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
+
+
+class labeling_algorithms_conf(BaseModel):
+    labeling =  models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
+    algorithms = models.CharField(max_length=255)  # 对应的算法
+    is_filter = models.BooleanField(default=True)  # 是否采纳过滤后的频率
+    anote = models.CharField(max_length=255)  # 注释
+    class Meta:
+        unique_together = ["labeling", "algorithms"]
 
 class Tone(BaseModel):
     """

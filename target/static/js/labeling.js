@@ -43,7 +43,7 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
 		},
         xAxis: {
             categories: indexArr.slice(start,end),
-           
+
             tickInterval:10
         },
 		yAxis: {
