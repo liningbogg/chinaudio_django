@@ -268,17 +268,32 @@
    	var current_frame = {{current_frame|safe}};
 	var extend_rad = {{extend_rad|safe}};
 	var frame_end = {{frame_num|safe}};
+	var rmse_data={{rmse|safe}};//实际数据
+   	var rmse_base=new Array({{frame_num|safe}});
 	var counter=0;
+	var stopPos={{stopPos|safe}};//终止位置
+	var startPos={{startPos|safe}};//起始位置
    	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
+   	{
+   		rmse_base[i]=rmse_data[counter];
+   		counter++;
+   	}
+	counter=0;
+	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
    	{
    		ee_base[i]=ee_data[counter];
    		counter++;
    	}
-
-    var vadChartDictSeries={"spectral_entropy":ee_base,"rmse":{{rmse|safe}}};
+    var vadChartDictSeries={"spectral_entropy":ee_base,"rmse":rmse_base};
+	for(var i=0;i<stopPos.length;++i)
+	{
+		stopPos[i]+=Math.max(current_frame-extend_rad,0);
+		startPos[i]+=Math.max(current_frame-extend_rad,0);
+	}
+	console.log(stopPos);
     var vadChartDictLine={
-		"stopPos":{{stopPos|safe}},
-        "startPos":{{startPos|safe}}	
+		"stopPos":stopPos,
+        "startPos":startPos,
 	};
 
 	var start_pos = Math.max(0,current_frame-extend_rad);
@@ -292,8 +307,8 @@
 	//comb及combDescan用户提供的参考标记
 	var refChartDictSeries={"combDescan1":{{combDescanPrimary|safe}},"combdeScan2":{{combDescanSecondary|safe}},"comb":{{comb|safe}}};
     var refChartDictLine={
-		"stopPos":{{stopPos|safe}},
-        "startPos":{{startPos|safe}}	
+		"stopPos":stopPos,
+        "startPos":startPos,
 	};
 	var current_frame = {{current_frame|safe}};
 	var extend_rad = {{extend_rad|safe}};
@@ -465,5 +480,6 @@
     top_set("fingering");
     top_set("clips");
 </script>
+
 </body>
 </html>

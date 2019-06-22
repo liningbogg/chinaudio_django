@@ -28,7 +28,9 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
         chart: {
 	    	type: 'line',
             zoomType: 'xy', //xy方向均可缩放
-			animation: false
+            marginLeft: 80, // Keep all charts left aligned
+            marginRight: 80, // Keep all charts right aligned
+			animation: false,
         },
         boost: {
             useGPUTranslations: true
@@ -41,6 +43,7 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
 		},
         xAxis: {
             categories: indexArr.slice(start,end),
+           
             tickInterval:10
         },
 		yAxis: {

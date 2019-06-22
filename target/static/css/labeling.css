@@ -424,6 +424,11 @@ body,div
     border-color:green;
     display:table;
 	overflow-y:auto;
+	font-size:1rem;
+}
+.mark_clips input
+{
+    font-size:1rem;
 }
 /*clips显示和设置*/
 .clips{

@@ -656,9 +656,10 @@ class TargetView(View):
 
 		extend_rad = labelinfo.extend_rad
 		ee = self.wave_mem_spectrumEntropy.achieve(user_id, title, fs, nfft,
-												   max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
+												max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
 		ee = list(ee)
-		rmse = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, end)
+		rmse = self.wave_mem_rmse.achieve(user_id, title, fs, nfft,
+										max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
 		rmse = list(rmse)
 		vadrs = targetTools.vad(ee, rmse, thrartEE, thrartRmse, throp)
 
