@@ -73,6 +73,7 @@ body,div
     border-width:1px;
     border-style:solid;
     overflow-y:auto;
+    text-align:center;
 }
 .process table
 {
@@ -101,4 +102,5 @@ body,div
 {
     width:9%;
     font-size:20px;
+    text-align:center;
 }

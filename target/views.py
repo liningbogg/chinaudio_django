@@ -41,6 +41,7 @@ from target.targetTools import targetTools
 from baseFrqComb import BaseFrqDetector
 from scipy.interpolate import interp1d
 
+
 # 归一化函数
 def MaxMinNormalization(x, minv, maxv):
 	Min = np.min(x)
