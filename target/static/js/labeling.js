@@ -182,3 +182,30 @@ function sub_strings(title)
     console.log(test);
     console.log(test.rows[1].cells[1].getElementsByTagName("INPUT")[0].value);
 }
+
+/*算法选择触发函数*/
+function algorithm_selectFunc(algorithm_name,labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'algorithm_select/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name , true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = JSON.parse(xhr.response);
+            try{
+                var algorithm_string = "";
+                algorithm_string+="总帧数:"+context["frame_num"]+" 已处理:"+context["clips_num"];
+                algorithm_string+='  <input type="button" value="计算" onclick="cal_algorithm(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
+                document.getElementById('algorithm_opt').innerHTML=algorithm_string;
+            }catch(e)
+            {
+                console.log(e);
+            }
+
+        }
+    };
+}
+function cal_algorithm(algorithm_name,labeling_id)
+{
+    console.log(algorithm_name,labeling_id);
+}

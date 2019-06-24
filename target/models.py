@@ -33,7 +33,7 @@ class Clip(BaseModel):
         unique_together = ["title", "startingPos", "length", "create_user_id", "nfft"]
 
 
-class Algorithms_clips(BaseModel):
+class AlgorithmsClips(BaseModel):
     """
     算法形成的数据
     title:曲名
@@ -44,17 +44,15 @@ class Algorithms_clips(BaseModel):
     nfft:短时傅里叶帧长
     tar:标签
     """
-    title = models.CharField(max_length=255)
+    labeling =  models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
     algorithms = models.CharField(max_length=255)
     startingPos = models.IntegerField()
     length = models.IntegerField()
     tar = models.BinaryField(null=True)
     anote = models.CharField(max_length=255)
-    nfft = models.IntegerField()
-    fs = models.IntegerField()
 
     class Meta:
-        unique_together = ["title", "algorithms", "startingPos", "length", "create_user_id", "nfft"]
+        unique_together = ["labeling", "algorithms", "startingPos", "length"]
 
 
 class Labeling(BaseModel):

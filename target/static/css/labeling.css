@@ -133,59 +133,6 @@ body,div
     border-style:solid;
     border-color:green;
 }
-/*定弦设置*/
-.strings_set
-{
-    position:relative;
-    float:left;
-    display:table;
-	left:0%;
-    width:99%;
-    top:0%;
-    height:4%;
-    font-size:1rem;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
-    overflow-y:auto;
-    overflow-x:auto;
-}
-
-.strings_set tr td
-{
-    font-size:0.875rem;
-	line-height:1;
-	width:12%;
-}
-.strings_set tr td input
-{
-    width:98%;
-	table-layout:fixed;
-	font-size:0.875rem;
-	line-height:1;
-}
-
-/*提交定弦*/
-.sub_strings_set
-{
-    position:relative;
-    float:left;
-    display:table;
-	left:0%;
-    width:99%;
-    top:0%;
-    height:2%;
-    font-size:1rem;
-    style="border-width:1px; border-style:solid; border-color:blue;"
-    overflow-y:auto;
-    overflow-x:auto;
-}
-.sub_strings_set input
-{
-    font-size:1rem;
-	line-height:1;
-	width:100%;
-}
 
 /*定弦信息*/
 .strings_info
@@ -221,6 +168,7 @@ body,div
 	line-height:1;
 	width:10%;
 }
+
 
 /*标记参考，包括历史信息和当前帧指法推测*/
 .ref_info
@@ -308,6 +256,58 @@ body,div
     border-color:blue;
     overflow-y:auto;
 }
+/*算法预设数据生成*/
+.algorithm
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:100%;
+    top:0%;
+    height:2%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
+	overflow-y:auto;
+}
+.algorithm_select
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:40%;
+    top:0%;
+    height:100%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
+	overflow-y:auto;
+}
+.algorithm_select input
+{
+    font-size:1rem;
+    width:60%;
+}
+.algorithm_opt
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:1%;
+    width:59%;
+    top:0%;
+    height:100%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
+	overflow-y:auto;
+}
+.algorithm_opt input
+{
+    font-size:1rem;
+}
 /*参数信息*/
 .info
 {
@@ -346,6 +346,62 @@ body,div
 	font-size:1rem;
 	line-height:1;
 }
+
+/*定弦设置*/
+.strings_set
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:4%;
+    font-size:1rem;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+
+.strings_set tr td
+{
+    font-size:0.875rem;
+	line-height:1;
+	width:12%;
+}
+.strings_set tr td input
+{
+    width:98%;
+	table-layout:fixed;
+	font-size:0.875rem;
+	line-height:1;
+}
+
+/*提交定弦*/
+.sub_strings_set
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:0%;
+    width:99%;
+    top:0%;
+    height:2%;
+    font-size:1rem;
+    style="border-width:1px; border-style:solid; border-color:blue;"
+    overflow-y:auto;
+    overflow-x:auto;
+}
+.sub_strings_set input
+{
+    font-size:1rem;
+	line-height:1;
+	width:100%;
+}
+
+
 /*参考音高参数设置*/
 .ref_set
 {

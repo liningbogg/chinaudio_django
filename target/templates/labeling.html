@@ -41,6 +41,20 @@
 	</div>
 
 	<div class = "opt" name="opt" >
+		<div class="algorithm">
+			<div class="algorithm_select" >
+					算法选择<input type="text" id="algorithm_select" list="algorithm_list"
+							    onchange="algorithm_selectFunc(this.value,{{labeling_id|safe}})">
+				<datalist id="algorithm_list">
+					<option value="comb"></option>
+					<option value="combDescan"></option>
+				</datalist>
+			</div>
+			<div class="algorithm_opt" id="algorithm_opt">
+
+			</div>
+		</div>
+
 		<div class="info" id="info">
 			<table border="" class="table_info" id="table_info" >
 				<thead>

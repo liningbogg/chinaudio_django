@@ -772,7 +772,7 @@ class TargetView(View):
 					'startPos': list(vadrs['startPos']), 'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),
 					'filter_fft':list(filter_fft), 'current_tar':current_tar,"filter_rad":filter_rad,'a4_hz':a4_hz,
 					'string_hzes': string_hzes, 'string_notes': string_notes, 'string_do': string_do,'pitch_scaling':pitch_scaling,
-					"medium":list(medium),"current_frame":current_frame,"extend_rad":extend_rad,'play_fs':labelinfo.play_fs,
+					"medium":list(medium),"current_frame":current_frame,"extend_rad":extend_rad, "labeling_id":labelinfo.id, 'play_fs':labelinfo.play_fs,
 					"tone_extend_rad":tone_extend_rad, "frame_num":end, 'vad_thrart_EE':thrartEE,"clipsLocal": clipsLocal,
 					'vad_thrart_RMSE':thrartRmse, 'vad_throp_EE':throp, 'create_user_id':user_id,'possiblePos': possiblePos}
 
@@ -814,6 +814,19 @@ class TargetView(View):
 		except Exception as e:
 			print(e)
 			return None
+
+
+	@method_decorator(login_required)
+	def algorithm_select(self, request):
+		algorithms_name = request.GET.get('algorithm_name')
+		labeling_id = int(request.GET.get('labeling_id'))
+		print(labeling_id)
+		labeling = Labeling.objects.get(id=labeling_id)
+		clips = labeling.algorithmsclips_set.filter(algorithms=algorithms_name)
+		clips_num = clips.count()
+		frame_num = labeling.frameNum
+		context = {'clips_num': clips_num, 'frame_num': frame_num}
+		return HttpResponse(json.dumps(context))
 
 	@classmethod
 	@method_decorator(login_required)
@@ -959,9 +972,9 @@ class TargetView(View):
 				if request.user.has_perm('target.delete_clip'):  # 检查用户是否具有delete权限
 					item = Clip.objects.get(id=item_id)
 					item.delete()
-					status = class_name+ item_id + "已经被删除 ";
+					status = class_name+ item_id + "已经被删除 "
 				else:
-					rs = "err";
+					rs = "err"
 		return HttpResponse(rs)
 
 	@classmethod

@@ -43,6 +43,7 @@ urlpatterns = [
     path('wave/get_clipFFT/', target_view.get_clipfft),
     path('labeling/cal_pitch_pos/', target_view.cal_pitch_pos),
     path('labeling/filter_fft/', target_view.filter_fft),
+    path('labeling/algorithm_select/', target_view.algorithm_select),
     path('favicon.ico', serve, {'path': 'image/favicon.ico'}),
     url(r'^captcha', include('captcha.urls')),
     url('^$', target_view.index),
