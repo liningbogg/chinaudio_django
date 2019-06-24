@@ -44,7 +44,7 @@ class AlgorithmsClips(BaseModel):
     nfft:短时傅里叶帧长
     tar:标签
     """
-    labeling =  models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
+    labeling = models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
     algorithms = models.CharField(max_length=255)
     startingPos = models.IntegerField()
     length = models.IntegerField()

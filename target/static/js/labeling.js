@@ -194,8 +194,10 @@ function algorithm_selectFunc(algorithm_name,labeling_id)
             var context = JSON.parse(xhr.response);
             try{
                 var algorithm_string = "";
-                algorithm_string+="总帧数:"+context["frame_num"]+" 已处理:"+context["clips_num"];
+                algorithm_string+="总帧数:"+context["frame_num"]+" 已完成:"+context["clips_num"];
                 algorithm_string+='  <input type="button" value="计算" onclick="cal_algorithm(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
+                algorithm_string+='&nbsp<input type="button" value="清空" onclick="clear_algorithm(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
+                algorithm_string+='&nbsp<input type="button" value="刷新" onclick="algorithm_selectFunc(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
                 document.getElementById('algorithm_opt').innerHTML=algorithm_string;
             }catch(e)
             {
@@ -205,7 +207,63 @@ function algorithm_selectFunc(algorithm_name,labeling_id)
         }
     };
 }
+//计算某个算法的数据
 function cal_algorithm(algorithm_name,labeling_id)
 {
-    console.log(algorithm_name,labeling_id);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'algorithm_cal/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name , true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = JSON.parse(xhr.response);
+            try{
+                console.log(context)
+                alert(algorithm_name+"算法正在形成计算数据"+context["clips_num_oncreate"]+"条数据将被创建");
+            }catch(e)
+            {
+                console.log(e);
+            }
+
+        }
+    };
+}
+//清空labeling下某个算法的数据
+function clear_algorithm(algorithm_name,labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'algorithm_clear/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name , true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = JSON.parse(xhr.response);
+            try{
+                console.log(context)
+                alert(algorithm_name+"算法数据被清空,共删除"+context["clips_num_delete"]+"条数据");
+            }catch(e)
+            {
+                console.log(e);
+            }
+
+        }
+    };
+}
+
+/*算法配置选择*/
+function reference_selectFunc(algorithm_name,labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'reference_select/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name , true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = JSON.parse(xhr.response);
+            try{
+                //根据查询得到的配置情况，提供不同的显示界面
+            }catch(e)
+            {
+                console.log(e);
+            }
+
+        }
+    };
 }

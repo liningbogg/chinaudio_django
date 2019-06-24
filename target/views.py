@@ -31,6 +31,7 @@ from target.models import MarkedPhrase
 from target.models import Tone
 from target.models import Wave
 from target.models import Labeling
+from target.models import AlgorithmsClips
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
@@ -49,8 +50,9 @@ def MaxMinNormalization(x, minv, maxv):
 	y = (x - Min) / (Max - Min + 0.0000000001) * (maxv - minv) + minv
 	return y
 
+
 # filter by basefrq
-def filterByBasefrq(src, basefrq, width, nfft, fs):
+def filterByBase(src, basefrq, width, nfft, fs):
 	width = width*nfft/fs
 	basefrq = basefrq*nfft/fs
 	tar = np.copy(src)
@@ -205,11 +207,14 @@ class WaveMem:
 		"""
 		初始操作，包括轮询线程的启动
 		"""
-		self.container = {}  # 缓存容器
-		self.rwLock_container = RWLock()
-		thread = threading.Thread(target=self.supervisor)  # 创建监视线程
-		thread.setDaemon(True)	# 设置为守护线程， 一旦用户线程消失，此线程自动回收
-		thread.start()
+		try:
+			self.container = {}  # 缓存容器
+			self.rwLock_container = RWLock()
+			thread = threading.Thread(target=self.supervisor)  # 创建监视线程
+			thread.setDaemon(True)	# 设置为守护线程， 一旦用户线程消失，此线程自动回收
+			thread.start()
+		except Exception as e:
+			print(e)
 
 
 class WaveMemWave(WaveMem):
@@ -713,7 +718,7 @@ class TargetView(View):
 		current_clip = Clip.objects.get(title=title, create_user_id="combDescan", startingPos=current_frame)
 		current_tar = pickle.loads(current_clip.tar)[0]  # 当前帧主音高估计
 		if current_tar>40:
-			filter_fft = filterByBasefrq(srcFFT, current_tar, filter_rad, nfft, fs)  # 过滤后fft
+			filter_fft = filterByBase(srcFFT, current_tar, filter_rad, nfft, fs)  # 过滤后fft
 		else:
 			filter_fft = []
 		detectorDescan = BaseFrqDetector(True)  # 去扫描线算法
@@ -808,7 +813,7 @@ class TargetView(View):
 		try:
 			srcFFT=pickle.loads(Clip.objects.get(title=title, create_user_id="combDescan", startingPos=currentPos).src)
 			srcFFT[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
-			fft_filtered = filterByBasefrq(srcFFT, filter_frq, filter_width, nfft, fs)  # 过滤后fft
+			fft_filtered = filterByBase(srcFFT, filter_frq, filter_width, nfft, fs)  # 过滤后fft
 			fft_filtered=fft_filtered.tolist()
 			return HttpResponse(json.dumps(fft_filtered))
 		except Exception as e:
@@ -826,6 +831,79 @@ class TargetView(View):
 		clips_num = clips.count()
 		frame_num = labeling.frameNum
 		context = {'clips_num': clips_num, 'frame_num': frame_num}
+		return HttpResponse(json.dumps(context))
+
+	@method_decorator(login_required)
+	def algorithm_clear(self, request):
+		try:
+			algorithms_name = request.GET.get('algorithm_name')
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			clips_all = labeling.algorithmsclips_set.filter(algorithms=algorithms_name)
+			clips_num = clips_all.count()
+			clips_all.delete()
+		except Exception as e:
+			print(e)
+		context = {'clips_num_delete': clips_num}
+		return HttpResponse(json.dumps(context))
+
+	def algorithm_cal_thr(self,labeling_id,algorithms_name,group_num,group_id):
+		try:
+			labeling = Labeling.objects.get(id=labeling_id)
+			user_id = labeling.create_user_id
+			title = labeling.title
+			fs = labeling.play_fs
+			nfft = labeling.nfft
+			frameNum = labeling.frameNum
+			stft_arr = self.wave_mem_stft.achieve_Stft(user_id, title, fs, nfft, 0, frameNum)  # 短时傅里叶谱
+			rmse_arr = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, frameNum)  #　获取ｒｍｓｅ
+			max_num = int((frameNum-group_id-1)/group_num)+1  # 最大循环次数
+			for i in range(max_num):
+				index = i*group_num+group_id  # 要处理的帧ｉｄ
+				stft = np.copy(stft_arr[index])
+				stft[0:int(30*nfft/fs)] = 0  # 清零３０ｈｚ以下信号
+				if algorithms_name == "combDescan":
+					detector = BaseFrqDetector(True)  # 去扫描线算法
+				if algorithms_name == "comb":
+					detector = BaseFrqDetector(False)  # 不去扫描线算法
+				referencePitch = detector.getpitch(stft, fs, nfft, False)
+				referencePitchFiltered = 0  # 过滤后的ｓｔｆｔ
+
+				if referencePitch[0] > 65 and rmse_arr[index] > 0.1:
+					filteredSGN=filterByBase(stft, referencePitch[0], 30, nfft, fs)
+					Filtered = detector.getpitch(stft, fs, nfft, False)
+					referencePitchFiltered = Filtered[0]
+				tar = []  # 得到的ｐｉｔｃｈ
+				tar.append(referencePitch[0])
+				tar.append(referencePitchFiltered)
+				algorithm_clip = AlgorithmsClips(labeling=labeling, algorithms=algorithms_name,
+												 startingPos=index, length=1, tar=pickle.dumps(tar))
+				algorithm_clip.save()
+
+		except Exception as e:
+			print(e)
+
+	@method_decorator(login_required)
+	def algorithm_cal(self, request):
+		try:
+			algorithms_name = request.GET.get('algorithm_name')
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			clips_all = labeling.algorithmsclips_set.filter(algorithms=algorithms_name)
+			clips_num = clips_all.count()
+			clips_all.delete()
+			print("删除数据"+str(algorithms_name)+str(clips_num)+"条")
+			# 创建数据
+			clips_num_oncreate=labeling.frameNum  # 需要创建数据总条目
+			# 创建数据处理线程,线程数＝４
+			thread_num = 4
+			for i in range(thread_num):
+				thread = threading.Thread(target=self.algorithm_cal_thr, args=(labeling_id,algorithms_name,thread_num, i))  # 创建监视线程
+				thread.setDaemon(True)  # 设置为守护线程， 一旦用户线程消失，此线程自动回收
+				thread.start()
+		except Exception as e:
+			print(e)
+		context = {'clips_num_oncreate': clips_num_oncreate}
 		return HttpResponse(json.dumps(context))
 
 	@classmethod

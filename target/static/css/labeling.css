@@ -287,7 +287,7 @@ body,div
 }
 .algorithm_select input
 {
-    font-size:1rem;
+    font-size:0.875rem;
     width:60%;
 }
 .algorithm_opt
@@ -306,8 +306,62 @@ body,div
 }
 .algorithm_opt input
 {
-    font-size:1rem;
+    font-size:0.875rem;
 }
+
+/*算法配置*/
+.reference
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:100%;
+    top:0%;
+    height:2%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
+	overflow-y:auto;
+}
+.reference_select
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:40%;
+    top:0%;
+    height:100%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:blue;
+	overflow-y:auto;
+}
+.reference_select input
+{
+    font-size:0.875rem;
+    width:60%;
+}
+.reference_opt
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:1%;
+    width:59%;
+    top:0%;
+    height:100%;
+    border-width:0.0625rem;
+    border-style:solid;
+    border-color:red;
+	overflow-y:auto;
+}
+.reference_opt input
+{
+    font-size:0.875rem;
+}
+
 /*参数信息*/
 .info
 {

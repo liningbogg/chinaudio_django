@@ -43,7 +43,7 @@
 	<div class = "opt" name="opt" >
 		<div class="algorithm">
 			<div class="algorithm_select" >
-					算法选择<input type="text" id="algorithm_select" list="algorithm_list"
+					算法计算<input type="text" id="algorithm_select" list="algorithm_list" placeholder="算法名称"　onfocus="this.value=''"　
 							    onchange="algorithm_selectFunc(this.value,{{labeling_id|safe}})">
 				<datalist id="algorithm_list">
 					<option value="comb"></option>
@@ -51,6 +51,19 @@
 				</datalist>
 			</div>
 			<div class="algorithm_opt" id="algorithm_opt">
+
+			</div>
+		</div>
+		<div class="reference">
+			<div class="reference_select" >
+					算法配置<input type="text" id="reference_select" list="reference_list" placeholder="算法名称"　onfocus="this.value=''"　
+							    onchange="reference_selectFunc(this.value,{{labeling_id|safe}})">
+				<datalist id="reference_list">
+					<option value="comb"></option>
+					<option value="combDescan"></option>
+				</datalist>
+			</div>
+			<div class="reference_opt" id="reference_opt">
 
 			</div>
 		</div>
