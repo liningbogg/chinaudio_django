@@ -73,11 +73,11 @@ class Labeling(BaseModel):
         unique_together = ["title", "create_user_id", "nfft"]
 
 
-class labeling_algorithms_conf(BaseModel):
+class LabelingAlgorithmsConf(BaseModel):
     labeling =  models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
     algorithms = models.CharField(max_length=255)  # 对应的算法
     is_filter = models.BooleanField(default=True)  # 是否采纳过滤后的频率
-    anote = models.CharField(max_length=255)  # 注释
+    anote = models.CharField(max_length=255,null=True)  # 注释
     class Meta:
         unique_together = ["labeling", "algorithms"]
 

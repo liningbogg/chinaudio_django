@@ -43,12 +43,11 @@
 	<div class = "opt" name="opt" >
 		<div class="algorithm">
 			<div class="algorithm_select" >
-					算法计算<input type="text" id="algorithm_select" list="algorithm_list" placeholder="算法名称"　onfocus="this.value=''"　
-							    onchange="algorithm_selectFunc(this.value,{{labeling_id|safe}})">
-				<datalist id="algorithm_list">
-					<option value="comb"></option>
-					<option value="combDescan"></option>
-				</datalist>
+					算法计算
+				<select id="algorithm_select" onclick="algorithm_selectFunc(this.value,{{labeling_id|safe}})">
+  					<option value="comb">comb</option>
+  					<option value="combDescan">combDescan</option>
+				</select>
 			</div>
 			<div class="algorithm_opt" id="algorithm_opt">
 
@@ -56,12 +55,12 @@
 		</div>
 		<div class="reference">
 			<div class="reference_select" >
-					算法配置<input type="text" id="reference_select" list="reference_list" placeholder="算法名称"　onfocus="this.value=''"　
-							    onchange="reference_selectFunc(this.value,{{labeling_id|safe}})">
-				<datalist id="reference_list">
-					<option value="comb"></option>
-					<option value="combDescan"></option>
-				</datalist>
+					算法配置
+				<select id="reference_select"  onclick="reference_selectFunc(this.value,{{labeling_id|safe}})">
+  					<option value="comb">comb</option>
+  					<option value="combDescan">combDescan</option>
+				</select>
+
 			</div>
 			<div class="reference_opt" id="reference_opt">
 
@@ -215,16 +214,15 @@
 				<input type="number" id="play_end" onfocus="if(this.value==this.defaultValue){this.value=''}"
 					   onblur="if(this.value==''){this.value=this.defaultValue}"  placeholder="终止帧"/>
 				fs
-				<input type="number" id="play_fs" onfocus="this.value=''"
-					   onblur="if(this.value==''){this.value=this.defaultValue}" value={{play_fs|safe}}
-					   placeholder="采样率" list="play_fs_list"/>
-				<datalist id="play_fs_list">
-					<option value="44100"></option>
-					<option value="22050"></option>
-					<option value="13230"></option>
-					<option value="8820"></option>
-					<option value="4410"></option>
-				</datalist>
+				<select id="play_fs" value={{play_fs|safe}}>
+  					<option value="44100">44100</option>
+  					<option value="22050">22050</option>
+					<option value="13230">13230</option>
+  					<option value="8820">8820</option>
+					<option value="44100">44100</option>
+  					<option value="4410">4410</option>
+				</select>
+
 				<input type="button" id="sub_play_clips" style="float:right;width:22%"
 					   onclick="play_clips('{{title|safe}}',{{nfft|safe}})" value="播放">
 		</div>

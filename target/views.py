@@ -32,6 +32,7 @@ from target.models import Tone
 from target.models import Wave
 from target.models import Labeling
 from target.models import AlgorithmsClips
+from target.models import LabelingAlgorithmsConf
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
@@ -540,7 +541,7 @@ class TargetView(View):
 					chin = Chin()
 					chin.set_ahz(440)
 					wave=Wave(create_user_id=user_id,title=wave_name,waveFile=file_name, frameNum=frameNum, duration=duration,
-							  chin=pickle.dumps(chin), stft=pickle.dumps(speech_stft), fs=stream_fs,nfft=nfft,completion=0)
+							  chin=pickle.dumps(chin), fs=stream_fs,nfft=nfft,completion=0)
 					wave.save()
 					print(wave)
 					return "success"
@@ -906,6 +907,34 @@ class TargetView(View):
 		context = {'clips_num_oncreate': clips_num_oncreate}
 		return HttpResponse(json.dumps(context))
 
+	@method_decorator(login_required)
+	def reference_select(self, request):
+		algorithms_name = request.GET.get('algorithm_name')
+		labeling_id = int(request.GET.get('labeling_id'))
+		labeling = Labeling.objects.get(id=labeling_id)
+		algorithmsClips = labeling.labelingalgorithmsconf_set.filter(algorithms=algorithms_name)
+		algorithms_num = algorithmsClips.count()
+		context = {'algorithms_num': algorithms_num}
+		return HttpResponse(json.dumps(context))
+
+	@method_decorator(login_required)
+	def addReference(self, request):
+		try:
+			algorithms_name = request.GET.get('algorithm_name')
+			labeling_id = int(request.GET.get('labeling_id'))
+			isFilter = int(request.GET.get('isFilter'))
+			if isFilter == 0:
+				isFilter = False
+			if isFilter == 1:
+				isFilter = True
+			labeling = Labeling.objects.get(id=labeling_id)
+			newLabelingAlgorithmsConf = LabelingAlgorithmsConf(labeling=labeling, algorithms=algorithms_name, is_filter=isFilter)
+			newLabelingAlgorithmsConf.save()
+			print(newLabelingAlgorithmsConf)
+		except Exception as e:
+			print(e)
+
+		return HttpResponse("reference added done")
 	@classmethod
 	@method_decorator(login_required)
 	def wave_view(cls, request):

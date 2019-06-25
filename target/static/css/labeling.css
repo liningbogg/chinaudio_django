@@ -267,6 +267,7 @@ body,div
     top:0%;
     height:2%;
     border-width:0.0625rem;
+    font-size:0.875rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
@@ -281,11 +282,17 @@ body,div
     top:0%;
     height:100%;
     border-width:0.0625rem;
+    font-size:0.875rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
 }
 .algorithm_select input
+{
+    font-size:0.875rem;
+    width:60%;
+}
+.algorithm_select select
 {
     font-size:0.875rem;
     width:60%;
@@ -300,6 +307,7 @@ body,div
     top:0%;
     height:100%;
     border-width:0.0625rem;
+    font-size:0.875rem;
     border-style:solid;
     border-color:red;
 	overflow-y:auto;
@@ -320,6 +328,7 @@ body,div
     top:0%;
     height:2%;
     border-width:0.0625rem;
+    font-size:0.875rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
@@ -334,11 +343,17 @@ body,div
     top:0%;
     height:100%;
     border-width:0.0625rem;
+    font-size:0.875rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
 }
 .reference_select input
+{
+    font-size:0.875rem;
+    width:60%;
+}
+.reference_select select
 {
     font-size:0.875rem;
     width:60%;
@@ -353,6 +368,7 @@ body,div
     top:0%;
     height:100%;
     border-width:0.0625rem;
+    font-size:0.875rem;
     border-style:solid;
     border-color:red;
 	overflow-y:auto;
@@ -360,6 +376,13 @@ body,div
 .reference_opt input
 {
     font-size:0.875rem;
+    width:25%;
+}
+.reference_opt select
+{
+    font-size:0.875rem;
+    height:90%;
+    width:25%;
 }
 
 /*参数信息*/
@@ -516,6 +539,13 @@ body,div
 	overflow-y:auto;
 }
 .play_clips input
+{
+    width:17%;
+	table-layout:fixed;
+	font-size:0.875rem;
+	line-height:1;
+}
+.play_clips select
 {
     width:17%;
 	table-layout:fixed;

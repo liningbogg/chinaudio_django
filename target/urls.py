@@ -46,6 +46,8 @@ urlpatterns = [
     path('labeling/algorithm_select/', target_view.algorithm_select),
     path('labeling/algorithm_clear/', target_view.algorithm_clear),
     path('labeling/algorithm_cal/', target_view.algorithm_cal),
+    path('labeling/reference_select/', target_view.reference_select),
+    path('labeling/addReference/', target_view.addReference),
     path('favicon.ico', serve, {'path': 'image/favicon.ico'}),
     url(r'^captcha', include('captcha.urls')),
     url('^$', target_view.index),

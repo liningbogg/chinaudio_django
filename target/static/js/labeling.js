@@ -247,6 +247,26 @@ function clear_algorithm(algorithm_name,labeling_id)
         }
     };
 }
+/*添加参考算法数据*/
+function add_reference(algorithm_name,labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    var isFilter = document.getElementById('add_reference_select').value;
+    xhr.open('GET', 'addReference/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name+"&isFilter="+isFilter , true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
+
+        }
+    };
+}
 
 /*算法配置选择*/
 function reference_selectFunc(algorithm_name,labeling_id)
@@ -259,6 +279,19 @@ function reference_selectFunc(algorithm_name,labeling_id)
             var context = JSON.parse(xhr.response);
             try{
                 //根据查询得到的配置情况，提供不同的显示界面
+                var algorithm_num=context["algorithms_num"];
+                console.log(algorithm_num)
+                if(algorithm_num<1){
+                    //显示添加
+                    var div_string='<select id="add_reference_select"><option value="1">过滤</option><option value="0">不过滤</option></select>';
+                    div_string+='&nbsp&nbsp&nbsp<input type="button" value="添加" onclick="add_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
+                    document.getElementById('reference_opt').innerHTML=div_string;
+                }else{
+                    //显示重置　删除
+                    var div_string='<select><option value="1">过滤</option><option value="0">不过滤</option></select>';
+                    div_string+='&nbsp&nbsp&nbsp<input type="button" value="删除"/>';
+                    document.getElementById('reference_opt').innerHTML=div_string;
+                }
             }catch(e)
             {
                 console.log(e);
