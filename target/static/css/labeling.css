@@ -267,7 +267,7 @@ body,div
     top:0%;
     height:2%;
     border-width:0.0625rem;
-    font-size:0.875rem;
+    font-size:0.75rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
@@ -282,19 +282,19 @@ body,div
     top:0%;
     height:100%;
     border-width:0.0625rem;
-    font-size:0.875rem;
+    font-size:0.75rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
 }
 .algorithm_select input
 {
-    font-size:0.875rem;
+    font-size:0.75rem;
     width:60%;
 }
 .algorithm_select select
 {
-    font-size:0.875rem;
+    font-size:0.75rem;
     width:60%;
 }
 .algorithm_opt
@@ -307,14 +307,14 @@ body,div
     top:0%;
     height:100%;
     border-width:0.0625rem;
-    font-size:0.875rem;
+    font-size:0.75rem;
     border-style:solid;
     border-color:red;
 	overflow-y:auto;
 }
 .algorithm_opt input
 {
-    font-size:0.875rem;
+    font-size:0.75rem;
 }
 
 /*算法配置*/
@@ -324,11 +324,11 @@ body,div
 	float:left;
 	display:table;
 	left:0%;
-    width:100%;
+    width:80%;
     top:0%;
     height:2%;
     border-width:0.0625rem;
-    font-size:0.875rem;
+    font-size:0.75rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
@@ -339,52 +339,70 @@ body,div
 	float:left;
 	display:table;
 	left:0%;
-    width:40%;
+    width:50%;
     top:0%;
     height:100%;
     border-width:0.0625rem;
-    font-size:0.875rem;
+    font-size:0.75rem;
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
 }
-.reference_select input
-{
-    font-size:0.875rem;
-    width:60%;
-}
+
 .reference_select select
 {
-    font-size:0.875rem;
+    font-size:0.75rem;
+    height:90%;
     width:60%;
 }
 .reference_opt
 {
     position:relative;
 	float:left;
-	display:table;
 	left:1%;
-    width:59%;
+    width:48%;
     top:0%;
     height:100%;
     border-width:0.0625rem;
-    font-size:0.875rem;
+    font-size:0.625rem;
     border-style:solid;
     border-color:red;
 	overflow-y:auto;
 }
 .reference_opt input
 {
-    font-size:0.875rem;
-    width:25%;
+    font-size:0.625rem;
+    display:table-row;
+    height:95%;
 }
 .reference_opt select
 {
-    font-size:0.875rem;
+    font-size:0.625rem;
+    display:table-row;
     height:90%;
-    width:25%;
-}
 
+}
+.cal_stft
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:1%;
+    width:10%;
+    top:0%;
+    height:2%;
+    border-width:0.0625rem;
+    font-size:0.625rem;
+    border-style:solid;
+    border-color:green;
+	overflow-y:auto;
+}
+.cal_stft input
+{
+    font-size:0.625rem;
+    height:90%;
+    width:98%;
+}
 /*参数信息*/
 .info
 {
@@ -394,7 +412,7 @@ body,div
 	left:0%;
     width:99%;
     top:0%;
-    height:40%;
+    height:30%;
     border-width:0.0625rem;
     border-style:solid;
     border-color:red;
@@ -416,6 +434,7 @@ body,div
 	font-size:1rem;
 	line-height:1;
 	width:50%;
+	height:99%;
 }
 .table_info tr td input{
 	width:98%;
@@ -589,10 +608,12 @@ body,div
 }
 .clips tr td{
     width:12%;
+    font-size:0.875rem;
 }
 .clips tr td input
 {
-    width:99%;
+    width:96%;
+    height:100%;
     font-size:0.875rem;
 }
 .add_tone{
@@ -620,6 +641,11 @@ body,div
     border-style:solid;
     border-color:blue;
 	overflow-y:auto;
+}
+.add_tone_table_div table tr td input{
+    width:100%;
+    height:95%;
+    font-size:0.875rem;
 }
 .add_tone_table_div table{
     width:99%;

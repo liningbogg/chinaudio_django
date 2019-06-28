@@ -5,7 +5,6 @@
     <title>数据：{{title}}</title>
     <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
-    <script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>
     <script src="/static/js/labeling.js?time='+new Date().getTime()+'"></script>
     <link href="/static/css/labeling.css?time='+new Date().getTime()+'" rel="stylesheet" type="text/css" />
 
@@ -62,11 +61,14 @@
 				</select>
 
 			</div>
-			<div class="reference_opt" id="reference_opt">
+			<div class="reference_opt" id="reference_opt" >
 
 			</div>
-		</div>
 
+		</div>
+		<div class="cal_stft" id="cal_stft">
+			<input type="button" value="计算stft输入" onclick="cal_Stft({{labeling_id|safe}})">
+		</div>
 		<div class="info" id="info">
 			<table border="" class="table_info" id="table_info" >
 				<thead>
@@ -141,6 +143,12 @@
 						<input type="text" readonly="true" id="create_user_id" value={{create_user_id|safe}} />
 					</td>
 				</tr>
+				<tr>
+					<td>primary_ref</td>
+					<td>
+						<input type="text" readonly="true" id="primary_ref" value={{primary_ref|safe}} />
+					</td>
+				</tr>
 			</table>
 		</div>
 		<div class="strings_set" id="strings_set">
@@ -204,7 +212,7 @@
 				<input type="number" id="filter_width" onfocus="if(this.value==this.defaultValue){this.value=''}"
 					   onblur="if(this.value==''){this.value=this.defaultValue}" value={{filter_rad|safe}} placeholder="fft过滤宽度设置"/>
 				<input type="button" id="sub_filter_opt" style="float:right"
-					   onclick="filter_fft({{srcFFT|safe}},'{{title|safe}}',{{current_frame|safe}},{{nfft|safe}},{{fs|safe}})" value="重新过滤">
+					   onclick="filter_fft({{srcFFT|safe}},'{{title|safe}}',{{current_frame|safe}},{{nfft|safe}},{{fs|safe}},{{labeling_id|safe}})" value="重新过滤">
 		</div>
 		<div class="play_clips" id="play_clips" >
 				start
@@ -248,30 +256,30 @@
 					</tr>
 					<tr>
 						<td style="width:16%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%;font-size:0.875rem"/>
 						</td>
 						<td style="width:16%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%"/>
 						</td>
 						<td style="width:16%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%"/>
 						</td>
 						<td style="width:48%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%"/>
 						</td>
 					</tr>
 					<tr>
 						<td style="width:16%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%"/>
 						</td>
 						<td style="width:16%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%"/>
 						</td>
 						<td style="width:16%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%"/>
 						</td>
 						<td style="width:48%;">
-							<input type="number" style="width:100%;"/>
+							<input type="number" style="width:100%;height:95%"/>
 						</td>
 					</tr>
 				</table>
@@ -315,7 +323,6 @@
 		stopPos[i]+=Math.max(current_frame-extend_rad,0);
 		startPos[i]+=Math.max(current_frame-extend_rad,0);
 	}
-	console.log(stopPos);
     var vadChartDictLine={
 		"stopPos":stopPos,
         "startPos":startPos,
@@ -330,8 +337,37 @@
 </script>
 <script>
 	//comb及combDescan用户提供的参考标记
-	var refChartDictSeries={"combDescan1":{{combDescanPrimary|safe}},"combdeScan2":{{combDescanSecondary|safe}},"comb":{{comb|safe}}};
-    var refChartDictLine={
+	var current_frame = {{current_frame|safe}};
+	var extend_rad = {{extend_rad|safe}};
+	var frame_end = {{frame_num|safe}};
+	var reference_ori={{reference|safe}};  // 原始数据
+	var reference_tar=new Array();
+	for (key in reference_ori)
+	{
+		reference_tar[key]=new Array({{frame_num|safe}});
+		var counter=0;
+		for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
+   		{
+   			reference_tar[key][i]=reference_ori[key][counter];
+   			counter++;
+   		}
+	}
+
+	var refChartDictSeries = reference_tar;
+	/*
+	var rmse_data={{rmse|safe}};//实际数据
+   	var rmse_base=new Array({{frame_num|safe}});
+	var counter=0;
+	var stopPos={{stopPos|safe}};//终止位置
+	var startPos={{startPos|safe}};//起始位置
+   	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
+   	{
+   		rmse_base[i]=rmse_data[counter];
+   		counter++;
+   	}
+	*/
+
+	var refChartDictLine={
 		"stopPos":stopPos,
         "startPos":startPos,
 	};
@@ -343,14 +379,27 @@
 	var end_pos = Math.max(0,current_frame+extend_rad);
 	end_pos = Math.min(end_pos,frame_end);
     addChart("",refChartDictSeries,refChartDictLine, current_frame,"local_pitch",start_pos,end_pos);
+
 </script>
 <script>
 	//已标记音高信息
-	var targetArr={{target|safe}};
-	var targetChartDictSeries={"target1":targetArr[0],"target2":targetArr[1],"target3":targetArr[2]};
+	var targetArr_ori={{target|safe}};
+	var targetArr_tar=new Array();
+	for (key in targetArr_ori)
+	{
+		targetArr_tar[key]=new Array({{frame_num|safe}});
+		var counter=0;
+		for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
+   		{
+   			targetArr_tar[key][i]=targetArr_ori[key][counter];
+   			counter++;
+   		}
+	}
+	console.log(targetArr_tar);
+	var targetChartDictSeries={"target1":targetArr_tar[0],"target2":targetArr_tar[1],"target3":targetArr_tar[2]};
     var targetChartDictLine={
-		"stopPos":{{stopPos|safe}},
-        "startPos":{{startPos|safe}}	
+		"stopPos":stopPos,
+        "startPos":startPos
 	};
 	var current_frame = {{current_frame|safe}};
 	var extend_rad = {{extend_rad|safe}};

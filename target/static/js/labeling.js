@@ -118,13 +118,13 @@ function cal_pitch_pos(title)
 }
 
 //重新过滤ｆｆｔ
-function filter_fft(srcFFT,title,currentPos,nfft,fs)
+function filter_fft(srcFFT,title,currentPos,nfft,fs,labeling_id)
 {
     var filter_frq=document.getElementById('filter_frq').value;
     var filter_width=document.getElementById('filter_width').value;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'filter_fft/?'+"title="+title+"&currentPos="+currentPos +"&nfft="+nfft +"&fs="+fs
-        +"&filter_frq="+filter_frq+"&filter_width="+filter_width, true);
+        +"&filter_frq="+filter_frq+"&filter_width="+filter_width+"&labeling_id="+labeling_id, true);
     xhr.send(null);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
@@ -268,6 +268,63 @@ function add_reference(algorithm_name,labeling_id)
     };
 }
 
+/*删除参考算法数据*/
+function del_reference(algorithm_name,labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'delReference/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name , true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
+        }
+    };
+}
+
+/*设置主要参考音高*/
+function set_primary(algorithm_name,labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'setPrimary/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
+        }
+    };
+}
+
+/*更改算法是否过滤*/
+function set_refFilter(algorithm_name,labeling_id)
+{
+    isFilter=document.getElementById("del_reference_select").value;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'setRefFilter/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name+"&isFilter="+isFilter, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
+        }
+    };
+}
 /*算法配置选择*/
 function reference_selectFunc(algorithm_name,labeling_id)
 {
@@ -280,16 +337,17 @@ function reference_selectFunc(algorithm_name,labeling_id)
             try{
                 //根据查询得到的配置情况，提供不同的显示界面
                 var algorithm_num=context["algorithms_num"];
-                console.log(algorithm_num)
                 if(algorithm_num<1){
                     //显示添加
                     var div_string='<select id="add_reference_select"><option value="1">过滤</option><option value="0">不过滤</option></select>';
                     div_string+='&nbsp&nbsp&nbsp<input type="button" value="添加" onclick="add_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     document.getElementById('reference_opt').innerHTML=div_string;
+
                 }else{
                     //显示重置　删除
-                    var div_string='<select><option value="1">过滤</option><option value="0">不过滤</option></select>';
-                    div_string+='&nbsp&nbsp&nbsp<input type="button" value="删除"/>';
+                    var div_string='<select id="del_reference_select" onchange="set_refFilter(\''+algorithm_name+'\',\''+labeling_id+'\')"'+'><option value="1">过滤</option><option value="0">不过滤</option></select>';
+                    div_string+='&nbsp<input type="button" value="删除" onclick="del_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
+                    div_string+='&nbsp<input type="button" value="设置主参考" onclick="set_primary(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     document.getElementById('reference_opt').innerHTML=div_string;
                 }
             }catch(e)
@@ -297,6 +355,24 @@ function reference_selectFunc(algorithm_name,labeling_id)
                 console.log(e);
             }
 
+        }
+    };
+}
+/*重新计算stft作为输入*/
+function cal_Stft(labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'calStft/?'+"labeling_id="+labeling_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
         }
     };
 }

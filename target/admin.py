@@ -5,6 +5,7 @@ from target.models import Log
 from target.models import MarkedPhrase
 from target.models import Tone
 from target.models import Wave
+from target.models import Stft
 from target.models import LabelingAlgorithmsConf
 
 # Register your models here.
@@ -13,4 +14,5 @@ admin.site.register(Tone)
 admin.site.register(MarkedPhrase)
 admin.site.register(Wave)
 admin.site.register(Log)
+admin.site.register(Stft)
 admin.site.register(LabelingAlgorithmsConf)

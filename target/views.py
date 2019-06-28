@@ -1,4 +1,5 @@
 # coding = utf-8
+import sys
 import json
 import pickle
 import smtplib
@@ -623,14 +624,12 @@ class TargetView(View):
 
 	@method_decorator(login_required)
 	def labeling(self, request):
-
 		title = request.GET.get('title')
 		user_id = str(request.user)
 		wave = Wave.objects.get(create_user_id=user_id, title=title)
 		fs = wave.fs
 		nfft = wave.nfft
 		end = wave.frameNum
-
 		try:
 			labelinfo = Labeling.objects.get(create_user_id=user_id, title=title)
 		except Exception as e:
@@ -640,7 +639,6 @@ class TargetView(View):
 		thrartEE = labelinfo.vad_thrart_EE
 		thrartRmse = labelinfo.vad_thrart_RMSE
 		throp = labelinfo.vad_throp_EE
-
 		tone_extend_rad = labelinfo.tone_extend_rad
 		manual_pos= labelinfo.manual_pos
 		if manual_pos<0:
@@ -672,69 +670,76 @@ class TargetView(View):
 		# 收集tones
 		tones_start = max(current_frame-tone_extend_rad, 0)
 		tones_end = min(current_frame+tone_extend_rad, wave.frameNum)
-		tones_local_set = Tone.objects.filter(title=title,create_user_id=user_id, pos__range=(tones_start,tones_end))
+		tones_local_set = Tone.objects.filter(title=title,create_user_id=user_id, pos__range=(tones_start,tones_end-1))
 		tones_local = serializers.serialize("json", tones_local_set)
 		# comb及combDescan音高参考
-		combRef=np.zeros(wave.frameNum)
-		combDescanRef=[[0] * wave.frameNum, [0] * wave.frameNum]
-		time_start = time.time()
-		try:
-			clips = Clip.objects.filter(title=title, create_user_id="combDescan",
-										startingPos__range=(current_frame-extend_rad, current_frame+extend_rad))
-			for clip in clips:
-				pos=clip.startingPos
-				tar=pickle.loads(clip.tar)
-				index=0
-				for pitch in tar:
-					combDescanRef[index][pos]=pitch
-					index=index+1
-			clips = Clip.objects.filter(title=title, create_user_id="comb",
-										startingPos__range=(current_frame-extend_rad, current_frame+extend_rad))
+		reference = {}  # 算法支撑数据
+		labelingalgorithmsconf = labelinfo.labelingalgorithmsconf_set.all()  # 算法支持数据配置
+		start_ref = max(current_frame - extend_rad, 0)  # 起始位置
+		end_ref = min(current_frame + extend_rad, end)  # 终止位置
+		for algorithmsConf in labelingalgorithmsconf:
+			reference_name = algorithmsConf.algorithms
+			local_reference_clips = labelinfo.algorithmsclips_set.filter(algorithms=reference_name, startingPos__range=(current_frame-extend_rad, current_frame+extend_rad-1))
+			primary_arr = np.zeros(end_ref-start_ref)  # 算法主数据
+			for reference_clip in local_reference_clips:
+				primary_arr[reference_clip.startingPos-tones_start]=pickle.loads(reference_clip.tar)[0]
+			reference.update({reference_name: list(primary_arr)})
+			if algorithmsConf.is_filter is True:
+				reference_name=reference_name+"_filter"
+				filter_arr = np.zeros(end_ref - start_ref)  # 算法主数据
+				for reference_clip in local_reference_clips:
+					filter_arr[reference_clip.startingPos-tones_start] = pickle.loads(reference_clip.tar)[1]
+				reference.update({reference_name: list(filter_arr)})
 
-			for clip in clips:
-				pos=clip.startingPos
-				tar=pickle.loads(clip.tar)
-				combRef[pos]=tar[0]				
-		except Exception as e:
-			print(e)
-		# 已标记音高
-		time_end = time.time()
-		print(time_end - time_start)
-		target = [[0] * wave.frameNum, [0] * wave.frameNum, [0] * wave.frameNum]  # 存储前三个音高的二维数组
+		target = [[0] * (end_ref-start_ref), [0] * (end_ref-start_ref), [0] * (end_ref-start_ref)]  # 存储前三个音高的二维数组
 		try:
-			clips = Clip.objects.filter(title=title, create_user_id=request.user, startingPos__lt=wave.frameNum)
+			clips = Clip.objects.filter(title=title, create_user_id=request.user,
+										startingPos__range=(current_frame-extend_rad, current_frame+extend_rad-1))
 			for clip in clips:
 				pos=clip.startingPos
 				tar=pickle.loads(clip.tar)
 				index=0
 				for pitch in tar:
-					target[index][pos] = pitch
+					target[index][pos-tones_start] = pitch
 					index = index+1
 		except Exception as e:
 			print(e)
 		# fft及中间结果
-		srcFFT=pickle.loads(Clip.objects.get(title=title, create_user_id="combDescan",startingPos=current_frame).src) 
-		srcFFT[0:int(30*nfft/fs)]=0 # 清空30hz以下信号
-		filter_rad = labelinfo.filter_rad  # 过滤带宽半径
-		current_clip = Clip.objects.get(title=title, create_user_id="combDescan", startingPos=current_frame)
-		current_tar = pickle.loads(current_clip.tar)[0]  # 当前帧主音高估计
-		if current_tar>40:
-			filter_fft = filterByBase(srcFFT, current_tar, filter_rad, nfft, fs)  # 过滤后fft
-		else:
+		try:
+			srcFFT=pickle.loads(labelinfo.stft_set.get(startingPos=current_frame, length=1).src)
+			srcFFT[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
+			filter_rad = labelinfo.filter_rad  # 过滤带宽半径
+			current_clip = labelinfo.algorithmsclips_set.get(algorithms=labelinfo.primary_ref, startingPos=current_frame,length=1)
+			current_tar = pickle.loads(current_clip.tar)[0]  # 当前帧主音高估计
+			if current_tar > 40:
+				filter_fft = filterByBase(srcFFT, current_tar, filter_rad, nfft, fs)  # 过滤后fft
+				filter_fft = [round(i, 2) for i in filter_fft]
+			else:
+				filter_fft = []
+			detectorDescan = BaseFrqDetector(True)  # 去扫描线算法
+			pitchCombDescan = detectorDescan.getpitch(srcFFT, fs, nfft, False)
+			medium = pitchCombDescan[2]
+
+			# 重新采样(降低采样)
+			isResampling = labelinfo.medium_resampling
+			if isResampling is True:
+				processingX = np.arange(0, len(medium))
+				len_processingX = len(processingX)
+				processingY = medium
+				finterp = interp1d(processingX, processingY, kind="linear")
+				x_pred = np.linspace(0, processingX[len_processingX - 1] * 1.0,
+									 int(processingX[len_processingX - 1] / 10) + 1)
+				resamplingY = finterp(x_pred)
+				medium = resamplingY
+				srcFFT = [round(i, 4) for i in srcFFT]
+				medium = [round(i, 4) for i in medium]
+		except Exception as e:
+			medium = []
+			srcFFT = []
 			filter_fft = []
-		detectorDescan = BaseFrqDetector(True)  # 去扫描线算法
-		pitchCombDescan=detectorDescan.getpitch(srcFFT, fs, nfft, False)
-		medium=pitchCombDescan[2]
-		# 重新采样(降低采样)
-		isResampling = labelinfo.medium_resampling
-		if isResampling is True:
-			processingX=np.arange(0,len(medium))
-			len_processingX=len(processingX)
-			processingY=medium
-			finterp = interp1d(processingX,processingY,kind="linear")
-			x_pred = np.linspace(0, processingX[len_processingX-1]*1.0, int(processingX[len_processingX-1]/10)+1)
-			resamplingY=finterp(x_pred)
-			medium=resamplingY
+			current_tar = 0
+			filter_rad = 0
+			print(e)
 
 		# 可能的位置
 		if wave.chin is not None:
@@ -766,19 +771,18 @@ class TargetView(View):
 		else:
 			possiblePos = "尚未设置chin信息"
 		clipsLocalOri=Clip.objects.filter(title=title, create_user_id=user_id,
-							startingPos__range=(current_frame-extend_rad, current_frame+extend_rad))
+							startingPos__range=(current_frame-extend_rad, current_frame+extend_rad-1))
 		clipsLocal=[]
 		for clip in clipsLocalOri:
 			clipsLocal.append({"id": clip.id, "startingPos":clip.startingPos,
 									"length": clip.length, "tar": list(pickle.loads(clip.tar))})
 
 		context = {'title': title,'fs':fs,'nfft': nfft, 'ee': ee, 'rmse': rmse, 'stopPos': list(vadrs['stopPos']),
-					'manual_pos':manual_pos, 'combDescanPrimary':list(combDescanRef[0]), 'tones_local':tones_local,
-					'combDescanSecondary':list(combDescanRef[1]), 'comb':list(combRef),'target':target,
-					'startPos': list(vadrs['startPos']), 'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),
+					'manual_pos':manual_pos, 'tones_local':tones_local, 'target':target, 'reference': reference,'primary_ref':labelinfo.primary_ref,
+					'startPos': list(vadrs['startPos']), 'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),"medium":list(medium),
 					'filter_fft':list(filter_fft), 'current_tar':current_tar,"filter_rad":filter_rad,'a4_hz':a4_hz,
 					'string_hzes': string_hzes, 'string_notes': string_notes, 'string_do': string_do,'pitch_scaling':pitch_scaling,
-					"medium":list(medium),"current_frame":current_frame,"extend_rad":extend_rad, "labeling_id":labelinfo.id, 'play_fs':labelinfo.play_fs,
+					"current_frame":current_frame,"extend_rad":extend_rad, "labeling_id":labelinfo.id, 'play_fs':labelinfo.play_fs,
 					"tone_extend_rad":tone_extend_rad, "frame_num":end, 'vad_thrart_EE':thrartEE,"clipsLocal": clipsLocal,
 					'vad_thrart_RMSE':thrartRmse, 'vad_throp_EE':throp, 'create_user_id':user_id,'possiblePos': possiblePos}
 
@@ -807,20 +811,22 @@ class TargetView(View):
 		title = request.GET.get('title')
 		user_id = str(request.user)
 		currentPos = int(request.GET.get('currentPos'))
+		labeling_id = int(request.GET.get('labeling_id'))
 		filter_frq = float(request.GET.get('filter_frq'))
 		filter_width = float(request.GET.get('filter_width'))
 		nfft = int(request.GET.get('nfft'))
 		fs = int(request.GET.get('fs'))
 		try:
-			srcFFT=pickle.loads(Clip.objects.get(title=title, create_user_id="combDescan", startingPos=currentPos).src)
+			labeling = Labeling.objects.get(id=labeling_id)
+			srcFFT=pickle.loads(labeling.stft_set.get(startingPos=currentPos, length=1).src)
 			srcFFT[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
 			fft_filtered = filterByBase(srcFFT, filter_frq, filter_width, nfft, fs)  # 过滤后fft
 			fft_filtered=fft_filtered.tolist()
+			fft_filtered=[round(i, 2) for i in fft_filtered]
 			return HttpResponse(json.dumps(fft_filtered))
 		except Exception as e:
 			print(e)
 			return None
-
 
 	@method_decorator(login_required)
 	def algorithm_select(self, request):
@@ -930,11 +936,71 @@ class TargetView(View):
 			labeling = Labeling.objects.get(id=labeling_id)
 			newLabelingAlgorithmsConf = LabelingAlgorithmsConf(labeling=labeling, algorithms=algorithms_name, is_filter=isFilter)
 			newLabelingAlgorithmsConf.save()
-			print(newLabelingAlgorithmsConf)
 		except Exception as e:
 			print(e)
+		return HttpResponse("reference added ")
 
-		return HttpResponse("reference added done")
+	# 删除算法支持数据配置
+	@method_decorator(login_required)
+	def delReference(self, request):
+		try:
+			algorithms_name = request.GET.get('algorithm_name')
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			labelingAlgorithmsConf = labeling.labelingalgorithmsconf_set.get(algorithms=algorithms_name)
+			labelingAlgorithmsConf.delete()
+		except Exception as e:
+			print(e)
+		return HttpResponse("reference deleted ")
+
+	@method_decorator(login_required)
+	def calStft(self, request):
+		try:
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			all_stft = labeling.stft_set
+			frameNum = labeling.frameNum
+			start = time.time()
+			stft_arr = self.wave_mem_stft.achieve_Stft(labeling.create_user_id, labeling.title, labeling.fs, labeling.nfft, 0, frameNum)  # 短时傅里叶谱
+			end = time.time()
+			print(end-start)
+			for i in range(frameNum):
+				all_stft.update_or_create(startingPos=i, length=1, labeling=labeling, defaults={'src': pickle.dumps(stft_arr[i])})
+		except Exception as e:
+			print(e)
+			return HttpResponse("STFT ERR")
+		return HttpResponse("STFT calculated ")
+
+	@method_decorator(login_required)
+	def setPrimary(self, request):
+		try:
+			algorithms_name = request.GET.get('algorithm_name')
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			labeling.primary_ref = algorithms_name
+			labeling.save()
+		except Exception as e:
+			print(e)
+		return HttpResponse("primary seted ")
+
+	@method_decorator(login_required)
+	def setRefFilter(self, request):
+		try:
+			algorithms_name = request.GET.get('algorithm_name')
+			labeling_id = int(request.GET.get('labeling_id'))
+			isFilter = int(request.GET.get('isFilter'))
+			if isFilter == 0:
+				isFilter = False
+			if isFilter == 1:
+				isFilter = True
+			labeling = Labeling.objects.get(id=labeling_id)
+			labeling_conf = labeling.labelingalgorithmsconf_set.get(algorithms=algorithms_name)
+			labeling_conf.is_filter = isFilter
+			labeling_conf.save()
+		except Exception as e:
+			print(e)
+		return HttpResponse("primary filter configure seted ")
+
 	@classmethod
 	@method_decorator(login_required)
 	def wave_view(cls, request):
