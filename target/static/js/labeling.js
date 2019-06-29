@@ -345,7 +345,7 @@ function reference_selectFunc(algorithm_name,labeling_id)
 
                 }else{
                     //显示重置　删除
-                    var div_string='<select id="del_reference_select" onchange="set_refFilter(\''+algorithm_name+'\',\''+labeling_id+'\')"'+'><option value="1">过滤</option><option value="0">不过滤</option></select>';
+                    var div_string='<select id="del_reference_select" onclick="set_refFilter(\''+algorithm_name+'\',\''+labeling_id+'\')"'+'><option value="1">过滤</option><option value="0">不过滤</option></select>';
                     div_string+='&nbsp<input type="button" value="删除" onclick="del_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     div_string+='&nbsp<input type="button" value="设置主参考" onclick="set_primary(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     document.getElementById('reference_opt').innerHTML=div_string;

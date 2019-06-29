@@ -26,23 +26,7 @@
   <component name="ChangeListManager">
     <list default="true" id="8acc8f02-be45-420d-812a-1c53fb213d8d" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pitch/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/pitch/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/migrations/0001_initial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0002_auto_20190619_1129.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0003_labeling_medium_resampling.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0004_algorithms_clips_labeling_algorithms_conf.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0005_auto_20190623_1426.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0006_algorithmsclips_status.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0007_remove_algorithmsclips_status.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0008_auto_20190625_0412.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/migrations/0009_auto_20190625_1530.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/static/css/labeling.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/static/css/labeling.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/static/js/labeling.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/static/js/labeling.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/templates/labeling.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/templates/labeling.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/views.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -55,11 +39,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/target/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="419">
-              <caret line="734" column="36" selection-start-line="734" selection-start-column="35" selection-end-line="734" selection-end-column="36" />
+            <state relative-caret-position="1433">
+              <caret line="214" column="37" selection-start-line="214" selection-start-column="31" selection-end-line="214" selection-end-column="37" />
               <folding>
                 <element signature="e#17#27#0" expanded="true" />
               </folding>
@@ -68,10 +52,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pitch/settings.py">
+        <entry file="file://$PROJECT_DIR$/../.PyCharmCE2019.1/system/python_stubs/-1247971762/builtins.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="965">
-              <caret line="126" column="29" selection-start-line="126" selection-start-column="29" selection-end-line="126" selection-end-column="29" />
+            <state relative-caret-position="711">
+              <caret line="774" column="8" selection-start-line="774" selection-start-column="8" selection-end-line="774" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -100,7 +84,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="687">
+            <state relative-caret-position="1305">
               <caret line="87" column="13" selection-start-line="87" selection-start-column="4" selection-end-line="87" selection-end-column="13" />
             </state>
           </provider>
@@ -109,8 +93,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1190">
-              <caret line="344" selection-start-line="344" selection-end-line="344" />
+            <state relative-caret-position="243">
+              <caret line="308" column="12" lean-forward="true" selection-start-line="308" selection-start-column="12" selection-end-line="308" selection-end-column="12" />
             </state>
           </provider>
         </entry>
@@ -118,7 +102,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/pitch/urls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
+            <state relative-caret-position="285">
               <caret line="20" column="36" selection-start-line="20" selection-start-column="36" selection-end-line="20" selection-end-column="36" />
               <folding>
                 <element signature="e#629#661#0" expanded="true" />
@@ -130,8 +114,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/static/css/labeling.css">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="721">
-              <caret line="398" column="1" lean-forward="true" selection-start-line="398" selection-start-column="1" selection-end-line="398" selection-end-column="1" />
+            <state relative-caret-position="5970">
+              <caret line="398" column="1" selection-start-line="398" selection-start-column="1" selection-end-line="398" selection-end-column="1" />
             </state>
           </provider>
         </entry>
@@ -139,8 +123,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/urls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="795">
-              <caret line="53" column="61" lean-forward="true" selection-start-line="53" selection-start-column="61" selection-end-line="53" selection-end-column="61" />
+            <state relative-caret-position="735">
+              <caret line="54" column="62" selection-start-line="54" selection-start-column="62" selection-end-line="54" selection-end-column="62" />
               <folding>
                 <element signature="e#634#670#0" expanded="true" />
               </folding>
@@ -148,11 +132,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="825">
-              <caret line="354" selection-start-line="354" selection-end-line="354" />
+            <state relative-caret-position="5205">
+              <caret line="347" column="22" selection-start-line="347" selection-start-column="22" selection-end-line="347" selection-end-column="22" />
               <folding>
                 <element signature="n#style#0;n#td#3;n#tr#0;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#td#0;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
@@ -181,7 +165,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>stft</find>
       <find>Stft</find>
       <find>输入</find>
       <find>输</find>
@@ -211,6 +194,7 @@
       <find>startingPos__range</find>
       <find>info</find>
       <find>filter_fft</find>
+      <find>set_refFilter</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -274,8 +258,8 @@
         <option value="$PROJECT_DIR$/target/models.py" />
         <option value="$PROJECT_DIR$/target/views.py" />
         <option value="$PROJECT_DIR$/target/static/css/labeling.css" />
-        <option value="$PROJECT_DIR$/target/static/js/labeling.js" />
         <option value="$PROJECT_DIR$/target/templates/labeling.html" />
+        <option value="$PROJECT_DIR$/target/static/js/labeling.js" />
       </list>
     </option>
   </component>
@@ -565,6 +549,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="792" y="589" width="2560" height="1400" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Structure" order="0" sideWeight="0.37391305" side_tool="true" weight="0.15181866" />
       <window_info id="Favorites" order="1" sideWeight="0.37173578" side_tool="true" weight="0.1213778" />
@@ -686,7 +671,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///usr/lib/python3.5/multiprocessing/pool.py" />
     <entry file="file://$PROJECT_DIR$/../.PyCharmCE2018.3/system/python_stubs/-1247971764/numpy/core/_multiarray_umath.py" />
     <entry file="file://$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml">
       <provider selected="true" editor-type-id="text-editor" />
@@ -939,6 +923,13 @@
     <entry file="file://$PROJECT_DIR$/target/apps.py">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/pitch/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1890">
+          <caret line="126" column="29" selection-start-line="126" selection-start-column="29" selection-end-line="126" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/../.local/lib/python3.7/site-packages/django/db/models/query.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="7755">
@@ -956,19 +947,16 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/urls.py">
+    <entry file="file://$PROJECT_DIR$/target/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="795">
-          <caret line="53" column="61" lean-forward="true" selection-start-line="53" selection-start-column="61" selection-end-line="53" selection-end-column="61" />
-          <folding>
-            <element signature="e#634#670#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="1305">
+          <caret line="87" column="13" selection-start-line="87" selection-start-column="4" selection-end-line="87" selection-end-column="13" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pitch/urls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
+        <state relative-caret-position="285">
           <caret line="20" column="36" selection-start-line="20" selection-start-column="36" selection-end-line="20" selection-end-column="36" />
           <folding>
             <element signature="e#629#661#0" expanded="true" />
@@ -976,48 +964,27 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pitch/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="965">
-          <caret line="126" column="29" selection-start-line="126" selection-start-column="29" selection-end-line="126" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="687">
-          <caret line="87" column="13" selection-start-line="87" selection-start-column="4" selection-end-line="87" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="419">
-          <caret line="734" column="36" selection-start-line="734" selection-start-column="35" selection-end-line="734" selection-end-column="36" />
-          <folding>
-            <element signature="e#17#27#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/target/static/css/labeling.css">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="721">
-          <caret line="398" column="1" lean-forward="true" selection-start-line="398" selection-start-column="1" selection-end-line="398" selection-end-column="1" />
+        <state relative-caret-position="5970">
+          <caret line="398" column="1" selection-start-line="398" selection-start-column="1" selection-end-line="398" selection-end-column="1" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
+    <entry file="file://$PROJECT_DIR$/target/urls.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1190">
-          <caret line="344" selection-start-line="344" selection-end-line="344" />
+        <state relative-caret-position="735">
+          <caret line="54" column="62" selection-start-line="54" selection-start-column="62" selection-end-line="54" selection-end-column="62" />
+          <folding>
+            <element signature="e#634#670#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="825">
-          <caret line="354" selection-start-line="354" selection-end-line="354" />
+        <state relative-caret-position="5205">
+          <caret line="347" column="22" selection-start-line="347" selection-start-column="22" selection-end-line="347" selection-end-column="22" />
           <folding>
             <element signature="n#style#0;n#td#3;n#tr#0;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#td#0;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
@@ -1029,6 +996,30 @@
             <element signature="n#style#0;n#input#0;n#td#1;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#input#0;n#td#2;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#input#0;n#td#3;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="243">
+          <caret line="308" column="12" lean-forward="true" selection-start-line="308" selection-start-column="12" selection-end-line="308" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../.PyCharmCE2019.1/system/python_stubs/-1247971762/builtins.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="711">
+          <caret line="774" column="8" selection-start-line="774" selection-start-column="8" selection-end-line="774" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1433">
+          <caret line="214" column="37" selection-start-line="214" selection-start-column="31" selection-end-line="214" selection-end-column="37" />
+          <folding>
+            <element signature="e#17#27#0" expanded="true" />
           </folding>
         </state>
       </provider>
