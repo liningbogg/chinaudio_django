@@ -3,7 +3,7 @@ from __future__ import print_function
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
-
+import time
 from findPeaks import findpeaks
 
 '''
@@ -167,7 +167,6 @@ class BaseFrqDetector:
     @staticmethod
     def getbaselinefromscan(desamp, num):
         """
-
         :param desamp: 梳状曲线
         :param num: 恢复采样数量,插值数量
         :return: 基线向量
@@ -226,11 +225,9 @@ class BaseFrqDetector:
         :param showtestview:是否显示figure
         :return:频率,插值采样后的输入,梳状统计向量
         """
+        start = time.clock()
         dataclip[0:int(30 * nfft / fs)] = 0
         dataclip = BaseFrqDetector.subpeak_amplimiting(dataclip, int(30.0 / fs * nfft), 0.1)  # 次峰限幅
-        if self.showtestview:
-            plt.subplot(231)
-            plt.plot(np.arange(len(dataclip)), dataclip, label='amp-frq')
         lowcutoff = int(32.5 * 441000.0 / fs)  # 最低截止频率对应的坐标
         highcutoff = int(1400 * 441000.0 / fs)  # 最高截止频率对应的坐标
         peaksearchpixes = int(3 * 441000 / fs)  # 寻峰间距
@@ -244,45 +241,28 @@ class BaseFrqDetector:
                              int(processingx[lenprocessingx - 1] * 441000 / nfft) + 1)
         resampy = finterp(x_pred)
         lenresampy = len(resampy)
-        if self.showtestview == 1:
-            plt.subplot(232)
-            plt.plot(np.arange(len(resampy)), resampy, label='rs_Amp-frq')
 
         # pixes=10
         num = highcutoff  # 栅栏变换后的长度
         combtrans = np.zeros(num)  # 存放栅栏变换的结果
-
         # 梳状变换, 2019-03-10 16:54:45
-
-        for k in np.arange(1, highcutoff, 1):
-            combtrans[k] = sum([resampy[i] for i in np.arange(0, lenresampy - 1, k)])
-        if self.showtestview == 1:
-            plt.subplot(233)
-            plt.plot(np.arange(len(combtrans)), combtrans, label='combtrans')
+        print(type(resampy))
+        for k in np.arange(lowcutoff, highcutoff, 1):
+            combtrans[k] = sum(resampy[::k])
 
         # 如果有去扫描参数,则去扫描
         if self.isdescan is True:
             # 用于降低采样
             desamp = [combtrans[m] for m in np.arange(0, len(combtrans), 10)]  # 10倍数降采样
             desamp[0] = np.max(desamp)
-            if self.showtestview == 1:
-                plt.subplot(234)
-                plt.plot(np.arange(len(desamp)), desamp, label='Dscombtrans')
             baseline = BaseFrqDetector.getbaselinefromscan(desamp, num)  # 通过扫描线算法求基准曲线
-            if self.showtestview == 1:
-                plt.subplot(235)
-                plt.plot(np.arange(len(baseline)), baseline, label='baseline')
             truetrans = combtrans-baseline
         else:
             truetrans = combtrans
-
         truetrans[0:lowcutoff] = 0
-        if self.showtestview == 1:
-            plt.subplot(236)
-            plt.plot(np.arange(len(truetrans)), truetrans, label='truetrans')
+
         if sum(dataclip) < 1:
             return [0 / 10.0, resampy, truetrans]
-
         # 频率采样变换后寻峰
         combtranspeaks = findpeaks(truetrans, spacing=peaksearchpixes, limit=max(truetrans) * peaksearchamp)
         peaks = truetrans[combtranspeaks]  # 峰值大小
@@ -290,7 +270,6 @@ class BaseFrqDetector:
             return [0 / 10.0, resampy, truetrans]
         maxindex = np.argmax(peaks)
         maxfrq = combtranspeaks[maxindex]  # 最高峰值位置
-
         # 寻找1hz以内的最大的峰
         combthr = 6 * 441000 / fs  # 寻峰宽度
         decthr = 0.65  # 递减阈值
@@ -303,7 +282,4 @@ class BaseFrqDetector:
             else:
                 continue
         pitch = prebasefrq
-        if self.showtestview == 1:
-            plt.scatter(combtranspeaks, truetrans[combtranspeaks], color='', marker='o', edgecolors='r', s=100)
-            plt.show()
         return [pitch / 10.0, resampy, truetrans]

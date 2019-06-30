@@ -32,7 +32,9 @@ from target.models import MarkedPhrase
 from target.models import Tone
 from target.models import Wave
 from target.models import Labeling
+from target.models import Stft
 from target.models import AlgorithmsClips
+from target.models import AlgorithmsMediums
 from target.models import LabelingAlgorithmsConf
 from .forms import RegisterForm
 from chin import Chin
@@ -44,6 +46,7 @@ from target.targetTools import targetTools
 from baseFrqComb import BaseFrqDetector
 from scipy.interpolate import interp1d
 
+import multiprocessing
 
 # 归一化函数
 def MaxMinNormalization(x, minv, maxv):
@@ -213,7 +216,7 @@ class WaveMem:
 			self.container = {}  # 缓存容器
 			self.rwLock_container = RWLock()
 			thread = threading.Thread(target=self.supervisor)  # 创建监视线程
-			thread.setDaemon(True)	# 设置为守护线程， 一旦用户线程消失，此线程自动回收
+			thread.setDaemon(True)  # 设置为守护线程， 一旦用户线程消失，此线程自动回收
 			thread.start()
 		except Exception as e:
 			print(e)
@@ -355,30 +358,25 @@ class WaveMemSpectrumEntropy(WaveMem):
 						# 尝试从数据库获取wave.ee
 						try:
 							wave = Wave.objects.get(create_user_id=user_id, title=title)
-							if wave.ee is None or wave.ee == [] or len(wave.ee) < (wave.frameNum/2):
-								# 不存在
-								stft_ori = self.waveMem_stft.achieve_Stft(user_id, title, fs, nfft, 0, wave.frameNum)
-								stft_ori = np.transpose(stft_ori)  # stft转置
-								# 计算谱熵
-								stft_for_ee = np.copy(stft_ori[0:np.int(nfft / fs * 4000)])  # 4000hz以下信号用于音高检测
-								speech_stft_Enp = stft_for_ee[1:-1]
-								speech_stft_prob = speech_stft_Enp / np.sum(speech_stft_Enp, axis=0)
-								spectrum_entropy = np.sum(-np.log(speech_stft_prob) * speech_stft_prob, axis=0)
-								spectrum_entropy = MaxMinNormalization(spectrum_entropy, 0, 1)
-								pass
-							else:
-								# 存在
-								spectrum_entropy = pickle.loads(wave.ee)
-								pass
+							stft_ori = self.waveMem_stft.achieve_Stft(user_id, title, fs, nfft, 0, wave.frameNum)
+							stft_ori = np.transpose(stft_ori)  # stft转置
+
+							# 计算谱熵
+							stft_for_ee = np.copy(stft_ori[0:np.int(nfft / fs * 4000)])  # 4000hz以下信号用于音高检测
+							speech_stft_Enp = stft_for_ee[1:-1]
+							speech_stft_prob = speech_stft_Enp / (np.sum(speech_stft_Enp, axis=0)+0.00000000000000001)
+							spectrum_entropy = np.sum(-np.log(speech_stft_prob+0.0000000000000001) * speech_stft_prob, axis=0)
+							spectrum_entropy = MaxMinNormalization(spectrum_entropy, 0, 1)
+							wave.ee = pickle.dumps(spectrum_entropy)
+							wave.save(update_fields=["ee"])
+
 						except Exception as e:
 							print(e)
 						finally:
 							# 获取
 							wave = Wave.objects.get(create_user_id=user_id, title=title)
-							if wave.ee is None or wave.ee == [] or len(wave.ee)<(wave.frameNum/2):
-								wave.ee = pickle.dumps(spectrum_entropy)
-								wave.save(update_fields=["ee"])
-							pass
+							wave.ee = pickle.dumps(spectrum_entropy)
+							wave.save(update_fields=["ee"])
 						# 此处的stft仅仅为了求谱熵等，因此不需要特别长的生存时间，谱熵缓存可设置长一点
 						mem_item = MemItem_spectrum_entropy(user_id=user_id, title=title, fs=fs, nfft=nfft,
 															timestamp=datetime.now(), spectrum_entropy=spectrum_entropy,
@@ -467,6 +465,29 @@ class WaveMemRmse(WaveMem):
 		finally:
 			self.rwLock_container.rlock.release()
 		return sub_rmse
+
+
+def algorithm_cal_async(labeling, detector, stft, rmse, fs, nfft, algorithms_name, currentPos):
+	try:
+		referencePitch = detector.getpitch(stft, fs, nfft, False)
+		referencePitchFiltered = 0  # 过滤后的ｓｔｆｔ
+
+		if referencePitch[0] > 65 and rmse > 0.1:
+			filteredSGN=filterByBase(stft, referencePitch[0], 30, nfft, fs)
+			Filtered = detector.getpitch(stft, fs, nfft, False)
+			referencePitchFiltered = Filtered[0]
+		tar = []  # 得到的ｐｉｔｃｈ
+		tar.append(referencePitch[0])
+		tar.append(referencePitchFiltered)
+		algorithm_clip = AlgorithmsClips(labeling=labeling, algorithms=algorithms_name,
+										startingPos=currentPos, length=1, tar=pickle.dumps(tar))
+		algorithm_clip.save()
+		algorithm_medium = AlgorithmsMediums(labeling=labeling, algorithms=algorithms_name,
+										startingPos=currentPos, length=1, medium=pickle.dumps(referencePitch[2]))
+		algorithm_medium.save()
+	except Exception as e:
+		print(e)
+
 
 # Create your views here.
 class TargetView(View):
@@ -624,6 +645,7 @@ class TargetView(View):
 
 	@method_decorator(login_required)
 	def labeling(self, request):
+		start = time.clock()
 		title = request.GET.get('title')
 		user_id = str(request.user)
 		wave = Wave.objects.get(create_user_id=user_id, title=title)
@@ -641,6 +663,7 @@ class TargetView(View):
 		throp = labelinfo.vad_throp_EE
 		tone_extend_rad = labelinfo.tone_extend_rad
 		manual_pos= labelinfo.manual_pos
+		print([time.clock()-start, 667])
 		if manual_pos<0:
 			# 计算位置
 			clips = Clip.objects.filter(title=title, create_user_id=request.user,nfft=nfft)
@@ -657,21 +680,24 @@ class TargetView(View):
 			pass			
 		labelinfo.current_frame=current_frame
 		labelinfo.save()
-
+		print([time.clock() - start, 684])
 		extend_rad = labelinfo.extend_rad
 		ee = self.wave_mem_spectrumEntropy.achieve(user_id, title, fs, nfft,
 												max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
+		print([max(current_frame-extend_rad,0), min(current_frame+extend_rad, end)])
 		ee = list(ee)
 		rmse = self.wave_mem_rmse.achieve(user_id, title, fs, nfft,
 										max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
 		rmse = list(rmse)
+		print(rmse)
 		vadrs = targetTools.vad(ee, rmse, thrartEE, thrartRmse, throp)
-
+		print([time.clock() - start, 693])
 		# 收集tones
 		tones_start = max(current_frame-tone_extend_rad, 0)
 		tones_end = min(current_frame+tone_extend_rad, wave.frameNum)
-		tones_local_set = Tone.objects.filter(title=title,create_user_id=user_id, pos__range=(tones_start,tones_end-1))
+		tones_local_set = Tone.objects.filter(title=title, create_user_id=user_id, pos__range=(tones_start,tones_end-1))
 		tones_local = serializers.serialize("json", tones_local_set)
+		print([time.clock() - start, 698])
 		# comb及combDescan音高参考
 		reference = {}  # 算法支撑数据
 		labelingalgorithmsconf = labelinfo.labelingalgorithmsconf_set.all()  # 算法支持数据配置
@@ -690,7 +716,7 @@ class TargetView(View):
 				for reference_clip in local_reference_clips:
 					filter_arr[reference_clip.startingPos-tones_start] = pickle.loads(reference_clip.tar)[1]
 				reference.update({reference_name: list(filter_arr)})
-
+		print([time.clock() - start, 717])
 		target = [[0] * (end_ref-start_ref), [0] * (end_ref-start_ref), [0] * (end_ref-start_ref)]  # 存储前三个音高的二维数组
 		try:
 			clips = Clip.objects.filter(title=title, create_user_id=request.user,
@@ -704,22 +730,22 @@ class TargetView(View):
 					index = index+1
 		except Exception as e:
 			print(e)
+		print([time.clock() - start, 731])
 		# fft及中间结果
 		try:
 			srcFFT=pickle.loads(labelinfo.stft_set.get(startingPos=current_frame, length=1).src)
 			srcFFT[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
 			filter_rad = labelinfo.filter_rad  # 过滤带宽半径
-			current_clip = labelinfo.algorithmsclips_set.get(algorithms=labelinfo.primary_ref, startingPos=current_frame,length=1)
+			current_clip = labelinfo.algorithmsclips_set.get(algorithms=labelinfo.primary_ref,
+															 startingPos=current_frame,length=1)
 			current_tar = pickle.loads(current_clip.tar)[0]  # 当前帧主音高估计
 			if current_tar > 40:
 				filter_fft = filterByBase(srcFFT, current_tar, filter_rad, nfft, fs)  # 过滤后fft
 				filter_fft = [round(i, 2) for i in filter_fft]
 			else:
 				filter_fft = []
-			detectorDescan = BaseFrqDetector(True)  # 去扫描线算法
-			pitchCombDescan = detectorDescan.getpitch(srcFFT, fs, nfft, False)
-			medium = pitchCombDescan[2]
-
+			medium = pickle.loads(labelinfo.algorithmsmediums_set.get(algorithms=labelinfo.primary_ref,
+															  startingPos=current_frame,length=1).medium)
 			# 重新采样(降低采样)
 			isResampling = labelinfo.medium_resampling
 			if isResampling is True:
@@ -740,7 +766,7 @@ class TargetView(View):
 			current_tar = 0
 			filter_rad = 0
 			print(e)
-
+		print([time.clock() - start, 767])
 		# 可能的位置
 		if wave.chin is not None:
 			# 获得chin class
@@ -776,7 +802,7 @@ class TargetView(View):
 		for clip in clipsLocalOri:
 			clipsLocal.append({"id": clip.id, "startingPos":clip.startingPos,
 									"length": clip.length, "tar": list(pickle.loads(clip.tar))})
-
+		print([time.clock() - start, 803])
 		context = {'title': title,'fs':fs,'nfft': nfft, 'ee': ee, 'rmse': rmse, 'stopPos': list(vadrs['stopPos']),
 					'manual_pos':manual_pos, 'tones_local':tones_local, 'target':target, 'reference': reference,'primary_ref':labelinfo.primary_ref,
 					'startPos': list(vadrs['startPos']), 'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),"medium":list(medium),
@@ -854,41 +880,16 @@ class TargetView(View):
 		context = {'clips_num_delete': clips_num}
 		return HttpResponse(json.dumps(context))
 
-	def algorithm_cal_thr(self,labeling_id,algorithms_name,group_num,group_id):
-		try:
-			labeling = Labeling.objects.get(id=labeling_id)
-			user_id = labeling.create_user_id
-			title = labeling.title
-			fs = labeling.play_fs
-			nfft = labeling.nfft
-			frameNum = labeling.frameNum
-			stft_arr = self.wave_mem_stft.achieve_Stft(user_id, title, fs, nfft, 0, frameNum)  # 短时傅里叶谱
-			rmse_arr = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, frameNum)  #　获取ｒｍｓｅ
-			max_num = int((frameNum-group_id-1)/group_num)+1  # 最大循环次数
-			for i in range(max_num):
-				index = i*group_num+group_id  # 要处理的帧ｉｄ
-				stft = np.copy(stft_arr[index])
-				stft[0:int(30*nfft/fs)] = 0  # 清零３０ｈｚ以下信号
-				if algorithms_name == "combDescan":
-					detector = BaseFrqDetector(True)  # 去扫描线算法
-				if algorithms_name == "comb":
-					detector = BaseFrqDetector(False)  # 不去扫描线算法
-				referencePitch = detector.getpitch(stft, fs, nfft, False)
-				referencePitchFiltered = 0  # 过滤后的ｓｔｆｔ
-
-				if referencePitch[0] > 65 and rmse_arr[index] > 0.1:
-					filteredSGN=filterByBase(stft, referencePitch[0], 30, nfft, fs)
-					Filtered = detector.getpitch(stft, fs, nfft, False)
-					referencePitchFiltered = Filtered[0]
-				tar = []  # 得到的ｐｉｔｃｈ
-				tar.append(referencePitch[0])
-				tar.append(referencePitchFiltered)
-				algorithm_clip = AlgorithmsClips(labeling=labeling, algorithms=algorithms_name,
-												 startingPos=index, length=1, tar=pickle.dumps(tar))
-				algorithm_clip.save()
-
-		except Exception as e:
-			print(e)
+	def algorithm_cal_thread(self,labeling, detector, clips_num_oncreate, stft_arr, rmse_arr, fs, nfft, algorithms_name):
+		thread_num = 4
+		pool = multiprocessing.Pool(processes=thread_num)
+		for i in range(clips_num_oncreate):
+			stft = np.copy(stft_arr[i])
+			stft[0:int(30 * nfft / fs)] = 0  # 清零３０ｈｚ以下信号
+			pool.apply_async(algorithm_cal_async,
+							 args=(labeling, detector, stft, rmse_arr[i], fs, nfft, algorithms_name, i,))
+		pool.close()
+		pool.join()
 
 	@method_decorator(login_required)
 	def algorithm_cal(self, request):
@@ -899,15 +900,29 @@ class TargetView(View):
 			clips_all = labeling.algorithmsclips_set.filter(algorithms=algorithms_name)
 			clips_num = clips_all.count()
 			clips_all.delete()
-			print("删除数据"+str(algorithms_name)+str(clips_num)+"条")
+			print("删除算法参考数据"+str(algorithms_name)+str(clips_num)+"条")
+			medium_all = labeling.algorithmsmediums_set.filter(algorithms=algorithms_name)
+			medium_num = medium_all.count()
+			medium_all.delete()
+			print("删除算法中间结果" + str(algorithms_name) + str(clips_num) + "条")
 			# 创建数据
 			clips_num_oncreate=labeling.frameNum  # 需要创建数据总条目
-			# 创建数据处理线程,线程数＝４
-			thread_num = 4
-			for i in range(thread_num):
-				thread = threading.Thread(target=self.algorithm_cal_thr, args=(labeling_id,algorithms_name,thread_num, i))  # 创建监视线程
-				thread.setDaemon(True)  # 设置为守护线程， 一旦用户线程消失，此线程自动回收
-				thread.start()
+			user_id = labeling.create_user_id
+			title = labeling.title
+			fs = labeling.fs
+			nfft = labeling.nfft
+			stft_arr = self.wave_mem_stft.achieve_Stft(user_id, title, fs, nfft, 0, clips_num_oncreate)  # 短时傅里叶谱
+			rmse_arr = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, clips_num_oncreate)  # 获取ｒｍｓｅ
+			if algorithms_name == "combDescan":
+				detector = BaseFrqDetector(True)  # 去扫描线算法
+			if algorithms_name == "comb":
+				detector = BaseFrqDetector(False)  # 不去扫描线算法
+			thread = threading.Thread(target=self.algorithm_cal_thread,
+									  args=(labeling, detector, clips_num_oncreate, stft_arr, rmse_arr, fs, nfft, algorithms_name))  # 创建监视线程
+			thread.setDaemon(True)  # 设置为守护线程， 一旦用户线程消失，此线程自动回收
+			thread.start()
+
+
 		except Exception as e:
 			print(e)
 		context = {'clips_num_oncreate': clips_num_oncreate}
@@ -958,14 +973,15 @@ class TargetView(View):
 		try:
 			labeling_id = int(request.GET.get('labeling_id'))
 			labeling = Labeling.objects.get(id=labeling_id)
-			all_stft = labeling.stft_set
+			labeling.stft_set.all().delete()
 			frameNum = labeling.frameNum
-			start = time.time()
 			stft_arr = self.wave_mem_stft.achieve_Stft(labeling.create_user_id, labeling.title, labeling.fs, labeling.nfft, 0, frameNum)  # 短时傅里叶谱
-			end = time.time()
-			print(end-start)
+			list_stft = []
 			for i in range(frameNum):
-				all_stft.update_or_create(startingPos=i, length=1, labeling=labeling, defaults={'src': pickle.dumps(stft_arr[i])})
+				stft = Stft(startingPos=i, length=1, labeling=labeling, src=pickle.dumps(stft_arr[i]))
+				list_stft.append(stft)
+			labeling.stft_set.bulk_create(list_stft)
+
 		except Exception as e:
 			print(e)
 			return HttpResponse("STFT ERR")

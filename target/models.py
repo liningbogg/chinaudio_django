@@ -33,6 +33,19 @@ class Clip(BaseModel):
         unique_together = ["title", "startingPos", "length", "create_user_id", "nfft"]
 
 
+# 参考算法的中间结果
+class AlgorithmsMediums(BaseModel):
+    labeling = models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
+    algorithms = models.CharField(max_length=255)
+    startingPos = models.IntegerField()
+    length = models.IntegerField()
+    medium = models.BinaryField(null=True)
+    anote = models.CharField(max_length=255)
+
+    class Meta:
+        unique_together = ["labeling", "algorithms", "startingPos", "length"]
+
+
 class AlgorithmsClips(BaseModel):
     """
     算法形成的数据

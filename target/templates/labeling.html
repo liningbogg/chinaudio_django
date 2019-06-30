@@ -80,7 +80,7 @@
 				<tr>
 					<td>title</td>
 					<td>
-						<input type="text" id="title" readonly="true" value={{title|safe}} />
+						<input type="text" id="title" readonly="true" value='{{title|safe}}' />
 					</td>
 				</tr>
 				<tr>
@@ -306,17 +306,20 @@
 	var counter=0;
 	var stopPos={{stopPos|safe}};//终止位置
 	var startPos={{startPos|safe}};//起始位置
+	console.log(rmse_base);
    	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
    	{
    		rmse_base[i]=rmse_data[counter];
    		counter++;
    	}
+	console.log(ee_base);
 	counter=0;
 	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
    	{
    		ee_base[i]=ee_data[counter];
    		counter++;
    	}
+   	console.log(ee_base);
     var vadChartDictSeries={"spectral_entropy":ee_base,"rmse":rmse_base};
 	for(var i=0;i<stopPos.length;++i)
 	{
