@@ -41,7 +41,7 @@
             {% for wave in waves %}
             <tr>
                 <td style="color:blue;font-size:24px;line-height:2"><a href="../wave/?title={{wave.title}}">{{wave.title}}</a></td>
-                <td style="font-size:24px;line-height:2">{{wave.duration}}</td>
+                <td style="font-size:24px;line-height:2">{{wave.duration|floatformat:"2"}}</td>
                 <td style="font-size:24px;line-height:2">{{wave.frameNum}}</td>
                 <td style="font-size:24px;line-height:2">{{wave.nfft}}</td>
                 <td style='font-size:24px;line-height:2;'>{{wave.completion}}</td>

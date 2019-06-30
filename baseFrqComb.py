@@ -172,8 +172,9 @@ class BaseFrqDetector:
         :return: 基线向量
         """
         minval = min(desamp[20:-1])  # 最小值
-        maxval = np.mean(desamp[16:26])  # 最大值
+        maxval = np.mean(desamp[32:40])  # 最大值
         if (maxval - minval) < 1:
+            print("err2")
             return np.zeros(num)
         intercept = (maxval - minval) / 1000.0
         heights = np.arange(minval + intercept, maxval, intercept)
@@ -183,6 +184,7 @@ class BaseFrqDetector:
         for i in heights:
             dot = BaseFrqDetector.getscandot(desamp[0:pos], i)
             if not dot:
+                print("err")
                 return np.zeros(num)
             x.append(dot[0] * 10.0)
             y.append(dot[1])
@@ -191,9 +193,10 @@ class BaseFrqDetector:
         y.append(0)
         x.append(num)  # 保证不溢出
         y.append(0)
+
         finterp = interp1d(x, y, kind='linear')  # 线性内插配置
         x_pred = np.arange(0, num, 1)
-        resampy = finterp(x_pred) 
+        resampy = finterp(x_pred)
         return resampy
 
     @staticmethod
@@ -246,10 +249,9 @@ class BaseFrqDetector:
         num = highcutoff  # 栅栏变换后的长度
         combtrans = np.zeros(num)  # 存放栅栏变换的结果
         # 梳状变换, 2019-03-10 16:54:45
-        print(type(resampy))
         for k in np.arange(lowcutoff, highcutoff, 1):
             combtrans[k] = sum(resampy[::k])
-
+        combtrans[0:lowcutoff] = max(combtrans)
         # 如果有去扫描参数,则去扫描
         if self.isdescan is True:
             # 用于降低采样
@@ -282,4 +284,5 @@ class BaseFrqDetector:
             else:
                 continue
         pitch = prebasefrq
+        print(time.clock()-start)
         return [pitch / 10.0, resampy, truetrans]
