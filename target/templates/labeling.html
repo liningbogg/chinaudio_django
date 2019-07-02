@@ -62,12 +62,10 @@
 
 			</div>
 			<div class="reference_opt" id="reference_opt" >
-
 			</div>
-
 		</div>
 		<div class="cal_stft" id="cal_stft">
-			<input type="button" value="计算stft输入" onclick="cal_Stft({{labeling_id|safe}})">
+			<input type="button" value="计算stft输入" onclick="cal_Stft({{labeling_id|safe}})" />
 		</div>
 		<div class="info" id="info">
 			<table border="" class="table_info" id="table_info" >
@@ -95,7 +93,7 @@
 						<input type="text" id="current_frame" readonly="true" value={{current_frame|safe}} style="color:green" />
 					</td>
 				</tr>
-				<tr>
+				<tr>""?
 					<td>manual_pos</td>
 					<td>
 						<input type="number" id="manual_pos"  value={{manual_pos|safe}} placeholder="指定下次标记的位置，否则置为负数"/>
@@ -236,9 +234,15 @@
 		</div>
 		<div class="mark_clips" id="mark_clips">
 			fs
-			<input type="number" id="mark_fs" onfocus="this.value=''"
-					   onblur="if(this.value==''){this.value=this.defaultValue}" value=44100
-					   placeholder="采样率" list="play_fs_list" style="width:16%">
+			<select id="mark_fs" value={{play_fs|safe}}>
+				<option value="44100">44100</option>
+				<option value="22050">22050</option>
+				<option value="13230">13230</option>
+				<option value="8820">8820</option>
+				<option value="44100">44100</option>
+				<option value="4410">4410</option>
+			</select>
+
 			anote
 			<input type="text" id="mark_anote" placeholder='注释'
 					  style="width:48%">
