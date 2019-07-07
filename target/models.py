@@ -84,8 +84,10 @@ class Labeling(BaseModel):
     play_fs = models.IntegerField(default=44100)  # 用于记录当前片段播放的fs
     primary_ref = models.CharField(max_length=255,default="combDescan")  # 主导算法数据
     medium_resampling = models.BooleanField(default=True)
+
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
+
 
 class Stft(BaseModel):
     labeling = models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling

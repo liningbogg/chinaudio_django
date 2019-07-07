@@ -356,34 +356,23 @@ class WaveMemSpectrumEntropy(WaveMem):
 						print(waveKey + " 次命中")
 					else:
 						# 尝试从数据库获取wave.ee
+						print(waveKey + " 未命中")
 						try:
 							wave = Wave.objects.get(create_user_id=user_id, title=title)
-							stft_ori = self.waveMem_stft.achieve_Stft(user_id, title, fs, nfft, 0, wave.frameNum)
-							stft_ori = np.transpose(stft_ori)  # stft转置
-
-							# 计算谱熵
-							stft_for_ee = np.copy(stft_ori[0:np.int(nfft / fs * 4000)])  # 4000hz以下信号用于音高检测
-							speech_stft_Enp = stft_for_ee[1:-1]
-							speech_stft_prob = speech_stft_Enp / (np.sum(speech_stft_Enp, axis=0)+0.00000000000000001)
-							spectrum_entropy = np.sum(-np.log(speech_stft_prob+0.0000000000000001) * speech_stft_prob, axis=0)
-							spectrum_entropy = MaxMinNormalization(spectrum_entropy, 0, 1)
-							wave.ee = pickle.dumps(spectrum_entropy)
-							wave.save(update_fields=["ee"])
-
+							spectrum_entropy = pickle.loads(wave.ee)
+							mem_item = MemItem_spectrum_entropy(user_id=user_id, title=title, fs=fs, nfft=nfft,
+																timestamp=datetime.now(),
+																spectrum_entropy=spectrum_entropy,
+																obsolete=timedelta(minutes=5))
+							self.container.update({waveKey: mem_item})
+							sub_wave = self.container[waveKey].get_subwave(start, end)
 						except Exception as e:
+							# 此处的stft仅仅为了求谱熵等，因此不需要特别长的生存时间，谱熵缓存可设置长一点
+
 							print(e)
-						finally:
-							# 获取
-							wave = Wave.objects.get(create_user_id=user_id, title=title)
-							wave.ee = pickle.dumps(spectrum_entropy)
-							wave.save(update_fields=["ee"])
-						# 此处的stft仅仅为了求谱熵等，因此不需要特别长的生存时间，谱熵缓存可设置长一点
-						mem_item = MemItem_spectrum_entropy(user_id=user_id, title=title, fs=fs, nfft=nfft,
-															timestamp=datetime.now(), spectrum_entropy=spectrum_entropy,
-															obsolete=timedelta(minutes=5))
-						self.container.update({waveKey: mem_item})
-						sub_wave = self.container[waveKey].get_subwave(start, end)
-						print(waveKey + " 未命中")
+
+
+
 				except Exception as addcacheError:
 					print(addcacheError)
 				finally:
@@ -394,6 +383,7 @@ class WaveMemSpectrumEntropy(WaveMem):
 		finally:
 			self.rwLock_container.rlock.release()
 		return sub_wave
+
 
 class WaveMemRmse(WaveMem):
 	def __init__(self, waveMem_wave):
@@ -426,12 +416,14 @@ class WaveMemRmse(WaveMem):
 					else:
 						# 如果再次判断没有key则此时写入写入数据
 						# 尝试从数据库获取wave.rmse
-						try:
+						print(waveKey + " 未命中")
+						'''try:
 							wave = Wave.objects.get(create_user_id=user_id, title=title)
 							if wave.rmse is None or wave.rmse == [] or len(wave.rmse) < (wave.frameNum / 2):
 								# 不存在
 								# 计算rmse
 								# 获取原始左声道波形
+								wave = Wave.objects.get(create_user_id=user_id, title=title)
 								stream = self.waveMem_wave.achieve(user_id, title, fs, nfft, 0, wave.frameNum)
 								rmse = librosa.feature.rmse(y=stream, S=None, frame_length=nfft,
 															hop_length=nfft, center=True,
@@ -448,13 +440,21 @@ class WaveMemRmse(WaveMem):
 							if wave.rmse is None or wave.rmse == [] or len(wave.rmse) < (wave.frameNum / 2):
 								wave.rmse = pickle.dumps(rmse)
 								wave.save(update_fields=["rmse"])
+						'''
+						try:
+							wave = Wave.objects.get(create_user_id=user_id, title=title)
+							rmse = pickle.loads(wave.rmse)
+							mem_item = MemItem_rmse(user_id=user_id, title=title, fs=fs, nfft=nfft,
+													timestamp=datetime.now(), rmse=rmse,
+													obsolete=timedelta(minutes=60))
+							self.container.update({waveKey: mem_item})
+							sub_rmse = self.container[waveKey].get_subwave(start, end)
+						except Exception as e:
 
-						mem_item = MemItem_rmse(user_id=user_id, title=title, fs=fs, nfft=nfft,
-															timestamp=datetime.now(), rmse=rmse,
-															obsolete=timedelta(minutes=60))
-						self.container.update({waveKey: mem_item})
-						sub_rmse = self.container[waveKey].get_subwave(start, end)
-						print(waveKey + " 未命中")
+							print(e)
+
+
+
 				except Exception as addcacheError:
 					print(addcacheError)
 				finally:
@@ -500,7 +500,7 @@ class TargetView(View):
 		重载初始化函数
 		"""
 		super(View, self).__init__()
-		self.wave_mem_wave = WaveMemWave()	# 构建缓存对象
+		self.wave_mem_wave = WaveMemWave()  # 构建缓存对象
 		self.wave_mem_stft = WaveMemStft(self.wave_mem_wave)
 		self.wave_mem_spectrumEntropy = WaveMemSpectrumEntropy(self.wave_mem_stft)
 		self.wave_mem_rmse = WaveMemRmse(self.wave_mem_wave)
@@ -533,9 +533,7 @@ class TargetView(View):
 
 	@classmethod
 	def handle_upload_file(cls, upload_file, path, user_id):
-		print(upload_file)
-		print(path)
-		print(user_id)
+
 		if not os.path.exists(path):
 			os.makedirs(path)
 			print("文件夹已经创建:"+path)
@@ -565,7 +563,6 @@ class TargetView(View):
 					wave=Wave(create_user_id=user_id,title=wave_name,waveFile=file_name, frameNum=frameNum, duration=duration,
 							  chin=pickle.dumps(chin), fs=stream_fs,nfft=nfft,completion=0)
 					wave.save()
-					print(wave)
 					return "success"
 				except Exception as e:
 					print(e)
@@ -645,7 +642,6 @@ class TargetView(View):
 
 	@method_decorator(login_required)
 	def labeling(self, request):
-		start = time.clock()
 		title = request.GET.get('title')
 		user_id = str(request.user)
 		wave = Wave.objects.get(create_user_id=user_id, title=title)
@@ -663,7 +659,6 @@ class TargetView(View):
 		throp = labelinfo.vad_throp_EE
 		tone_extend_rad = labelinfo.tone_extend_rad
 		manual_pos= labelinfo.manual_pos
-		print([time.clock()-start, 667])
 		if manual_pos<0:
 			# 计算位置
 			clips = Clip.objects.filter(title=title, create_user_id=request.user,nfft=nfft)
@@ -680,24 +675,19 @@ class TargetView(View):
 			pass			
 		labelinfo.current_frame=current_frame
 		labelinfo.save()
-		print([time.clock() - start, 684])
 		extend_rad = labelinfo.extend_rad
 		ee = self.wave_mem_spectrumEntropy.achieve(user_id, title, fs, nfft,
 												max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
-		print([max(current_frame-extend_rad,0), min(current_frame+extend_rad, end)])
 		ee = list(ee)
 		rmse = self.wave_mem_rmse.achieve(user_id, title, fs, nfft,
 										max(current_frame-extend_rad,0), min(current_frame+extend_rad, end))
 		rmse = list(rmse)
-		print(rmse)
 		vadrs = targetTools.vad(ee, rmse, thrartEE, thrartRmse, throp)
-		print([time.clock() - start, 693])
 		# 收集tones
 		tones_start = max(current_frame-tone_extend_rad, 0)
 		tones_end = min(current_frame+tone_extend_rad, wave.frameNum)
 		tones_local_set = Tone.objects.filter(title=title, create_user_id=user_id, pos__range=(tones_start,tones_end-1))
 		tones_local = serializers.serialize("json", tones_local_set)
-		print([time.clock() - start, 698])
 		# comb及combDescan音高参考
 		reference = {}  # 算法支撑数据
 		labelingalgorithmsconf = labelinfo.labelingalgorithmsconf_set.all()  # 算法支持数据配置
@@ -716,7 +706,6 @@ class TargetView(View):
 				for reference_clip in local_reference_clips:
 					filter_arr[reference_clip.startingPos-tones_start] = pickle.loads(reference_clip.tar)[1]
 				reference.update({reference_name: list(filter_arr)})
-		print([time.clock() - start, 717])
 		target = [[0] * (end_ref-start_ref), [0] * (end_ref-start_ref), [0] * (end_ref-start_ref)]  # 存储前三个音高的二维数组
 		try:
 			clips = Clip.objects.filter(title=title, create_user_id=request.user,
@@ -730,7 +719,6 @@ class TargetView(View):
 					index = index+1
 		except Exception as e:
 			print(e)
-		print([time.clock() - start, 731])
 		# fft及中间结果
 		try:
 			srcFFT=pickle.loads(labelinfo.stft_set.get(startingPos=current_frame, length=1).src)
@@ -757,8 +745,8 @@ class TargetView(View):
 									 int(processingX[len_processingX - 1] / 10) + 1)
 				resamplingY = finterp(x_pred)
 				medium = resamplingY
-				srcFFT = [round(i, 4) for i in srcFFT]
-				medium = [round(i, 4) for i in medium]
+				srcFFT = [round(i, 2) for i in srcFFT]
+				medium = [round(i, 2) for i in medium]
 		except Exception as e:
 			medium = []
 			srcFFT = []
@@ -766,7 +754,6 @@ class TargetView(View):
 			current_tar = 0
 			filter_rad = 0
 			print(e)
-		print([time.clock() - start, 767])
 		# 可能的位置
 		if wave.chin is not None:
 			# 获得chin class
@@ -802,7 +789,6 @@ class TargetView(View):
 		for clip in clipsLocalOri:
 			clipsLocal.append({"id": clip.id, "startingPos":clip.startingPos,
 									"length": clip.length, "tar": list(pickle.loads(clip.tar))})
-		print([time.clock() - start, 803])
 		context = {'title': title,'fs':fs,'nfft': nfft, 'ee': ee, 'rmse': rmse, 'stopPos': list(vadrs['stopPos']),
 					'manual_pos':manual_pos, 'tones_local':tones_local, 'target':target, 'reference': reference,'primary_ref':labelinfo.primary_ref,
 					'startPos': list(vadrs['startPos']), 'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),"medium":list(medium),
@@ -988,6 +974,55 @@ class TargetView(View):
 		return HttpResponse("STFT calculated ")
 
 	@method_decorator(login_required)
+	def calEE(self, request):
+		try:
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			user_id = labeling.create_user_id;
+			title = labeling.title
+			fs = labeling.fs
+			nfft = labeling.nfft
+			wave = Wave.objects.get(create_user_id=user_id, title=title)
+			stft_ori = self.wave_mem_stft.achieve_Stft(user_id, title, fs, nfft, 0, wave.frameNum)
+			stft_ori = np.transpose(stft_ori)  # stft转置
+			# 计算谱熵
+			stft_for_ee = np.copy(stft_ori[0:np.int(nfft / fs * 4000)])  # 4000hz以下信号用于音高检测
+			speech_stft_Enp = stft_for_ee[1:-1]
+			speech_stft_prob = speech_stft_Enp / (np.sum(speech_stft_Enp, axis=0) + 0.00000000000000001)
+			spectrum_entropy = np.sum(-np.log(speech_stft_prob + 0.0000000000000001) * speech_stft_prob, axis=0)
+			spectrum_entropy = MaxMinNormalization(spectrum_entropy, 0, 1)
+			wave.ee = pickle.dumps(spectrum_entropy)
+			wave.save(update_fields=["ee"])
+
+
+		except Exception as e:
+			print(e)
+			return HttpResponse("EE ERR")
+		return HttpResponse("EE calculated ")
+
+	@method_decorator(login_required)
+	def calRmse(self, request):
+		try:
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			user_id=labeling.create_user_id;
+			title=labeling.title
+			fs=labeling.fs
+			nfft=labeling.nfft
+			wave = Wave.objects.get(create_user_id=user_id, title=title)
+			stream = self.wave_mem_wave.achieve(user_id, title, fs, nfft, 0, wave.frameNum)
+			rmse = librosa.feature.rmse(y=stream, S=None, frame_length=nfft,
+										hop_length=nfft, center=True,
+										pad_mode='reflect')[0]
+			rmse = MaxMinNormalization(rmse, 0, 1)
+			wave.rmse = pickle.dumps(rmse)
+			wave.save(update_fields=["rmse"])
+		except Exception as e:
+			print(e)
+			return HttpResponse("RMSE ERR")
+		return HttpResponse("RMSE calculated ")
+
+	@method_decorator(login_required)
 	def setPrimary(self, request):
 		try:
 			algorithms_name = request.GET.get('algorithm_name')
@@ -1016,6 +1051,19 @@ class TargetView(View):
 		except Exception as e:
 			print(e)
 		return HttpResponse("primary filter configure seted ")
+
+	@method_decorator(login_required)
+	def setManualPos(self, request):
+		try:
+			manualPos = int(request.GET.get('manualPos'))
+			labeling_id = int(request.GET.get('labeling_id'))
+			labeling = Labeling.objects.get(id=labeling_id)
+			labeling.manual_pos = manualPos
+			labeling.save(update_fields=['manual_pos'])
+		except Exception as e:
+			print(e)
+			return HttpResponse("err")
+		return HttpResponse("ok")
 
 	@classmethod
 	@method_decorator(login_required)

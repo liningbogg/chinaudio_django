@@ -86,7 +86,7 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'POST': '3306',
         'USER': 'liningbo',
-        'PASSWORD': '1a2a3a'
+        'PASSWORD': '1a2a3a',
     },
 }
 
@@ -125,7 +125,6 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1024000000
-MAX_ALLOWED_PACKET = 2684354560
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [

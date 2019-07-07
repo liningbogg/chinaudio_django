@@ -174,7 +174,6 @@ class BaseFrqDetector:
         minval = min(desamp[20:-1])  # 最小值
         maxval = np.mean(desamp[32:40])  # 最大值
         if (maxval - minval) < 1:
-            print("err2")
             return np.zeros(num)
         intercept = (maxval - minval) / 1000.0
         heights = np.arange(minval + intercept, maxval, intercept)

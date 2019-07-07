@@ -9,6 +9,7 @@
     <link href="/static/css/labeling.css?time='+new Date().getTime()+'" rel="stylesheet" type="text/css" />
 
 </head>
+<body >
 <div class="login" id="login" >
     <a href="../index/">主页</a>
     {% include "login_info_base.html" %}
@@ -40,33 +41,52 @@
 	</div>
 
 	<div class = "opt" name="opt" >
-		<div class="algorithm">
-			<div class="algorithm_select" >
-					算法计算
-				<select id="algorithm_select" onclick="algorithm_selectFunc(this.value,{{labeling_id|safe}})">
-  					<option value="comb">comb</option>
-  					<option value="combDescan">combDescan</option>
-				</select>
-			</div>
-			<div class="algorithm_opt" id="algorithm_opt">
 
-			</div>
-		</div>
-		<div class="reference">
-			<div class="reference_select" >
-					算法配置
-				<select id="reference_select"  onclick="reference_selectFunc(this.value,{{labeling_id|safe}})">
-  					<option value="comb">comb</option>
-  					<option value="combDescan">combDescan</option>
-				</select>
+		<div class="input_opt" id="input_opt">
+			<details>
+				<summary>可折叠input选项</summary>
+					<div class="algorithm">
+						<div class="algorithm_select" >
+							算法计算
+						<select id="algorithm_select" onclick="algorithm_selectFunc(this.value,{{labeling_id|safe}})">
+							<option value="comb">comb</option>
+							<option value="combDescan">combDescan</option>
+						</select>
+					</div>
+					<div class="algorithm_opt" id="algorithm_opt">
 
-			</div>
-			<div class="reference_opt" id="reference_opt" >
-			</div>
+					</div>
+				</div>
+				<div class="reference">
+					<div class="reference_select" >
+							算法配置
+						<select id="reference_select"  onclick="reference_selectFunc(this.value,{{labeling_id|safe}})">
+							<option value="comb">comb</option>
+							<option value="combDescan">combDescan</option>
+						</select>
+					</div>
+					<div class="reference_opt" id="reference_opt" >
+					</div>
+				</div>
+				<div class="cal_input" id="cal_input">
+					<div class="cal_stft" id="cal_stft">
+						<input type="button" value="计算stft输入" onclick="cal_Stft({{labeling_id|safe}})" />
+					</div>
+					<div class="cal_rmse" id="cal_rmse">
+						<input type="button" value="计算rmse" onclick="cal_Rmse({{labeling_id|safe}})" />
+					</div>
+					<div class="cal_ee" id="cal_ee">
+						<input type="button" value="计算ee" onclick="cal_EE({{labeling_id|safe}})" />
+					</div>
+					<div class="cal_allInput" id="cal_allInput">
+						<input type="button" value="计算所有" onclick="cal_allInput({{labeling_id|safe}})" />
+					</div>
+				</div>
+			</details>
+
 		</div>
-		<div class="cal_stft" id="cal_stft">
-			<input type="button" value="计算stft输入" onclick="cal_Stft({{labeling_id|safe}})" />
-		</div>
+
+
 		<div class="info" id="info">
 			<table border="" class="table_info" id="table_info" >
 				<thead>
@@ -93,10 +113,10 @@
 						<input type="text" id="current_frame" readonly="true" value={{current_frame|safe}} style="color:green" />
 					</td>
 				</tr>
-				<tr>""?
+				<tr>
 					<td>manual_pos</td>
 					<td>
-						<input type="number" id="manual_pos"  value={{manual_pos|safe}} placeholder="指定下次标记的位置，否则置为负数"/>
+						<input type="number" id="manual_pos" readonly="true" value={{manual_pos|safe}} placeholder="指定下次标记的位置，否则置为负数"/>
 					</td>
 				</tr>
 				<tr>
@@ -108,31 +128,31 @@
 				<tr>
 					<td>extend_rad</td>
 					<td>
-						<input type="number" id="extend_rad" value={{extend_rad|safe}} placeholder="当前标记视窗半径"/>
+						<input type="number" id="extend_rad" value={{extend_rad|safe}} placeholder="当前标记视窗半径" style="color:blue"/>
 					</td>
 				</tr>
 				<tr>
 					<td>tone_extend_rad</td>
 					<td>
-						<input type="number" id="tone_extend_rad" value={{tone_extend_rad|safe}} placeholder="音符参考半径"/>
+						<input type="number" id="tone_extend_rad" value={{tone_extend_rad|safe}} placeholder="音符参考半径" style="color:blue"/>
 					</td>
 				</tr>
 				<tr>
 					<td>vad_thrart_EE</td>
 					<td>
-						<input type="number" id="vad_thrart_EE" value={{vad_thrart_EE|safe}} placeholder="起始位置判定熵阈值"/>
+						<input type="number" id="vad_thrart_EE" value={{vad_thrart_EE|safe}} placeholder="起始位置判定熵阈值" style="color:blue"/>
 					</td>
 				</tr>
 				<tr>
 					<td>vad_throp_EE</td>
 					<td>
-						<input type="number" id="vad_throp_EE" value={{vad_throp_EE|safe}} placeholder="终止位置判定熵阈值"/>
+						<input type="number" id="vad_throp_EE" value={{vad_throp_EE|safe}} placeholder="终止位置判定熵阈值" style="color:blue"/>
 					</td>
 				</tr>
 				<tr>
 					<td>vad_thrart_RMSE</td>
 					<td>
-						<input type="number" id="vad_thrart_RMSE" value={{vad_thrart_RMSE|safe}} placeholder="起始位置判定能量阈值"/>
+						<input type="number" id="vad_thrart_RMSE" value={{vad_thrart_RMSE|safe}} placeholder="起始位置判定能量阈值" style="color:blue"/>
 					</td>
 				</tr>
 				<tr>
@@ -310,20 +330,17 @@
 	var counter=0;
 	var stopPos={{stopPos|safe}};//终止位置
 	var startPos={{startPos|safe}};//起始位置
-	console.log(rmse_base);
    	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
    	{
    		rmse_base[i]=rmse_data[counter];
    		counter++;
    	}
-	console.log(ee_base);
 	counter=0;
 	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
    	{
    		ee_base[i]=ee_data[counter];
    		counter++;
    	}
-   	console.log(ee_base);
     var vadChartDictSeries={"spectral_entropy":ee_base,"rmse":rmse_base};
 	for(var i=0;i<stopPos.length;++i)
 	{
@@ -361,18 +378,7 @@
 	}
 
 	var refChartDictSeries = reference_tar;
-	/*
-	var rmse_data={{rmse|safe}};//实际数据
-   	var rmse_base=new Array({{frame_num|safe}});
-	var counter=0;
-	var stopPos={{stopPos|safe}};//终止位置
-	var startPos={{startPos|safe}};//起始位置
-   	for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
-   	{
-   		rmse_base[i]=rmse_data[counter];
-   		counter++;
-   	}
-	*/
+
 
 	var refChartDictLine={
 		"stopPos":stopPos,
@@ -402,7 +408,6 @@
    			counter++;
    		}
 	}
-	console.log(targetArr_tar);
 	var targetChartDictSeries={"target1":targetArr_tar[0],"target2":targetArr_tar[1],"target3":targetArr_tar[2]};
     var targetChartDictLine={
 		"stopPos":stopPos,
@@ -519,6 +524,7 @@
 <script>
 	var clipsLocal={{clipsLocal|safe}};
 	var clips_str="<table border='' class='table_clips_local' id='table_clips_local' >";
+	var counter_row=0;
 	for(var i=0;i<clipsLocal.length;i++)
 	{
 		clips_str+="<tr>";
@@ -546,7 +552,7 @@
 	" <td><input type='number' style='color:blue;font-size:1rem'/></td>"+
 	"<td><input type='number' style='color:blue;font-size:1rem'/></td>"+
 	"<td><input type='button' style='color:blue;font-size:1rem' value='插入(P)'/></td>"+
-	"<td><input type='button' style='color:blue;font-size:1rem' value='移动到'/></td>";
+	"<td><input type='button' style='color:blue;font-size:1rem' value='移动到' onclick='move2Pos({{labeling_id|safe}})'/></td>";
 	clips_str+="</tr>";
 	clips_str+="</table>";
 	var divItem=document.getElementById("clips");

@@ -256,7 +256,18 @@ body,div
     border-color:blue;
     overflow-y:auto;
 }
+
 /*算法预设数据生成*/
+.input_opt{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:100%;
+    top:0%;
+    height:2%;
+    font-size:0.75rem;
+}
 .algorithm
 {
     position:relative;
@@ -265,12 +276,8 @@ body,div
 	left:0%;
     width:100%;
     top:0%;
-    height:2%;
-    border-width:0.0625rem;
+    height:33%;
     font-size:0.75rem;
-    border-style:solid;
-    border-color:blue;
-	overflow-y:auto;
 }
 .algorithm_select
 {
@@ -280,12 +287,8 @@ body,div
 	left:0%;
     width:40%;
     top:0%;
-    height:100%;
-    border-width:0.0625rem;
+    height:95%;
     font-size:0.75rem;
-    border-style:solid;
-    border-color:blue;
-	overflow-y:auto;
 }
 .algorithm_select input
 {
@@ -295,22 +298,19 @@ body,div
 .algorithm_select select
 {
     font-size:0.75rem;
+    vertical-align:middle;
+    height:95%;
     width:60%;
 }
 .algorithm_opt
 {
     position:relative;
 	float:left;
-	display:table;
 	left:1%;
-    width:59%;
+    width:58%;
     top:0%;
-    height:100%;
-    border-width:0.0625rem;
+    height:95%;
     font-size:0.75rem;
-    border-style:solid;
-    border-color:red;
-	overflow-y:auto;
 }
 .algorithm_opt input
 {
@@ -323,85 +323,146 @@ body,div
     position:relative;
 	float:left;
 	display:table;
+	\vertical-align:middle;
 	left:0%;
-    width:80%;
+    width:100%;
     top:0%;
-    height:2%;
-    border-width:0.0625rem;
+    height:33%;
     font-size:0.75rem;
-    border-style:solid;
-    border-color:blue;
-	overflow-y:auto;
 }
 .reference_select
 {
     position:relative;
 	float:left;
 	display:table;
+	vertical-align:middle;
 	left:0%;
-    width:50%;
+    width:40%;
     top:0%;
-    height:100%;
-    border-width:0.0625rem;
+    height:95%;
     font-size:0.75rem;
-    border-style:solid;
-    border-color:blue;
-	overflow-y:auto;
+
 }
 
 .reference_select select
 {
     font-size:0.75rem;
-    height:90%;
+    vertical-align:middle;
+    top:0%;
+    height:95%;
     width:60%;
 }
 .reference_opt
 {
     position:relative;
 	float:left;
+	display:table;
 	left:1%;
-    width:48%;
+    width:58%;
     top:0%;
-    height:100%;
-    border-width:0.0625rem;
-    font-size:0.625rem;
-    border-style:solid;
-    border-color:red;
-	overflow-y:auto;
+    height:95%;
+    font-size:0.75rem;
 }
 .reference_opt input
 {
-    font-size:0.625rem;
-    display:table-row;
+    font-size:0.75rem;
+    vertical-align:middle;
+    width:32%;
     height:95%;
 }
 .reference_opt select
 {
-    font-size:0.625rem;
-    display:table-row;
-    height:90%;
+    font-size:0.875rem;
+    vertical-align:middle;
+    width:32%;
+    height:100%;
+    font-color:red;
+}
 
+
+/*计算输入，stft,ee,rmse*/
+.cal_input
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:100%;
+    top:0%;
+    height:2%;
+    font-size:0.75rem;
 }
 .cal_stft
 {
     position:relative;
 	float:left;
 	display:table;
-	left:1%;
-    width:10%;
+	left:0%;
+    width:24.5%;
     top:0%;
     height:2%;
-    border-width:0.0625rem;
-    font-size:0.625rem;
-    border-style:solid;
-    border-color:green;
+    font-size:0.75rem;
 	overflow-y:auto;
 }
 .cal_stft input
 {
-    font-size:0.625rem;
-    height:90%;
-    width:98%;
+    font-size:0.75rem;
+    height:100%;
+    width:100%;
+}
+.cal_rmse
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:24.5%;
+    top:0%;
+    height:2%;
+    font-size:0.75rem;
+	overflow-y:auto;
+}
+.cal_rmse input
+{
+    font-size:0.75rem;
+    height:100%;
+    width:100%;
+}
+.cal_allInput
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:24.5%;
+    top:0%;
+    height:2%;
+    font-size:0.75rem;
+	overflow-y:auto;
+}
+.cal_allInput input
+{
+    font-size:0.75rem;
+    height:100%;
+    width:100%;
+}
+.cal_ee
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:0%;
+    width:24.5%;
+    top:0%;
+    height:2%;
+    font-size:0.75rem;
+	overflow-y:auto;
+}
+.cal_ee input
+{
+    font-size:0.75rem;
+    height:100%;
+    width:100%;
 }
 /*参数信息*/
 .info
@@ -439,7 +500,7 @@ body,div
 .table_info tr td input{
 	width:98%;
 	table-layout:fixed;
-	font-size:1rem;
+	font-size:0.875rem;
 	line-height:1;
 }
 
@@ -588,6 +649,10 @@ body,div
 .mark_clips input
 {
     font-size:1rem;
+}
+.mark_clips select
+{
+    font-size:0.875rem;
 }
 /*clips显示和设置*/
 .clips{

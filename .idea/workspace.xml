@@ -3,29 +3,43 @@
   <component name="BookmarkManager">
     <bookmark url="file://$PROJECT_DIR$/chin.py" line="100" mnemonic="4" />
     <bookmark url="file://$PROJECT_DIR$/target/pitchPrediction.py" line="80" />
+    <bookmark url="file://$PROJECT_DIR$/target/templates/copywaves.html" line="67" />
+    <bookmark url="file://$PROJECT_DIR$/target/templates/copywaves.html" line="34" />
     <bookmark url="file://$PROJECT_DIR$/target/views.py" line="107" />
     <bookmark url="file://$PROJECT_DIR$/target/targetTools.py" line="15" />
-    <bookmark url="file://$PROJECT_DIR$/baseFrqComb.py" line="260" />
+    <bookmark url="file://$PROJECT_DIR$/baseFrqComb.py" line="259" />
     <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="113" />
-    <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="502" />
-    <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="435" />
-    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="663" />
+    <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="563" />
+    <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="496" />
+    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="659" />
     <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="222" />
-    <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="598" />
+    <bookmark url="file://$PROJECT_DIR$/target/static/css/labeling.css" line="663" />
     <bookmark url="file://$PROJECT_DIR$/target/views.py" />
     <bookmark url="file://$PROJECT_DIR$/target/static/css/index.css" line="82" />
     <bookmark url="file://$PROJECT_DIR$/target/static/css/index.css" line="87" />
-    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="805" />
-    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="941" />
-    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="951" />
-    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="964" />
+    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="791" />
+    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="927" />
+    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="937" />
+    <bookmark url="file://$PROJECT_DIR$/target/views.py" line="950" />
     <bookmark url="file://$PROJECT_DIR$/target/views.py" line="482" />
-    <bookmark url="file://$PROJECT_DIR$/baseFrqComb.py" line="285" />
+    <bookmark url="file://$PROJECT_DIR$/baseFrqComb.py" line="284" />
+    <bookmark url="file://$PROJECT_DIR$/target/static/js/labeling.js" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8acc8f02-be45-420d-812a-1c53fb213d8d" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baseFrqComb.py" beforeDir="false" afterPath="$PROJECT_DIR$/baseFrqComb.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pitch/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/pitch/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/migrations/0001_initial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/migrations/0002_stft.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/migrations/0003_labeling_primary_ref.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/migrations/0004_algorithmsmediums.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/static/css/labeling.css" beforeDir="false" afterPath="$PROJECT_DIR$/target/static/css/labeling.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/static/js/labeling.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/static/js/labeling.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/templates/labeling.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/templates/labeling.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/views.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -39,71 +53,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pitch/settings.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1365">
-              <caret line="91" selection-start-line="91" selection-end-line="91" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/target/templates/index.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="645">
-              <caret line="43" column="88" selection-start-line="43" selection-start-column="88" selection-end-line="43" selection-end-column="88" />
-              <folding>
-                <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#tr#0;n#thead#0;n#table#0;n#div#2;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#td#0;n#tr#0;n#table#0;n#div#2;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#td#1;n#tr#0;n#table#0;n#div#2;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#td#2;n#tr#0;n#table#0;n#div#2;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#td#3;n#tr#0;n#table#0;n#div#2;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#td#4;n#tr#0;n#table#0;n#div#2;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/baseFrqComb.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="613">
-              <caret line="255" column="33" lean-forward="true" selection-start-line="255" selection-start-column="33" selection-end-line="255" selection-end-column="33" />
-              <folding>
-                <element signature="e#0#37#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/target/targetTools.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="16" column="7" selection-start-line="16" selection-start-column="7" selection-end-line="16" selection-end-column="7" />
-              <folding>
-                <element signature="e#0#16#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../.PyCharmCE2019.1/system/python_stubs/-1247971762/builtins.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="11610">
-              <caret line="774" column="8" selection-start-line="774" selection-start-column="8" selection-end-line="774" selection-end-column="8" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="36" column="23" selection-start-line="36" selection-start-column="6" selection-end-line="36" selection-end-column="23" />
+            <state relative-caret-position="1125">
+              <caret line="75" column="14" selection-start-line="75" selection-start-column="4" selection-end-line="75" selection-end-column="14" />
             </state>
           </provider>
         </entry>
@@ -111,8 +64,34 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-3645">
-              <caret line="111" column="49" selection-start-line="111" selection-start-column="45" selection-end-line="111" selection-end-column="49" />
+            <state relative-caret-position="974">
+              <caret line="443" column="9" lean-forward="true" selection-start-line="443" selection-start-column="9" selection-end-line="443" selection-end-column="9" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/target/templates/wave.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="555">
+              <caret line="37" column="38" selection-start-line="37" selection-start-column="38" selection-end-line="37" selection-end-column="38" />
+              <folding>
+                <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pitch/urls.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="285">
+              <caret line="20" column="36" selection-start-line="20" selection-start-column="36" selection-end-line="20" selection-end-column="36" />
+              <folding>
+                <element signature="e#629#661#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -120,10 +99,22 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/urls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="735">
-              <caret line="54" column="62" selection-start-line="54" selection-start-column="62" selection-end-line="54" selection-end-column="62" />
+            <state relative-caret-position="810">
+              <caret line="54" column="51" selection-start-line="54" selection-start-column="51" selection-end-line="54" selection-end-column="51" />
               <folding>
                 <element signature="e#634#670#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/target/views.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="15225">
+              <caret line="1062" column="30" selection-start-line="1062" selection-start-column="30" selection-end-line="1062" selection-end-column="30" />
+              <folding>
+                <element signature="e#17#27#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -132,30 +123,34 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="335">
-              <caret line="67" column="92" selection-start-line="67" selection-start-column="92" selection-end-line="67" selection-end-column="92" />
+            <state relative-caret-position="715">
+              <caret line="154" column="140" selection-start-line="154" selection-start-column="140" selection-end-line="154" selection-end-column="140" />
               <folding>
-                <element signature="n#style#0;n#input#2;n#div#8;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#td#3;n#tr#0;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#td#0;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#0;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#1;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#2;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#3;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#0;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#1;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#2;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-                <element signature="n#style#0;n#input#0;n#td#3;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#input#0;n#td#1;n#tr#2;n#table#0;n#div#1;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#input#0;n#td#1;n#tr#5;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#input#0;n#td#1;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#input#0;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#input#0;n#td#1;n#tr#8;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+                <element signature="n#style#0;n#input#0;n#td#1;n#tr#9;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/target/static/css/labeling.css">
+        <entry file="file://$PROJECT_DIR$/target/templates/register.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-5069">
-              <caret line="406" column="5" selection-start-line="406" selection-start-column="1" selection-end-line="406" selection-end-column="5" />
+            <state relative-caret-position="525">
+              <caret line="35" column="37" selection-start-line="35" selection-start-column="37" selection-end-line="35" selection-end-column="37" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/target/templates/login.html">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="465">
+              <caret line="31" column="52" selection-start-line="31" selection-start-column="52" selection-end-line="31" selection-end-column="52" />
             </state>
           </provider>
         </entry>
@@ -172,36 +167,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>8</find>
-      <find>276</find>
-      <find>labeling(</find>
-      <find>Stft_set</find>
-      <find>ee</find>
-      <find>stft_set</find>
-      <find>wave.ee</find>
-      <find>stft</find>
-      <find>stft(</find>
-      <find>update_or</find>
-      <find>transaction</find>
+      <find>msg_from</find>
+      <find>save(update</find>
+      <find>cal_Stft</find>
+      <find>achieve</find>
       <find>update</find>
-      <find>bulk_create</find>
-      <find>Stft</find>
-      <find>type</find>
-      <find>print</find>
+      <find>calSt</find>
+      <find>wave_mem_wave</find>
       <find>labeling</find>
-      <find>index</find>
-      <find>index(</find>
-      <find>duration</find>
-      <find>title</find>
-      <find>primary_ref</find>
-      <find>AlgorithmsMediums</find>
-      <find>algorithm_cal_thread</find>
-      <find>algorithm_cal_async</find>
-      <find>getbaselinefromscan</find>
-      <find>&quot;&quot;?</find>
-      <find>算法计算</find>
-      <find>play_fs_list</find>
-      <find>info</find>
+      <find>calEE</find>
+      <find>waveKey</find>
+      <find>container</find>
+      <find>WaveMemSpectrumEntropy</find>
+      <find>rwLock_container</find>
+      <find>rmse</find>
+      <find>print</find>
+      <find>err2</find>
+      <find>onclick</find>
+      <find>1弦</find>
+      <find>labeling_id</find>
+      <find>move</find>
+      <find>err</find>
+      <find>e.str</find>
+      <find>strings_set_table</find>
+      <find>r</find>
+      <find>relo</find>
+      <find>redic</find>
+      <find>update_fields</find>
+      <find>body</find>
+      <find>onReload</find>
+      <find>&lt;body</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -247,7 +242,6 @@
         <option value="$PROJECT_DIR$/target/static/js/wave.js" />
         <option value="$PROJECT_DIR$/pitchTarget.py" />
         <option value="$PROJECT_DIR$/chin.py" />
-        <option value="$PROJECT_DIR$/target/templates/wave.html" />
         <option value="$PROJECT_DIR$/pitch/__init__.py" />
         <option value="$PROJECT_DIR$/target/__init__.py" />
         <option value="$PROJECT_DIR$/target/static/css/wave.css" />
@@ -258,14 +252,15 @@
         <option value="$PROJECT_DIR$/target/static/css/index.css" />
         <option value="$PROJECT_DIR$/target/task.py" />
         <option value="$PROJECT_DIR$/target/admin.py" />
-        <option value="$PROJECT_DIR$/target/urls.py" />
+        <option value="$PROJECT_DIR$/target/templates/index.html" />
         <option value="$PROJECT_DIR$/target/static/css/labeling.css" />
-        <option value="$PROJECT_DIR$/target/static/js/labeling.js" />
         <option value="$PROJECT_DIR$/target/models.py" />
         <option value="$PROJECT_DIR$/pitch/settings.py" />
-        <option value="$PROJECT_DIR$/target/views.py" />
-        <option value="$PROJECT_DIR$/target/templates/index.html" />
         <option value="$PROJECT_DIR$/baseFrqComb.py" />
+        <option value="$PROJECT_DIR$/target/urls.py" />
+        <option value="$PROJECT_DIR$/target/templates/wave.html" />
+        <option value="$PROJECT_DIR$/target/views.py" />
+        <option value="$PROJECT_DIR$/target/static/js/labeling.js" />
         <option value="$PROJECT_DIR$/target/templates/labeling.html" />
       </list>
     </option>
@@ -282,27 +277,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope">
-        <subPane subId="Scope 'Changed Files'; set:Changed Files; ALL; class com.intellij.packageDependencies.ChangeListScope">
-          <expand>
-            <path>
-              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
-            </path>
-            <path>
-              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
-              <item name="pitch" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
-              <item name="target" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -331,13 +305,6 @@
               <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
               <item name="target" type="462c0819:PsiDirectoryNode" />
               <item name="static" type="462c0819:PsiDirectoryNode" />
-              <item name="css" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
               <item name="js" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -345,6 +312,27 @@
               <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
               <item name="target" type="462c0819:PsiDirectoryNode" />
               <item name="templates" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope">
+        <subPane subId="Scope 'Changed Files'; set:Changed Files; ALL; class com.intellij.packageDependencies.ChangeListScope">
+          <expand>
+            <path>
+              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="pitch" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="target" type="9f88c78c:ScopeViewTreeModel$FileNode" />
             </path>
           </expand>
           <select />
@@ -569,7 +557,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="217" y="99" width="2560" height="1400" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.62608695" visible="true" weight="0.14421177" />
       <window_info id="Structure" order="1" sideWeight="0.37391305" side_tool="true" weight="0.15181866" />
@@ -582,7 +569,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.4969929" weight="0.33679354" />
       <window_info anchor="bottom" id="Version Control" order="7" sideWeight="0.49894515" weight="0.32873806" />
-      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.4994726" weight="0.3272147" />
+      <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.4994726" weight="0.32881084" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.5030071" side_tool="true" weight="0.15642458" />
       <window_info anchor="bottom" id="Python Console" order="10" sideWeight="0.49894515" weight="0.16013438" />
       <window_info anchor="bottom" id="Messages" order="11" sideWeight="0.49972633" weight="0.26124197" />
@@ -705,13 +692,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/templates/register.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="525">
-          <caret line="35" column="37" selection-start-line="35" selection-start-column="37" selection-end-line="35" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pitctPrep.py" />
     <entry file="file://$PROJECT_DIR$/datatarget.json" />
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/typeshed/stdlib/2and3/threading.pyi">
@@ -722,13 +702,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../.PyCharmCE2018.3/system/python_stubs/-98414044/builtins.py" />
-    <entry file="file://$PROJECT_DIR$/target/templates/login.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="108">
-          <caret line="4" column="21" selection-start-line="4" selection-start-column="21" selection-end-line="4" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/target/static/image/favicon.ico">
       <provider selected="true" editor-type-id="images" />
     </entry>
@@ -799,18 +772,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/templates/wave.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1200">
-          <caret line="80" column="28" selection-start-line="80" selection-start-column="28" selection-end-line="80" selection-end-column="28" />
-          <folding>
-            <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pitchTarget.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="265">
@@ -828,13 +789,6 @@
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/static/js/wave.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="7" column="24" selection-start-line="7" selection-start-column="10" selection-end-line="7" selection-end-column="27" />
         </state>
       </provider>
     </entry>
@@ -883,16 +837,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pitch/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="20" column="36" selection-start-line="20" selection-start-column="36" selection-end-line="20" selection-end-column="36" />
-          <folding>
-            <element signature="e#629#661#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/lib/python3.7/multiprocessing/pool.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="385">
@@ -914,23 +858,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" column="38" selection-start-line="4" selection-end-line="4" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="6540">
-          <caret line="483" column="14" selection-start-line="483" selection-start-column="14" selection-end-line="483" selection-end-column="14" />
-          <folding>
-            <element signature="e#17#27#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pitch/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1365">
-          <caret line="91" selection-start-line="91" selection-end-line="91" />
         </state>
       </provider>
     </entry>
@@ -961,70 +888,125 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../.PyCharmCE2019.1/system/python_stubs/-1247971762/builtins.py">
+    <entry file="file://$PROJECT_DIR$/pitch/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="11610">
-          <caret line="774" column="8" selection-start-line="774" selection-start-column="8" selection-end-line="774" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/models.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="36" column="23" selection-start-line="36" selection-start-column="6" selection-end-line="36" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="735">
-          <caret line="54" column="62" selection-start-line="54" selection-start-column="62" selection-end-line="54" selection-end-column="62" />
-          <folding>
-            <element signature="e#634#670#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="925">
+          <caret line="114" column="23" lean-forward="true" selection-start-line="114" selection-start-column="23" selection-end-line="114" selection-end-column="23" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/baseFrqComb.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="613">
-          <caret line="255" column="33" lean-forward="true" selection-start-line="255" selection-start-column="33" selection-end-line="255" selection-end-column="33" />
+        <state relative-caret-position="190">
+          <caret line="163" column="26" lean-forward="true" selection-start-line="163" selection-start-column="26" selection-end-line="163" selection-end-column="26" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
+    <entry file="file://$PROJECT_DIR$/target/static/css/labeling.css">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3645">
-          <caret line="111" column="49" selection-start-line="111" selection-start-column="45" selection-end-line="111" selection-end-column="49" />
+        <state relative-caret-position="90">
+          <caret line="456" column="14" selection-start-line="456" selection-start-column="14" selection-end-line="456" selection-end-column="14" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/static/css/labeling.css">
+    <entry file="file://$PROJECT_DIR$/../.PyCharmCE2019.1/system/python_stubs/-1247971762/builtins.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-5069">
-          <caret line="406" column="5" selection-start-line="406" selection-start-column="1" selection-end-line="406" selection-end-column="5" />
+        <state relative-caret-position="1161">
+          <caret line="774" column="8" selection-start-line="774" selection-start-column="8" selection-end-line="774" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/static/js/wave.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="384">
+          <caret line="41" column="18" selection-start-line="41" selection-start-column="18" selection-end-line="41" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1125">
+          <caret line="75" column="14" selection-start-line="75" selection-start-column="4" selection-end-line="75" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/templates/wave.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="555">
+          <caret line="37" column="38" selection-start-line="37" selection-start-column="38" selection-end-line="37" selection-end-column="38" />
+          <folding>
+            <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pitch/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="20" column="36" selection-start-line="20" selection-start-column="36" selection-end-line="20" selection-end-column="36" />
+          <folding>
+            <element signature="e#629#661#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15225">
+          <caret line="1062" column="30" selection-start-line="1062" selection-start-column="30" selection-end-line="1062" selection-end-column="30" />
+          <folding>
+            <element signature="e#17#27#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/templates/register.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="35" column="37" selection-start-line="35" selection-start-column="37" selection-end-line="35" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="974">
+          <caret line="443" column="9" lean-forward="true" selection-start-line="443" selection-start-column="9" selection-end-line="443" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="810">
+          <caret line="54" column="51" selection-start-line="54" selection-start-column="51" selection-end-line="54" selection-end-column="51" />
+          <folding>
+            <element signature="e#634#670#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/templates/login.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="465">
+          <caret line="31" column="52" selection-start-line="31" selection-start-column="52" selection-end-line="31" selection-end-column="52" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="335">
-          <caret line="67" column="92" selection-start-line="67" selection-start-column="92" selection-end-line="67" selection-end-column="92" />
+        <state relative-caret-position="715">
+          <caret line="154" column="140" selection-start-line="154" selection-start-column="140" selection-end-line="154" selection-end-column="140" />
           <folding>
-            <element signature="n#style#0;n#input#2;n#div#8;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#td#3;n#tr#0;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#td#0;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#0;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#1;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#2;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#3;n#tr#1;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#0;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#1;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#2;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#3;n#tr#2;n#table#0;n#div#0;n#div#10;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#2;n#table#0;n#div#1;n#div#1;n#div#1;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#5;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#8;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#9;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
           </folding>
         </state>
       </provider>

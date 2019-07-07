@@ -345,7 +345,7 @@ function reference_selectFunc(algorithm_name,labeling_id)
 
                 }else{
                     //显示重置　删除
-                    var div_string='<select id="del_reference_select" onclick="set_refFilter(\''+algorithm_name+'\',\''+labeling_id+'\')"'+'><option value="1">过滤</option><option value="0">不过滤</option></select>';
+                    var div_string='<select id="del_reference_select" onclick="set_refFilter(\''+algorithm_name+'\',\''+labeling_id+'\')"'+'><option value="1" >过滤</option><option value="0">不过滤</option></select>';
                     div_string+='&nbsp<input type="button" value="删除" onclick="del_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     div_string+='&nbsp<input type="button" value="设置主参考" onclick="set_primary(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     document.getElementById('reference_opt').innerHTML=div_string;
@@ -375,4 +375,73 @@ function cal_Stft(labeling_id)
             }
         }
     };
+}
+
+/*重新计算rmse作为输入*/
+function cal_Rmse(labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'calRmse/?'+"labeling_id="+labeling_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
+        }
+    };
+}
+
+/*重新计算EE作为输入*/
+function cal_EE(labeling_id)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'calEE/?'+"labeling_id="+labeling_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
+        }
+    };
+}
+
+/*移动到制定位置*/
+function move2Pos(labeling_id)
+{
+    manual_pos=document.getElementById("table_clips_local");
+    rowsNum=manual_pos.rows.length;
+    manualPos=manual_pos.rows[rowsNum-1].cells[0].getElementsByTagName("INPUT")[0].value;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'setManualPos/?'+"labeling_id="+labeling_id+"&manualPos="+manualPos, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                if(context=="ok"){
+                    location.reload();
+                }else{
+                    alert(context);
+                }
+            }catch(e)
+            {
+                console.log(e);
+            }
+        }
+    };
+}
+
+/*刷新前提交*/
+window.onbeforeunload = function(){
+
 }
