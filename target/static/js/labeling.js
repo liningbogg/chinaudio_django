@@ -56,7 +56,7 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
 	    	enabled: true
 		},
 		tooltip: {
-            valueDecimals: 2,  //显示精度
+            valueDecimals: 3,  //显示精度
 	    	shared: true
 		},
 		plotOptions: {
@@ -415,6 +415,14 @@ function cal_EE(labeling_id)
     };
 }
 
+/*计算stft ee rmse*/
+function cal_allInput(labeling_id)
+{
+    cal_Rmse(labeling_id);
+    cal_EE(labeling_id);
+    cal_Stft(labeling_id);
+}
+
 /*移动到制定位置*/
 function move2Pos(labeling_id)
 {
@@ -440,6 +448,8 @@ function move2Pos(labeling_id)
         }
     };
 }
+
+
 
 /*刷新前提交*/
 window.onbeforeunload = function(){

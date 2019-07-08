@@ -64,12 +64,11 @@ function copywaves(){
     var $select = $('#user_wave');
     var test={{waves|safe}};
     for (var wave in test){
-        console.log(test[wave].fields.title);
-        var $option = $('<option value="'+test[wave].fields.title+'" data-section="'+test[wave].fields.create_user_id
-        +  '"selected="selected">'+test[wave].fields.title+'</option>');
+        console.log(wave);
+        var $option = $('<option value="'+test[wave]["title"]+'" data-section="'+test[wave]["create_user_id"]
+        +  '"selected="selected">'+test[wave]["title"]+'</option>');
         $select.append($option);
     }
-    console.log($select)
     var tree1 = $select.treeMultiselect({ enableSelectAll: true, sortable: true, hideSidePanel: false, searchable: true, startCollapsed: true});
 
 </script>

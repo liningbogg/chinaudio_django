@@ -594,18 +594,18 @@ class TargetView(View):
 		:return:
 		"""
 		user_id = str(request.user)
-		waves = Wave.objects.filter(~Q(create_user_id=user_id))
+		waves = Wave.objects.filter(~Q(create_user_id=user_id)).values('id', 'title', 'create_user_id')
 		wavenameAlready = Wave.objects.filter(create_user_id=user_id).values('title')
 		name_exist = set()
-		waves_filter = set()
+		waves_filter = []
 		for wavename in wavenameAlready:
 			name_exist.add(wavename["title"])
 		for wave in waves:
-			if wave.title not in name_exist:
-				waves_filter.add(wave)
+			print(wave)
+			if wave['title'] not in name_exist:
+				waves_filter.append(wave)
 
-		waves = serializers.serialize("json", waves_filter)
-		context = {'waves': waves}
+		context = {'waves': waves_filter}
 		return render(request, 'copywaves.html', context)
 
 	def sub_and_execute_copywaves(self, request):
@@ -729,7 +729,7 @@ class TargetView(View):
 			current_tar = pickle.loads(current_clip.tar)[0]  # 当前帧主音高估计
 			if current_tar > 40:
 				filter_fft = filterByBase(srcFFT, current_tar, filter_rad, nfft, fs)  # 过滤后fft
-				filter_fft = [round(i, 2) for i in filter_fft]
+				filter_fft = [round(i, 4) for i in filter_fft]
 			else:
 				filter_fft = []
 			medium = pickle.loads(labelinfo.algorithmsmediums_set.get(algorithms=labelinfo.primary_ref,
@@ -745,8 +745,8 @@ class TargetView(View):
 									 int(processingX[len_processingX - 1] / 10) + 1)
 				resamplingY = finterp(x_pred)
 				medium = resamplingY
-				srcFFT = [round(i, 2) for i in srcFFT]
-				medium = [round(i, 2) for i in medium]
+				srcFFT = [round(i, 4) for i in srcFFT]
+				medium = [round(i, 4) for i in medium]
 		except Exception as e:
 			medium = []
 			srcFFT = []
