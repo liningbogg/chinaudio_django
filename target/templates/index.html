@@ -51,10 +51,39 @@
         </table>
     </div>
     <div class="tune_preset" id="tune_preset" >
-        <table border="1">
+        <table border="1" id="tune_table">
             <tr>
                 <td>tune_name</td><td>a4_hz</td><td>do</td><td>note1</td><td>note2</td><td>note3</td><td>note4</td>
-                <td>note5</td><td>note6</td><td>note7</td><td>opt</td>
+                <td>note5</td><td>note6</td><td>note7</td><td>opt1</td><td>opt2</td>
+            </tr>
+            {% for tune in tunes %}
+            <tr>
+                <td style="width:12%"><input type="text" value='{{tune.tune_name}}' /></td>
+                <td><input type="number" value='{{tune.a4_hz|floatformat:"2"}}' /></td>
+                <td><input type="text" value='{{tune.do}}' /></td>
+                <td><input type="text" value='{{tune.note1}}' /></td>
+                <td><input type="text" value='{{tune.note2}}' /></td>
+                <td><input type="text" value='{{tune.note3}}' /></td>
+                <td><input type="text" value='{{tune.note4}}' /></td>
+                <td><input type="text" value='{{tune.note5}}' /></td>
+                <td><input type="text" value='{{tune.note6}}' /></td>
+                <td><input type="text" value='{{tune.note7}}' /></td>
+                <td><input type="button" value="reset" onclick="add_tune({{ forloop.counter}})"/></td>
+                <td><input type="button" value="delete" /></td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td><input type="text" /></td>
+                <td><input type="number" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="button" value="add" onclick="add_tune(-1)" /></td>
             </tr>
         </table>
     </div>

@@ -473,7 +473,7 @@ body,div
 	left:0%;
     width:99%;
     top:0%;
-    height:30%;
+    height:20%;
     border-width:0.0625rem;
     border-style:solid;
     border-color:red;
@@ -526,7 +526,7 @@ body,div
 {
     font-size:0.875rem;
 	line-height:1;
-	width:12%;
+	width:11%;
 }
 .strings_set tr td input
 {
@@ -537,27 +537,33 @@ body,div
 }
 
 /*提交定弦*/
-.sub_strings_set
+.pre_strings_set
 {
     position:relative;
     float:left;
     display:table;
 	left:0%;
-    width:99%;
+    width:100%;
     top:0%;
     height:2%;
-    font-size:1rem;
-    style="border-width:1px; border-style:solid; border-color:blue;"
+    font-size:0.875rem;
     overflow-y:auto;
     overflow-x:auto;
 }
-.sub_strings_set input
+.pre_strings_set input
 {
-    font-size:1rem;
+    font-size:0.875rem;
 	line-height:1;
-	width:100%;
+	width:49.5%;
+	height:98%;
 }
-
+.pre_strings_set select
+{
+    font-size:0.875rem;
+	line-height:1;
+	width:49.6%;
+	height:98%;
+}
 
 /*参考音高参数设置*/
 .ref_set
@@ -566,18 +572,42 @@ body,div
 	float:left;
 	display:table;
 	left:0%;
-    width:99%;
+    width:45%;
     top:0%;
     height:2%;
     border-width:0.0625rem;
+    font-size:0.875rem;
     border-style:solid;
     border-color:red;
 	overflow-y:auto;
 }
 .ref_set input
 {
-    width:22%;
-	table-layout:fixed;
+    width:35%;
+    height:90%;
+	font-size:0.875rem;
+	line-height:1;
+}
+/*自定义区间估算*/
+.customRef
+{
+    position:relative;
+	float:left;
+	display:table;
+	left:2%;
+    width:52%;
+    top:0%;
+    height:2%;
+    border-width:0.0625rem;
+    font-size:0.875rem;
+    border-style:solid;
+    border-color:red;
+	overflow-y:auto;
+}
+.customRef input
+{
+    width:25%;
+    height:90%;
 	font-size:0.875rem;
 	line-height:1;
 }

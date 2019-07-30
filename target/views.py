@@ -24,6 +24,7 @@ from django.shortcuts import render
 from django.template import loader
 from django.utils.decorators import method_decorator
 from django.views.generic import View
+
 from pydub import AudioSegment
 from django.db.models import Q
 import os, shutil
@@ -36,6 +37,7 @@ from target.models import Stft
 from target.models import AlgorithmsClips
 from target.models import AlgorithmsMediums
 from target.models import LabelingAlgorithmsConf
+from target.models import Tune
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
@@ -45,7 +47,7 @@ import scipy
 from target.targetTools import targetTools
 from baseFrqComb import BaseFrqDetector
 from scipy.interpolate import interp1d
-
+from scipy.fftpack import fft
 import multiprocessing
 
 # 归一化函数
@@ -491,7 +493,7 @@ def algorithm_cal_async(labeling, detector, stft, rmse, fs, nfft, algorithms_nam
 
 # Create your views here.
 class TargetView(View):
-	msg_from = '1214397815@qq.com'	# 发送方邮箱
+	msg_from = '1214397815@qq.com'  # 发送方邮箱
 	passwd = 'ruzdcenkznfhhijf'  # 填入发送方邮箱的授权码
 	msg_to = '1214397815@qq.com'  # 收件人邮箱
 
@@ -513,7 +515,6 @@ class TargetView(View):
 		:param request:
 		:return:
 		"""
-		# bt = loader.get_template("index.html")
 		waves = Wave.objects.filter(create_user_id=request.user)
 		for wave in waves:
 			clips = Clip.objects.filter(title=wave.title, create_user_id=request.user)
@@ -523,13 +524,70 @@ class TargetView(View):
 				candidateFrame = clips.aggregate(Max('startingPos'))['startingPos__max']
 				candidateFrameNum = wave.frameNum  # 待测总帧数
 				completion = round(candidateFrame / candidateFrameNum * 100, 1)
-				completion = min(100,completion)
+				completion = min(100, completion)
 			wave.completion = completion
 			wave.save(update_fields=["completion"])
-
 		waves = Wave.objects.filter(create_user_id=request.user).order_by('frameNum')
-		context = {'waves': waves}
+		try:
+			tunes = Tune.objects.filter(create_user_id=request.user)
+		except Exception as e:
+			print(e)
+		context = {'waves': waves, 'tunes': tunes}
 		return render(request, 'index.html', context)
+
+	@method_decorator(login_required)
+	def addTune(self, request):
+		print("hello")
+		tune_name = str(request.GET.get('tune_name'))
+		a4_hz = request.GET.get('a4_hz')
+		print(a4_hz)
+
+		do = str(request.GET.get('do'))
+		note1 = str(request.GET.get('note1'))
+		note2 = str(request.GET.get('note2'))
+		note3 = str(request.GET.get('note3'))
+		note4 = str(request.GET.get('note4'))
+		note5 = str(request.GET.get('note5'))
+		note6 = str(request.GET.get('note6'))
+		note7 = str(request.GET.get('note7'))
+		print(note5)
+		try:
+			Tune.objects.update_or_create(create_user_id=request.user, tune_name=tune_name, defaults={'a4_hz': a4_hz,
+					'do': do, 'note1': note1, 'note2': note2, 'note3':note3, 'note4': note4, 'note5': note5,'note6': note6, 'note7': note7},)
+		except Exception as e:
+			print(e)
+			return HttpResponse("err")
+		return HttpResponse("ok")
+
+	@method_decorator(login_required)
+	def stringsReset(self, request):
+		strings_str = request.GET.get('strings')
+		do = request.GET.get('do')
+		a4_hz = float(request.GET.get('a4_hz'))
+		f_list = strings_str.split(',')
+		strings=[]
+		for item in f_list:
+			print(item)
+			strings.append(float(item))
+		print(strings)
+		try:
+			wave_id = request.GET.get('wave_id')
+			wave = Wave.objects.get(id=wave_id)
+			chin = Chin()
+			print(do)
+			print(a4_hz)
+			chin.set_ahz(a4_hz)
+			chin.set_do(do)
+			print(strings)
+			print(chin)
+			chin.set_hzes(strings)
+			wave.chin = pickle.dumps(chin)
+			wave.save()
+		except Exception as e:
+			print(e)
+			return HttpResponse(e)
+		return HttpResponse("ok")
+
 
 	@classmethod
 	def handle_upload_file(cls, upload_file, path, user_id):
@@ -537,39 +595,41 @@ class TargetView(View):
 		if not os.path.exists(path):
 			os.makedirs(path)
 			print("文件夹已经创建:"+path)
-		else:
-			file_name = path + upload_file.name
-			print(file_name)
-			wave_name=upload_file.name.split(".")[0]
-			print(wave_name)
-			already = Wave.objects.filter(create_user_id=user_id, title=wave_name) #已经存在的wave
-			if already.count() == 0:
-				try:
-					destination = open(file_name, 'wb+')
-					for chunk in upload_file.chunks():
-						destination.write(chunk)
-					destination.close()
-					# 插入数据库
-					stream, stream_fs = librosa.load(file_name, mono=False, sr=None)
-					duration = librosa.core.get_duration(y=stream[0],sr=stream_fs)
-					nfft = round(stream_fs/10)
-					speech_stft, phase = librosa.magphase(
-						librosa.stft(stream[0], n_fft=nfft, hop_length=nfft, window=scipy.signal.hamming))
-					speech_stft = np.transpose(speech_stft)  # stft转置
-					frameNum = np.size(speech_stft,0)
-					#chin 设置
-					chin = Chin()
-					chin.set_ahz(440)
-					wave=Wave(create_user_id=user_id,title=wave_name,waveFile=file_name, frameNum=frameNum, duration=duration,
-							  chin=pickle.dumps(chin), fs=stream_fs,nfft=nfft,completion=0)
-					wave.save()
-					return "success"
-				except Exception as e:
-					print(e)
-					return "err"
-			else:
-				print(wave_name + " already existed")
+		file_name = path + upload_file.name
+		print(file_name)
+		wave_name = upload_file.name.split(".")[0]
+		print(wave_name)
+		already = Wave.objects.filter(create_user_id=user_id, title=wave_name)  # 已经存在的wave
+		if already.count() == 0:
+			try:
+				destination = open(file_name, 'wb+')
+				for chunk in upload_file.chunks():
+					destination.write(chunk)
+				destination.close()
+				# 插入数据库
+				stream, stream_fs = librosa.load(file_name, mono=False, sr=None)
+				duration = librosa.core.get_duration(y=stream[0], sr=stream_fs)
+				nfft = round(stream_fs / 10)
+				speech_stft, phase = librosa.magphase(
+					librosa.stft(stream[0], n_fft=nfft, hop_length=nfft, window=scipy.signal.hamming))
+				speech_stft = np.transpose(speech_stft)  # stft转置
+				frameNum = np.size(speech_stft, 0)
+				# chin 设置
+				chin = Chin()
+				chin.set_ahz(440)
+				wave = Wave(create_user_id=user_id, title=wave_name, waveFile=file_name, frameNum=frameNum,
+							duration=duration,
+							chin=pickle.dumps(chin), fs=stream_fs, nfft=nfft, completion=0)
+				wave.save()
+				return "success"
+			except Exception as e:
+				print(e)
 				return "err"
+		else:
+			print(wave_name + " already existed")
+			return "err"
+
+
 
 
 	@classmethod
@@ -645,6 +705,7 @@ class TargetView(View):
 		title = request.GET.get('title')
 		user_id = str(request.user)
 		wave = Wave.objects.get(create_user_id=user_id, title=title)
+		wave_id = wave.id
 		fs = wave.fs
 		nfft = wave.nfft
 		end = wave.frameNum
@@ -734,7 +795,7 @@ class TargetView(View):
 				filter_fft = []
 			medium = pickle.loads(labelinfo.algorithmsmediums_set.get(algorithms=labelinfo.primary_ref,
 															  startingPos=current_frame,length=1).medium)
-			# 重新采样(降低采样)
+			# 重新采样(降低采样), 只降低中间结果
 			isResampling = labelinfo.medium_resampling
 			if isResampling is True:
 				processingX = np.arange(0, len(medium))
@@ -789,10 +850,14 @@ class TargetView(View):
 		for clip in clipsLocalOri:
 			clipsLocal.append({"id": clip.id, "startingPos":clip.startingPos,
 									"length": clip.length, "tar": list(pickle.loads(clip.tar))})
-		context = {'title': title,'fs':fs,'nfft': nfft, 'ee': ee, 'rmse': rmse, 'stopPos': list(vadrs['stopPos']),
+		try:
+			tunes = Tune.objects.filter(create_user_id=request.user)
+		except Exception as e:
+			print(e)
+		context = {'title': title,'fs':fs,'nfft': nfft, 'ee': ee, 'rmse': rmse, 'stopPos': list(vadrs['stopPos']),'tunes':tunes,
 					'manual_pos':manual_pos, 'tones_local':tones_local, 'target':target, 'reference': reference,'primary_ref':labelinfo.primary_ref,
 					'startPos': list(vadrs['startPos']), 'ee_diff':list(vadrs['ee_diff']),"srcFFT":list(srcFFT),"medium":list(medium),
-					'filter_fft':list(filter_fft), 'current_tar':current_tar,"filter_rad":filter_rad,'a4_hz':a4_hz,
+					'filter_fft':list(filter_fft), 'current_tar':current_tar,"filter_rad":filter_rad,'a4_hz':a4_hz,'wave_id':wave_id,
 					'string_hzes': string_hzes, 'string_notes': string_notes, 'string_do': string_do,'pitch_scaling':pitch_scaling,
 					"current_frame":current_frame,"extend_rad":extend_rad, "labeling_id":labelinfo.id, 'play_fs':labelinfo.play_fs,
 					"tone_extend_rad":tone_extend_rad, "frame_num":end, 'vad_thrart_EE':thrartEE,"clipsLocal": clipsLocal,
@@ -819,7 +884,28 @@ class TargetView(View):
 		return HttpResponse(possiblePos)
 
 	@method_decorator(login_required)
-	def filter_fft(selfs, request):
+	def tuneReset(self, request):
+		try:
+			wave_id = request.GET.get('wave_id')
+			tune_id = request.GET.get('tune_id')
+			tune = Tune.objects.get(id=tune_id)
+			wave=Wave.objects.get(id=wave_id)
+			chin=Chin()
+			chin.set_ahz(tune.a4_hz)
+			chin.set_do(tune.do)
+
+			notes=[tune.note1, tune.note2, tune.note3, tune.note4, tune.note5, tune.note6, tune.note7]
+			chin.set_notes(notes)
+			wave.chin=pickle.dumps(chin)
+			wave.save()
+		except Exception as e:
+			print(e)
+			return HttpResponse(e)
+		return HttpResponse("ok")
+
+
+	@method_decorator(login_required)
+	def filter_fft(self, request):
 		title = request.GET.get('title')
 		user_id = str(request.user)
 		currentPos = int(request.GET.get('currentPos'))
@@ -839,6 +925,71 @@ class TargetView(View):
 		except Exception as e:
 			print(e)
 			return None
+
+	# 自定义重新采样函数
+	@staticmethod
+	def resampling(src, targetLen):
+		processingX = np.arange(0, len(src))
+		len_processingX = len(processingX)
+		processingY = src
+		finterp = interp1d(processingX, processingY, kind="linear")
+		x_pred = np.linspace(0, processingX[len_processingX - 1] * 1.0, int(targetLen) + 1)
+		resamplingY = finterp(x_pred)
+		return resamplingY
+
+	@method_decorator(login_required)
+	def cal_custom_pitch(self, request):
+		title = request.GET.get('title')
+		user_id = str(request.user)
+		nfft = int(request.GET.get('nfft'))
+		fs = int(request.GET.get('fs'))
+		start = int(request.GET.get('start'))
+		end = int(request.GET.get('end'))
+		labeling_id = int(request.GET.get('labeling_id'))
+		labeling = Labeling.objects.get(id=labeling_id)
+		try:
+			wave_arr = self.wave_mem_wave.achieve(user_id, title, fs, nfft, start, end)  #
+			wave_len = len(wave_arr)
+			wave_fft_src = fft(wave_arr)  # 自定义序列的fft
+			wave_fft = abs(wave_fft_src)[0:int((len(wave_fft_src)+1)/2)]
+			fft_len = len(wave_fft)
+			targetLen = 2205
+			print(wave_len, fft_len)
+			labeling = Labeling.objects.get(id=labeling_id)
+			algorithms_name = labeling.primary_ref
+			detector = None
+			
+			if algorithms_name == "combDescan":
+				detector = BaseFrqDetector(True)  # 去扫描线算法
+			if algorithms_name == "comb":
+				detector = BaseFrqDetector(False)  # 不去扫描线算法
+			referencePitchAllInfo = detector.getpitch(wave_fft, fs, wave_len, False)
+			src = TargetView.resampling(wave_fft, targetLen)[0:int(4000*4410/fs)]  # 重新采样后的适合显示的fft
+			primaryPitch = referencePitchAllInfo[0]  # 主音高
+			medium = referencePitchAllInfo[2]  # 中间结果
+			isResampling = labeling.medium_resampling
+			if isResampling is True:
+				medium = TargetView.resampling(medium, int(len(medium)/10))
+			if primaryPitch > 40:
+				filter_fft = filterByBase(src, primaryPitch, labeling.filter_rad, nfft, fs)  # 过滤后fft
+				filter_fft = [round(i, 4) for i in filter_fft]
+			else:
+				filter_fft = []
+			wave = Wave.objects.get(create_user_id=user_id, title=title)
+			if wave.chin is not None:
+				chin = pickle.loads(wave.chin)
+			else:
+				chin = None
+			print(chin)
+			possiblePos = chin.cal_possiblepos(primaryPitch)[1].replace("\n", "<br>")
+			context = {'primaryPitch': primaryPitch, 'src': list(src), 'filter_fft': filter_fft, 'medium': list(medium)
+					   ,"possiblePos": possiblePos}
+			return HttpResponse(json.dumps(context))
+		except Exception as e:
+			filter_fft = []
+			print(e)
+			return None
+
 
 	@method_decorator(login_required)
 	def algorithm_select(self, request):
@@ -1087,7 +1238,6 @@ class TargetView(View):
 		items = []	# 返回的clips
 		pitchesArr = [[0] * wave.frameNum, [0] * wave.frameNum, [0] * wave.frameNum]  # 存储前三个音高的二维数组
 		# pitchesArr = [pitchesArr]
-
 
 		if wave.chin is not None:
 			chin = pickle.loads(wave.chin)

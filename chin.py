@@ -68,7 +68,6 @@ class Chin:
             pos = item % 12
             self.__tones.append(Chin.__noteslist[pos])
             count = count + 1
-        print(self.__tones)
 
     @staticmethod
     def cal_position(basefrq, frq):

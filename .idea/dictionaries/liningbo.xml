@@ -34,11 +34,13 @@
       <w>notesposition</w>
       <w>notesstr</w>
       <w>onload</w>
+      <w>onreadystatechange</w>
       <w>pitchinfo</w>
       <w>playwave</w>
       <w>poscan</w>
       <w>possiblepos</w>
       <w>pred</w>
+      <w>resampling</w>
       <w>resultion</w>
       <w>rightboundary</w>
       <w>rlock</w>

@@ -172,7 +172,7 @@
 		<div class="strings_set" id="strings_set">
 			<table border="" class="strings_set_table" id="strings_set_table">
 				<tr>
-					<td>1弦</td><td>2弦</td><td>3弦</td><td>4弦</td><td>5弦</td><td>6弦</td><td>7弦</td><td>do</td>
+					<td>1弦</td><td>2弦</td><td>3弦</td><td>4弦</td><td>5弦</td><td>6弦</td><td>7弦</td><td>do</td><td>a4_hz</td><td>opt</td>
 				</tr>
 				<tr>
 					<td>
@@ -207,20 +207,43 @@
 						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
 						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
 					</td>
-
+					<td>
+						<input onfocus="if(this.value==this.defaultValue){this.value='';placeholder=this.defaultValue}"
+						   onblur="if(this.value==''){this.value=this.defaultValue}"/>
+					</td>
+					<td>
+						<input type="button" name="sub_chin_strings"  value="set" onclick="sub_strings('{{title}}',{{wave_id|safe}})" style="float:right;"/>
+					</td>
 				</tr>
 			</table>
 		</div>
-		<div class="sub_strings_set" id="sub_strings_set" >
-			<input type="button" name="sub_chin_strings"  value="设置strings" onclick="sub_strings('{{title}}')" style="float:right;"/>
+		<div class="pre_strings_set" id="pre_strings_set" >
+			<select id="select_tune" >
+				{% for tune in tunes %}
+  					<option value="{{tune.id}}">{{tune.tune_name}}</option>
+				{% endfor %}
+			</select>
+			<input type="button" value="重设定弦" onclick="tune_reset({{wave_id|safe}})"/>
 		</div>
 		<div class="ref_set" id="ref_set">
-			音高
+			pitch
 			<input type="number" id="primary_pitch" onfocus="if(this.value==this.defaultValue){this.value=''}"
 				   onblur="if(this.value==''){this.value=this.defaultValue}"
 				   value={{current_tar|safe}} placeholder="待预测音位的音高"/>
-			<input type="button" name="sub_primary_pitch" onclick="cal_pitch_pos('{{title}}')" value="音位估算"
+			<input type="button" name="sub_primary_pitch" onclick="cal_pitch_pos('{{title}}')" value="stringEva"
 				   style="float:right;">
+		</div>
+		<div class="customRef" id="customRef">
+			start
+			<input type="number" id="custom_start" onfocus="if(this.value==this.defaultValue){this.value=''}"
+				   onblur="if(this.value==''){this.value=this.defaultValue}" value="{{current_frame|safe}}" style="width:20%"
+				   placeholder="起始位置"/>
+			end
+			<input type="number" id="custom_end" onfocus="if(this.value==this.defaultValue){this.value=''}"
+				   onblur="if(this.value==''){this.value=this.defaultValue}" value="{{current_frame|safe}}" style="width:20%"
+				   placeholder="终止边界"/>
+			<input type="button" name="sub_customRef" onclick="cal_customRef('{{title}}',{{nfft|safe}},{{fs|safe}},{{labeling_id|safe}})" value="customEva"
+				   style="float:right;width:30%" />
 		</div>
 		<div class="filter_set" id="filter_set" >
 				频率
@@ -250,7 +273,7 @@
 				</select>
 
 				<input type="button" id="sub_play_clips" style="float:right;width:22%"
-					   onclick="play_clips('{{title|safe}}',{{nfft|safe}})" value="播放">
+					   onclick="play_clips('{{title|safe}}',{{nfft|safe}})" value="play">
 		</div>
 		<div class="mark_clips" id="mark_clips">
 			fs
@@ -264,10 +287,10 @@
 			</select>
 
 			anote
-			<input type="text" id="mark_anote" placeholder='注释'
+			<input type="text" id="mark_anote" placeholder='anote here'
 					  style="width:48%">
 			<input type="button" id="sub_mark_clips" style="float:right;width:22%"
-					   onclick="mark_clips('{{title|safe}}',{{nfft|safe}})" value="mark标记">
+					   onclick="mark_clips('{{title|safe}}',{{nfft|safe}})" value="mark">
 		</div>
 		<div class="add_tone" id="add_tone">
 			<div class="add_tone_table_div" id="add_tone_table_div" >
@@ -513,13 +536,16 @@
 	//设置定弦信息
     var string_hzes={{string_hzes|safe}};
     var string_do='{{string_do|safe}}';
+    var a4_hz='{{a4_hz|safe}}';
     var table_row=document.getElementById("strings_set_table").rows[1];
     for (var i=0;i<string_hzes.length;++i){
     	var item=table_row.cells[i].getElementsByTagName("INPUT")[0];
     	item.defaultValue=string_hzes[i].toFixed(2);
     }
-	var divItem=table_row.cells[string_hzes.length].getElementsByTagName("INPUT")[0];
-    divItem.defaultValue=string_do;
+	var divItem_do=table_row.cells[string_hzes.length].getElementsByTagName("INPUT")[0];
+    divItem_do.defaultValue=string_do;
+    var divItem_a4=table_row.cells[string_hzes.length+1].getElementsByTagName("INPUT")[0];
+    divItem_a4.defaultValue=a4_hz;
 </script>
 <script>
 	var clipsLocal={{clipsLocal|safe}};

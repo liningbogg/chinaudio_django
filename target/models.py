@@ -139,6 +139,7 @@ class Wave(BaseModel):
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
 
+
 class Tune(BaseModel):
     tune_name = models.CharField(max_length=255)
     a4_hz = models.FloatField(default=440.0)
@@ -150,8 +151,10 @@ class Tune(BaseModel):
     note5 = models.CharField(max_length=16)
     note6 = models.CharField(max_length=16)
     note7 = models.CharField(max_length=16)
+
     class Meta:
         unique_together = ["tune_name", "create_user_id"]
+
 
 class Log(BaseModel):
     """

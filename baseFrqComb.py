@@ -227,7 +227,6 @@ class BaseFrqDetector:
         :param showtestview:是否显示figure
         :return:频率,插值采样后的输入,梳状统计向量
         """
-        start = time.clock()
         dataclip[0:int(30 * nfft / fs)] = 0
         dataclip = BaseFrqDetector.subpeak_amplimiting(dataclip, int(30.0 / fs * nfft), 0.1)  # 次峰限幅
         lowcutoff = int(32.5 * 441000.0 / fs)  # 最低截止频率对应的坐标
@@ -283,5 +282,4 @@ class BaseFrqDetector:
             else:
                 continue
         pitch = prebasefrq
-        print(time.clock()-start)
         return [pitch / 10.0, resampy, truetrans]

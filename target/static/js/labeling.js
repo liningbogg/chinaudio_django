@@ -141,10 +141,43 @@ function filter_fft(srcFFT,title,currentPos,nfft,fs,labeling_id)
         }
     };
 }
+
+//计算自定义片段的音高
+function cal_customRef(title,nfft,fs,labeling_id)
+{
+    var start=document.getElementById('custom_start').value;
+    var end=document.getElementById('custom_end').value;
+    console.log(title,nfft,start,end);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'calCustomPitch/?'+"title="+title+"&start="+start+"&end="+end+"&nfft="+nfft+"&fs="+fs+"&labeling_id="+labeling_id, true);
+    xhr.send(null)
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            try{
+                var context = JSON.parse(xhr.response);
+                var primaryPitch=context["primaryPitch"];
+                var src = context["src"];
+                var filter_fft = context["filter_fft"];
+                var medium = context["medium"];
+                var srcChartDictSeries={"fft":src,"filter_fft":filter_fft};
+                var possiblePos = context["possiblePos"];
+	            srcChartDictLine=[];
+                addChart("",srcChartDictSeries,srcChartDictLine,440*nfft/fs,"sampling_fft",0,parseInt(4000*4410/fs));
+                srcChartDictSeries={"medium":medium};
+	            srcChartDictLine=[];
+	            //此处的４４０要跟随是否降低采样变化，尚未实现
+                addChart("",srcChartDictSeries,srcChartDictLine,440,"sampling_medium",0,medium.length);
+                document.getElementById('ref_info').innerHTML=possiblePos;
+            }catch(err){
+                console.log(err);
+            }
+        }
+    };
+}
+
 //播放片段
 function play_clips(title,nfft)
 {
-    var play_start=document.getElementById('play_start').value;
     var play_end=document.getElementById('play_end').value;
     var fs = document.getElementById('play_fs').value;
     nfft=nfft*fs/44100;
@@ -176,15 +209,58 @@ function play_clips(title,nfft)
 }
 
 //设置strings
-function sub_strings(title)
+function sub_strings(title,wave_id)
 {
     var test = document.getElementById("strings_set_table");
-    console.log(test);
-    console.log(test.rows[1].cells[1].getElementsByTagName("INPUT")[0].value);
+    var strings=new Array(7);
+    for(var i=0;i<7;++i){
+        strings[i]=test.rows[1].cells[i].getElementsByTagName("INPUT")[0].value;
+    }
+    var _do=test.rows[1].cells[7].getElementsByTagName("INPUT")[0].value;
+    var a4_hz=test.rows[1].cells[8].getElementsByTagName("INPUT")[0].value;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'strings_reset/?'+"strings="+strings+"&do="+_do+"&a4_hz="+a4_hz+"&wave_id="+wave_id , true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context);
+                location.reload();
+            }catch(e)
+            {
+                console.log(e);
+            }
+
+        }
+    };
+}
+
+function tune_reset(wave_id){
+    var iscontinue= confirm("确定执行危险操作吗?");
+    if(iscontinue==true){
+        tune_id=document.getElementById('select_tune').value;
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'tune_reset/?'+"tune_id="+tune_id+"&wave_id="+wave_id , true);
+        xhr.send(null);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+                var context = xhr.response;
+                try{
+                    console.log(context);
+                    location.reload();
+                }catch(e)
+                {
+                    console.log(e);
+                }
+
+            }
+        };
+    }
 }
 
 /*算法选择触发函数*/
-function algorithm_selectFunc(algorithm_name,labeling_id)
+function algorithm_selectFunc(algorithm_name, labeling_id)
 {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'algorithm_select/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name , true);
@@ -453,5 +529,5 @@ function move2Pos(labeling_id)
 
 /*刷新前提交*/
 window.onbeforeunload = function(){
-
+    
 }

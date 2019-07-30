@@ -1,3 +1,7 @@
+html
+{
+    font-size: calc(100vw/1920*16);
+}
 body,div
 {
     position:fixed;
@@ -12,9 +16,9 @@ body,div
     width:99%;
     height:3%;
     display:table;
-    font-size:24px;
+    font-size:1.25rem;
     border-color:blue;
-    border-width:1px;
+    border-width:0.05rem;
     border-style:solid;
 }
 .main
@@ -25,7 +29,7 @@ body,div
     top:0%;
     height:96%;
     border-color:red;
-    border-width:1px;
+    border-width:0.05rem;
     border-style:solid;
     overflow-y:auto;
 }
@@ -38,9 +42,9 @@ body,div
     top:0%;
     height:3%;
     display:table;
-    font-size:32px;
+    font-size:1.5rem;
     border-color:red;
-    border-width:1px;
+    border-width:0.05rem;
     border-style:solid;
 }
 /*添加waves*/
@@ -53,7 +57,7 @@ body,div
     height:3%;
     display:table;
     border-color:green;
-    border-width:1px;
+    border-width:0.05rem;
     border-style:solid;
 }
 .add_waves input
@@ -66,11 +70,11 @@ body,div
 {
     position:relative;
     float:left;
-    width:54%;
+    width:55%;
     top:0%;
     height:80%;
     border-color:blue;
-    border-width:1px;
+    border-width:0.05rem;
     border-style:solid;
     overflow-y:auto;
     text-align:center;
@@ -84,13 +88,12 @@ body,div
 {
     position:relative;
     float:left;
-    width:45%;
+    width:43%;
     top:0%;
     left:0.5%;
-    height:2%;
-    display:table;
+    height:60%;
     border-color:blue;
-    border-width:1px;
+    border-width:0.05rem;
     border-style:solid;
     overflow-y:auto;
 }
@@ -100,7 +103,13 @@ body,div
 }
 .tune_preset tr td
 {
-    width:9%;
-    font-size:20px;
+    text-align:center;
+    font-size:1rem;
+}
+.tune_preset tr td input
+{
+    width:100%;
+    height:100%;
+    font-size:1rem;
     text-align:center;
 }

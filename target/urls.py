@@ -55,6 +55,10 @@ urlpatterns = [
     path('labeling/calRmse/', target_view.calRmse),
     path('labeling/calEE/', target_view.calEE),
     path('labeling/setManualPos/', target_view.setManualPos),
+    path('labeling/calCustomPitch/', target_view.cal_custom_pitch),
+    path('index/addTune/', target_view.addTune),
+    path('labeling/tune_reset/', target_view.tuneReset),  # 此处是指根据曲调重新设置弦高的危险算操作
+    path('labeling/strings_reset/', target_view.stringsReset),
     path('favicon.ico', serve, {'path': 'image/favicon.ico'}),
     url(r'^captcha', include('captcha.urls')),
     url('^$', target_view.index),
