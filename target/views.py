@@ -802,6 +802,7 @@ class TargetView(View):
 				len_processingX = len(processingX)
 				processingY = medium
 				finterp = interp1d(processingX, processingY, kind="linear")
+
 				x_pred = np.linspace(0, processingX[len_processingX - 1] * 1.0,
 									 int(processingX[len_processingX - 1] / 10) + 1)
 				resamplingY = finterp(x_pred)
@@ -861,7 +862,8 @@ class TargetView(View):
 					'string_hzes': string_hzes, 'string_notes': string_notes, 'string_do': string_do,'pitch_scaling':pitch_scaling,
 					"current_frame":current_frame,"extend_rad":extend_rad, "labeling_id":labelinfo.id, 'play_fs':labelinfo.play_fs,
 					"tone_extend_rad":tone_extend_rad, "frame_num":end, 'vad_thrart_EE':thrartEE,"clipsLocal": clipsLocal,
-					'vad_thrart_RMSE':thrartRmse, 'vad_throp_EE':throp, 'create_user_id':user_id,'possiblePos': possiblePos}
+					'vad_thrart_RMSE':thrartRmse, 'vad_throp_EE':throp, 'create_user_id':user_id,
+				    'possiblePos': possiblePos}
 
 		return render(request, 'labeling.html', context)
 

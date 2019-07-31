@@ -166,7 +166,7 @@ function cal_customRef(title,nfft,fs,labeling_id)
                 srcChartDictSeries={"medium":medium};
 	            srcChartDictLine=[];
 	            //此处的４４０要跟随是否降低采样变化，尚未实现
-                addChart("",srcChartDictSeries,srcChartDictLine,440,"sampling_medium",0,medium.length);
+                addChart("",srcChartDictSeries,srcChartDictLine,4400*medium.length/14000,"sampling_medium",0,medium.length);
                 document.getElementById('ref_info').innerHTML=possiblePos;
             }catch(err){
                 console.log(err);
