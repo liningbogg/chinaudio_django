@@ -178,6 +178,7 @@ function cal_customRef(title,nfft,fs,labeling_id)
 //播放片段
 function play_clips(title,nfft)
 {
+    var play_start=document.getElementById('play_start').value;
     var play_end=document.getElementById('play_end').value;
     var fs = document.getElementById('play_fs').value;
     nfft=nfft*fs/44100;
@@ -194,6 +195,7 @@ function play_clips(title,nfft)
     //start = Math.round(play_start*fs/nfft);
     //end = Math.round(play_end*fs/nfft);
     var xhr = new XMLHttpRequest();
+    console.log(play_start);
     xhr.open('GET', 'get_phrase/?'+"title="+title+"&start="+play_start+"&end="+play_end+"&nfft="+nfft+"&fs="+fs, true);
     xhr.responseType = 'blob';
     xhr.send(null)

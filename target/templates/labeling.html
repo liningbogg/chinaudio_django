@@ -240,7 +240,7 @@
 				   placeholder="起始位置"/>
 			end
 			<input type="number" id="custom_end" onfocus="if(this.value==this.defaultValue){this.value=''}"
-				   onblur="if(this.value==''){this.value=this.defaultValue}" value="{{current_frame|safe}}" style="width:20%"
+				   onblur="if(this.value==''){this.value=this.defaultValue}" value="{{current_frame|add:1}}" style="width:20%"
 				   placeholder="终止边界"/>
 			<input type="button" name="sub_customRef" onclick="cal_customRef('{{title}}',{{nfft|safe}},{{fs|safe}},{{labeling_id|safe}})" value="customEva"
 				   style="float:right;width:30%" />
