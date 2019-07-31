@@ -476,7 +476,7 @@ def algorithm_cal_async(labeling, detector, stft, rmse, fs, nfft, algorithms_nam
 
 		if referencePitch[0] > 65 and rmse > 0.1:
 			filteredSGN=filterByBase(stft, referencePitch[0], 30, nfft, fs)
-			Filtered = detector.getpitch(stft, fs, nfft, False)
+			Filtered = detector.getpitch(filteredSGN, fs, nfft, False)
 			referencePitchFiltered = Filtered[0]
 		tar = []  # 得到的ｐｉｔｃｈ
 		tar.append(referencePitch[0])
