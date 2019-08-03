@@ -54,6 +54,7 @@ class targetTools:
             print(e)
             maxRmse = 0
         info.append([currentInit, length, currentSum, maxRmse, maxEEPos])
+        #print(info)
         clipStop = [item for item in info if (item[2] > throp)]
         clipStart = [item for item in info if (item[2] < (-1 * thrartEE) and item[3] > thrartRmse)]
         startPosOri = np.array([x[0]-1 for x in clipStart])

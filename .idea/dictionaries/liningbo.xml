@@ -28,11 +28,15 @@
       <w>indexcache</w>
       <w>isfilter</w>
       <w>markstr</w>
+      <w>maxminnormalization</w>
+      <w>maxv</w>
+      <w>minv</w>
       <w>namefile</w>
       <w>newclip</w>
       <w>nfft</w>
       <w>notesposition</w>
       <w>notesstr</w>
+      <w>oncreate</w>
       <w>onload</w>
       <w>onreadystatechange</w>
       <w>pitchinfo</w>

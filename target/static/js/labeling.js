@@ -496,9 +496,10 @@ function cal_EE(labeling_id)
 /*计算stft ee rmse*/
 function cal_allInput(labeling_id)
 {
+    cal_Stft(labeling_id);
     cal_Rmse(labeling_id);
     cal_EE(labeling_id);
-    cal_Stft(labeling_id);
+
 }
 
 /*移动到制定位置*/
