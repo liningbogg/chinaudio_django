@@ -244,7 +244,7 @@ class WaveMemWave(WaveMem):
 					t0 = time.clock()
 					# 如果再次判断没有key则此时写入写入数据
 					wave = Wave.objects.get(create_user_id=user_id, title=title)
-					stream = librosa.load(wave.waveFile, mono=False, sr=fs)[0][0]  # 以Fs重新采样
+					stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
 					t1 = time.clock()
 					mem_item = MemitemWave(
 						user_id,

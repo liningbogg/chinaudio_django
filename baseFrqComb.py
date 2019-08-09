@@ -246,6 +246,7 @@ class BaseFrqDetector:
         # pixes=10
         num = highcutoff  # 栅栏变换后的长度
         combtrans = np.zeros(num)  # 存放栅栏变换的结果
+
         # 梳状变换, 2019-03-10 16:54:45
         for k in np.arange(lowcutoff, highcutoff, 1):
             combtrans[k] = sum(resampy[::k])
