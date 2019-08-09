@@ -72,10 +72,11 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
     var i=0;
     for(key in dictSeries){
         options.series[i] = new Object();
+        options.series[i].visible = dictSeries[key]["visible"];
         options.series[i].color = color_chart[i];
         options.series[i].lineWidth = 1;
         options.series[i].name = key;
-        options.series[i].data = dictSeries[key].slice(start,end);
+        options.series[i].data = dictSeries[key]["list"].slice(start,end);
         i++;
     }
     var chart = Highcharts.chart(MyDiv,options);
@@ -123,7 +124,7 @@ function filter_fft(srcFFT,title,currentPos,nfft,fs,labeling_id)
     var filter_frq=document.getElementById('filter_frq').value;
     var filter_width=document.getElementById('filter_width').value;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'filter_fft/?'+"title="+title+"&currentPos="+currentPos +"&nfft="+nfft +"&fs="+fs
+    xhr.open('GET', 'filter_fft/?'+"title="+title+"&current_pos="+currentPos +"&nfft="+nfft +"&fs="+fs
         +"&filter_frq="+filter_frq+"&filter_width="+filter_width+"&labeling_id="+labeling_id, true);
     xhr.send(null);
     xhr.onreadystatechange = function() {
@@ -131,7 +132,10 @@ function filter_fft(srcFFT,title,currentPos,nfft,fs,labeling_id)
             try{
                 var fft_filtered = JSON.parse(xhr.response);
                 //在html上显示图形
-                var srcChartDictSeries={"fft":srcFFT,"filter_fft":fft_filtered};
+                var srcChartDictSeries={
+                    "fft":{"list":srcFFT,"visible":true},
+                    "filter_fft":{"list":fft_filtered,"visible":true}
+                };
 	            srcChartDictLine=[];
                 addChart("",srcChartDictSeries,srcChartDictLine,440*nfft/fs,"sampling_fft",0,parseInt(4000*nfft/fs));
             }catch(err){
@@ -159,15 +163,19 @@ function cal_customRef(title,nfft,fs,labeling_id)
                 var src = context["src"];
                 var filter_fft = context["filter_fft"];
                 var medium = context["medium"];
-                var srcChartDictSeries={"fft":src,"filter_fft":filter_fft};
-                var possiblePos = context["possiblePos"];
+                var srcChartDictSeries={
+                    "fft":{"list":src,"visible":true},
+                    "filter_fft":{"list":filter_fft,"visible":true}
+                };
+                var possible_pos = context["possible_pos"];
+
 	            srcChartDictLine=[];
                 addChart("",srcChartDictSeries,srcChartDictLine,440*nfft/fs,"sampling_fft",0,parseInt(4000*4410/fs));
-                srcChartDictSeries={"medium":medium};
+                srcChartDictSeries={"medium":{"list":medium,"visible":true}};
 	            srcChartDictLine=[];
 	            //此处的４４０要跟随是否降低采样变化，尚未实现
                 addChart("",srcChartDictSeries,srcChartDictLine,4400*medium.length/14000,"sampling_medium",0,medium.length);
-                document.getElementById('ref_info').innerHTML=possiblePos;
+                document.getElementById('ref_info').innerHTML=possible_pos;
             }catch(err){
                 console.log(err);
             }
@@ -203,7 +211,6 @@ function play_clips(title,nfft)
         if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
             //获取blob对象
             var blob_wav = xhr.response;
-            console.log(blob_wav)
             var url= URL.createObjectURL(blob_wav);  // 获取音频blob url
             phrase.src=url;  //设置播放路径
         }
@@ -330,7 +337,7 @@ function add_reference(algorithm_name,labeling_id)
 {
     var xhr = new XMLHttpRequest();
     var isFilter = document.getElementById('add_reference_select').value;
-    xhr.open('GET', 'addReference/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name+"&isFilter="+isFilter , true);
+    xhr.open('GET', 'addReference/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name+"&is_filter="+isFilter , true);
     xhr.send(null);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
@@ -509,7 +516,7 @@ function move2Pos(labeling_id)
     rowsNum=manual_pos.rows.length;
     manualPos=manual_pos.rows[rowsNum-1].cells[0].getElementsByTagName("INPUT")[0].value;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'setManualPos/?'+"labeling_id="+labeling_id+"&manualPos="+manualPos, true);
+    xhr.open('GET', 'setManualPos/?'+"labeling_id="+labeling_id+"&manual_pos="+manualPos, true);
     xhr.send(null);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功

@@ -1,7 +1,10 @@
 <component name="ProjectDictionaryState">
   <dictionary name="liningbo">
     <words>
+      <w>addcache</w>
+      <w>addwaves</w>
       <w>aduios</w>
+      <w>allinfo</w>
       <w>anote</w>
       <w>basefrq</w>
       <w>bybasefrq</w>
@@ -10,6 +13,7 @@
       <w>copywaves</w>
       <w>dataplay</w>
       <w>delcache</w>
+      <w>descan</w>
       <w>dostr</w>
       <w>dtone</w>
       <w>eedf</w>
@@ -20,19 +24,26 @@
       <w>fanyin</w>
       <w>fanyinpred</w>
       <w>fftnum</w>
+      <w>finterp</w>
       <w>flac</w>
+      <w>frameum</w>
       <w>guqin</w>
       <w>highcharts</w>
       <w>hzes</w>
       <w>i.pause</w>
       <w>indexcache</w>
       <w>isfilter</w>
+      <w>labelinfo</w>
+      <w>liningbo</w>
       <w>markstr</w>
       <w>maxminnormalization</w>
       <w>maxv</w>
+      <w>memitem</w>
       <w>minv</w>
       <w>namefile</w>
       <w>newclip</w>
+      <w>newfilepath</w>
+      <w>newlabeling</w>
       <w>nfft</w>
       <w>notesposition</w>
       <w>notesstr</w>
@@ -51,16 +62,23 @@
       <w>rmse</w>
       <w>ruzdcenkznfhhijf</w>
       <w>sanyin</w>
+      <w>seted</w>
       <w>simi</w>
+      <w>smtp</w>
       <w>spacethr</w>
       <w>spilted</w>
       <w>stft</w>
       <w>streamplay</w>
       <w>strid</w>
       <w>subwave</w>
+      <w>thrart</w>
+      <w>throp</w>
       <w>thrsanyin</w>
       <w>tonestr</w>
+      <w>vadrs</w>
       <w>wavblob</w>
+      <w>wavemem</w>
+      <w>waveout</w>
       <w>wavepitches</w>
       <w>wlock</w>
     </words>

@@ -28,7 +28,7 @@ class Clip(BaseModel):
     tar = models.BinaryField(null=True)
     anote = models.CharField(max_length=255)
     nfft = models.IntegerField()
-    
+    objects = models.Manager()
     class Meta:
         unique_together = ["title", "startingPos", "length", "create_user_id", "nfft"]
 
@@ -41,7 +41,7 @@ class AlgorithmsMediums(BaseModel):
     length = models.IntegerField()
     medium = models.BinaryField(null=True)
     anote = models.CharField(max_length=255)
-
+    objects = models.Manager()
     class Meta:
         unique_together = ["labeling", "algorithms", "startingPos", "length"]
 
@@ -63,7 +63,7 @@ class AlgorithmsClips(BaseModel):
     length = models.IntegerField()
     tar = models.BinaryField(null=True)
     anote = models.CharField(max_length=255)
-
+    objects = models.Manager()
     class Meta:
         unique_together = ["labeling", "algorithms", "startingPos", "length"]
 
@@ -84,6 +84,7 @@ class Labeling(BaseModel):
     play_fs = models.IntegerField(default=44100)  # 用于记录当前片段播放的fs
     primary_ref = models.CharField(max_length=255,default="combDescan")  # 主导算法数据
     medium_resampling = models.BooleanField(default=True)
+    objects = models.Manager()
 
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
@@ -94,6 +95,7 @@ class Stft(BaseModel):
     startingPos = models.IntegerField()
     length = models.IntegerField()
     src = models.BinaryField(null=True)
+    objects = models.Manager()
     class Meta:
         unique_together = ["labeling", "startingPos", "length"]
 
@@ -102,6 +104,7 @@ class LabelingAlgorithmsConf(BaseModel):
     algorithms = models.CharField(max_length=255)  # 对应的算法
     is_filter = models.BooleanField(default=True)  # 是否采纳过滤后的频率
     anote = models.CharField(max_length=255,null=True)  # 注释
+    objects = models.Manager()
     class Meta:
         unique_together = ["labeling", "algorithms"]
 
@@ -122,6 +125,7 @@ class Tone(BaseModel):
     note = models.CharField(max_length=16)
     tone = models.CharField(max_length=16)
     anote = models.CharField(max_length=255)
+    objects = models.Manager()
 
 
 class Wave(BaseModel):
@@ -135,6 +139,7 @@ class Wave(BaseModel):
     fs = models.IntegerField()
     nfft = models.IntegerField(default=4410)
     completion = models.FloatField()
+    objects = models.Manager()
 
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
@@ -151,7 +156,7 @@ class Tune(BaseModel):
     note5 = models.CharField(max_length=16)
     note6 = models.CharField(max_length=16)
     note7 = models.CharField(max_length=16)
-
+    objects = models.Manager()
     class Meta:
         unique_together = ["tune_name", "create_user_id"]
 
@@ -166,7 +171,7 @@ class Log(BaseModel):
     title = models.CharField(max_length=255)
     content = models.CharField(max_length=255)
     timestamp = models.DateTimeField()
-
+    objects = models.Manager()
 
 class MarkedPhrase(BaseModel):
     """
@@ -178,3 +183,4 @@ class MarkedPhrase(BaseModel):
     mark = models.CharField(max_length=255)
     start = models.FloatField()
     length = models.FloatField()
+    objects = models.Manager()

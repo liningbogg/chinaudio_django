@@ -63,7 +63,7 @@
                     {% endfor %}
                     <input name="clip_select"
                            onchange="selectClip('{{clip.title}}', {{clip.startingPos}},{{clip.id}},
-                           '{{clip.possiblePos|safe}}',{{wave.fs|safe}},{{wave.nfft|safe}},
+                           '{{clip.possible_pos|safe}}',{{wave.fs|safe}},{{wave.nfft|safe}},
                            {{wave.frameNum|safe}})"
                            type="radio">
                     {% if perms.target.delete_clip%}

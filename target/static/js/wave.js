@@ -94,7 +94,7 @@ function add_wave(waveFile){
     var user_name=spilt_arr[spilt_arr.length-2];
     console.log(user_name);
     var wave_audio= document.getElementById("song");  //获取播放器
-    wave_audio.src = "/static/"+user_name+"/"+file_name;  // 设置播放资源url
+    wave_audio.src = "/media/"+user_name+"/"+file_name;  // 设置播放资源url
     audios.push(wave_audio);  // 加入播放器队列
     wave_audio.addEventListener("play", pauseAll.bind(wave_audio));  // 互斥播放监听
 }

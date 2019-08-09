@@ -32,7 +32,7 @@
 		<div class="strings_info" id="strings_info">
 		</div>
 		<div class="ref_info" id="ref_info" >
-			{{possiblePos|safe}}
+			{{possible_pos|safe}}
 		</div>
 		<div class="tone_info" id="tone_info" >
 		</div>
@@ -138,9 +138,9 @@
 					</td>
 				</tr>
 				<tr>
-					<td>vad_thrart_EE</td>
+					<td>vad_thrart_ee</td>
 					<td>
-						<input type="number" id="vad_thrart_EE" value={{vad_thrart_EE|safe}} placeholder="起始位置判定熵阈值" style="color:blue"/>
+						<input type="number" id="vad_thrart_EE" value={{vad_thrart_ee|safe}} placeholder="起始位置判定熵阈值" style="color:blue"/>
 					</td>
 				</tr>
 				<tr>
@@ -253,7 +253,7 @@
 				<input type="number" id="filter_width" onfocus="if(this.value==this.defaultValue){this.value=''}"
 					   onblur="if(this.value==''){this.value=this.defaultValue}" value={{filter_rad|safe}} placeholder="fft过滤宽度设置"/>
 				<input type="button" id="sub_filter_opt" style="float:right"
-					   onclick="filter_fft({{srcFFT|safe}},'{{title|safe}}',{{current_frame|safe}},{{nfft|safe}},{{fs|safe}},{{labeling_id|safe}})" value="重新过滤">
+					   onclick="filter_fft({{src_fft|safe}},'{{title|safe}}',{{current_frame|safe}},{{nfft|safe}},{{fs|safe}},{{labeling_id|safe}})" value="重新过滤">
 		</div>
 		<div class="play_clips" id="play_clips" >
 				start
@@ -364,7 +364,10 @@
    		ee_base[i]=ee_data[counter];
    		counter++;
    	}
-    var vadChartDictSeries={"spectral_entropy":ee_base,"rmse":rmse_base};
+    var vadChartDictSeries={
+    	"spectral_entropy":{"list":ee_base, "visible":true},
+    	"rmse":{"list":rmse_base, "visible":true}
+    };
 	for(var i=0;i<stopPos.length;++i)
 	{
 		stopPos[i]+=Math.max(current_frame-extend_rad,0);
@@ -394,11 +397,11 @@
 	var reference_tar=new Array();
 	for (key in reference_ori)
 	{
-		reference_tar[key]=new Array({{frame_num|safe}});
+		reference_tar[key]={"list":new Array({{frame_num|safe}}), "visible":true};
 		var counter=0;
 		for(var i= Math.max(current_frame-extend_rad,0);i<Math.min(current_frame+extend_rad,frame_end);i++)
    		{
-   			reference_tar[key][i]=reference_ori[key][counter];
+   			reference_tar[key]["list"][i]=reference_ori[key][counter];
    			counter++;
    		}
 	}
@@ -434,7 +437,11 @@
    			counter++;
    		}
 	}
-	var targetChartDictSeries={"target1":targetArr_tar[0],"target2":targetArr_tar[1],"target3":targetArr_tar[2]};
+	var targetChartDictSeries={
+		"target1":{"list":targetArr_tar[0],"visible":true},
+		"target2":{"list":targetArr_tar[1],"visible":true},
+		"target3":{"list":targetArr_tar[2],"visible":true}
+	};
     var targetChartDictLine={
 		"stopPos":stopPos,
         "startPos":startPos
@@ -450,7 +457,10 @@
 </script>
 <script>
 	//fft显示
-	var srcChartDictSeries={"fft":{{srcFFT|safe}},"filter_fft":{{filter_fft|safe}}};
+	var srcChartDictSeries={
+		"fft":{"list":{{src_fft|safe}},"visible":true},
+		"filter_fft":{"list":{{filter_fft|safe}},"visible":true}
+	};
 	var nfft={{nfft|safe}};
 	var fs={{fs|safe}};
 	srcChartDictLine=[];
@@ -458,10 +468,16 @@
 </script>
 <script>
 	//medium梳状投影
-	var mediumChartDictSeries={"medium":{{medium|safe}}};
+	var mediumChartDictSeries={
+		"medium":{"list":{{medium|safe}},"visible":true}
+	};
 	var fs={{fs|safe}};
 	mediumChartDictLine=[];
-    addChart("",mediumChartDictSeries,mediumChartDictLine,4400*mediumChartDictSeries["medium"].length/14000,"sampling_medium",0,mediumChartDictSeries["medium"].length);
+    addChart(
+    	"",mediumChartDictSeries,mediumChartDictLine,
+    	4400*mediumChartDictSeries["medium"]["list"].length/14000,
+    	"sampling_medium",0,mediumChartDictSeries["medium"].length
+    );
 </script>
 <script>
 	//播放音乐片段
@@ -551,7 +567,7 @@
     divItem_a4.defaultValue=a4_hz;
 </script>
 <script>
-	var clipsLocal={{clipsLocal|safe}};
+	var clipsLocal={{clips_local|safe}};
 	var clips_str="<table border='' class='table_clips_local' id='table_clips_local' >";
 	var counter_row=0;
 	for(var i=0;i<clipsLocal.length;i++)
