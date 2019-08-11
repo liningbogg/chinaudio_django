@@ -45,7 +45,6 @@ from scipy.interpolate import interp1d
 from scipy.fftpack import fft
 from cacheout import Cache
 import multiprocessing
-import time
 
 
 # 归一化函数
@@ -87,18 +86,18 @@ class MemItem:
 # wave类
 class MemitemWave(MemItem):
 	"""
-	曲目条目定义类
+	曲目缓存定义类
 	"""
 	obsolete = timedelta(minutes=60)
-	val_list = ["user_id", "title", "fs", "nfft", "wave", "obsolete"]  # 成员变量名称列表
 
-	def __init__(self, user_id, title, fs, nfft, wave, obsolete):
+	def __init__(self, user_id, title, fs, nfft, frame_init, frame_num, wave):
 		self.user_id = user_id
 		self.title = title
 		self.fs = fs
 		self.nfft = nfft
 		self.wave = wave
-		self.obsolete = obsolete
+		self.frame_init = frame_init
+		self.frame_num = frame_num
 
 	def get_subwave(self, start, end):
 		"""
@@ -107,13 +106,12 @@ class MemitemWave(MemItem):
 		:param end: 终止位置，不包括end
 		:return: 返回子数组（float数组）
 		"""
-		if start == end and start == 0:
-			sub = np.copy(self.wave)
-		else:
-			sub = np.copy(self.wave[start: end])
+		sub = np.copy(self.wave[start: end])
+		print(len(self.wave))
 		return sub
 
 
+'''
 # stft类
 class MemItemStft(MemItem):
 	"""
@@ -188,6 +186,7 @@ class MemItemRmse(MemItem):
 		else:
 			sub = np.copy(self.rmse[start:end])
 		return sub
+'''
 
 
 # 缓存基类
@@ -209,6 +208,21 @@ class WaveMem:
 		"""
 		pass
 
+	@abstractmethod
+	def get_cache_name_list(self, user_id, title, fs, nfft, start, end):
+		"""
+				获取制定片段的缓存名称列表
+				:param title:名称
+				:param nfft: 帧长度
+				:param start: 起始帧
+				:param end: 终止帧
+				:param user_id 用户id
+				:param fs: 采样率
+				:return: float32array
+				"""
+
+		pass
+
 	def __init__(self, maxsize):
 		"""
 		初始操作，包括轮询线程的启动
@@ -223,6 +237,32 @@ class WaveMemWave(WaveMem):
 	def __init__(self, maxsize):
 		super(WaveMemWave, self).__init__(maxsize)
 
+	def get_cache_name_list(self, user_id, title, fs, nfft, start, end):
+		cache_name_list = []  # 程序目的输出　字典列表
+		try:
+			labeling = Labeling.objects.get(create_user_id=user_id, title=title)  # 用户标记数据
+			cache_block_size = labeling.cache_block_size
+			first_block_index = int(start / cache_block_size)  # 第一块缓存索引
+			last_block_index = int(end / cache_block_size)  # 最后一块缓存索引
+			for i in range(first_block_index, last_block_index + 1):
+				cache_name = user_id + "_" + title + "_" + "wave_" + str(fs) + "_" + str(i)
+				cache_name = str(cache_name)
+				start_pos = max(i * cache_block_size, start)
+				end_pos = min((i + 1) * cache_block_size, end)  # 右侧区间开
+				cache_name_list.append(
+					{
+						"name": cache_name,
+						"block_frame_init": i * cache_block_size,  # 缓存块起始地址
+						"block_frame_num": cache_block_size,  # 缓存块长度
+						"start_pos": start_pos,
+						"end_pos": end_pos,
+					}
+				)
+		except Exception as e:
+			print(e)
+		finally:
+			return cache_name_list
+
 	def achieve(self, user_id, title, fs, nfft, start, end):
 		"""
 		获取制定片段，原始wave波形
@@ -234,186 +274,50 @@ class WaveMemWave(WaveMem):
 		:param fs: 采样率
 		:return: float32array
 		"""
-		sub_wave = []
-		try:
-			wave_key = user_id + "_" + title + "_" + "wave_"+str(fs)	 # 例子 pi_秋风词_wave_44100
-			sub_wave_item = self.container.get(wave_key)
-			if sub_wave_item is None:
 
-				try:
-					t0 = time.clock()
-					# 如果再次判断没有key则此时写入写入数据
-					wave = Wave.objects.get(create_user_id=user_id, title=title)
-					stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
-					t1 = time.clock()
+		sub_wave = []  # 程序到目标输出，wave子串
+		try:
+			wave = Wave.objects.get(create_user_id=user_id, title=title)
+			chche_info = self.get_cache_name_list(user_id, title, fs, nfft, start, end)  # 获取缓存块信息
+			for item in chche_info:
+				chche_block = self.container.get(item["name"])
+				block_init = 1.0*item["block_frame_init"]*nfft/fs  # 缓存初始时刻，单位ｓ
+				block_len = 1.0*item["block_frame_num"]*nfft/fs  # 缓存持续时间，单位ｓ
+				if chche_block is None:
+					stream = librosa.load(
+						wave.waveFile,
+						mono=False, sr=fs,
+						res_type="kaiser_fast",
+						offset=block_init,
+						duration=block_len
+					)[0][0]
 					mem_item = MemitemWave(
 						user_id,
 						title,
-						fs,
-						nfft,
-						stream,
-						timedelta(minutes=120)
+						fs,  # 重新采样率
+						nfft,  # 重采样后的frame长
+						item["block_frame_init"],
+						item["block_frame_num"],
+						stream
 					)
-
-					self.container.set(wave_key, mem_item)
-					sub_wave = mem_item.get_subwave(start * nfft, end * nfft)
-					print(wave_key + " 未命中")
-
-					print(t1-t0)
-				except Exception as addcacheError:
-					print("读取错误:"+repr(addcacheError))
-				finally:
-					pass
-			else:
-				print(wave_key + " 命中")
-				sub_wave = sub_wave_item.get_subwave(start * nfft, end * nfft)
+					self.container.set(item["name"], mem_item)
+					sub_wave_item = mem_item.get_subwave(
+						(item["start_pos"]-item["block_frame_init"])*nfft,
+						(item["end_pos"]-item["block_frame_init"])*nfft
+					)  # 分段wave
+					print(item["name"] + " missed")
+					sub_wave.extend(sub_wave_item)
+				else:
+					sub_wave_item = chche_block.get_subwave(
+						(item["start_pos"]-item["block_frame_init"]) * nfft,
+						(item["end_pos"]-item["block_frame_init"]) * nfft
+					)
+					print(item["name"] + " hit")
+					sub_wave.extend(sub_wave_item)
 		except Exception as e:
 			print(e)
 		finally:
-			pass
-		return sub_wave
-
-
-class WaveMemStft(WaveMem):
-	def __init__(self, wavemem_wave, maxsize):
-		super(WaveMemStft, self).__init__(maxsize)
-		self.wavemem_wave = wavemem_wave
-
-	def achieve(self, user_id, title, fs, nfft, start, end):
-		"""
-		获取短时傅里叶,此缓存粒度较粗，不提供单帧粒度，若是单帧fft获取，则直接调用数据库，此处设置缓存目的是求给予stft的谱熵等等
-		:param user_id: 用户id
-		:param fs: 采样率
-		:param title: 名称
-		:param nfft: 帧长度
-		:param start: 起始帧
-		:param end: 终止帧
-		:return: 短时傅里叶功率谱或者幅值谱
-		"""
-		sub_wave = []
-		try:
-			wave_key = user_id + "_" + title + "_" + "stft"	 # 例子 pi_秋风词_stft
-			sub_wave_item = self.container.get(wave_key)
-			if sub_wave_item is None:
-				# 获取原始左声道波形
-				stream = self.wavemem_wave.achieve(user_id, title, fs, nfft, 0, 0)
-				# 获取stft
-				speech_stft, phase = librosa.magphase(
-					librosa.stft(stream, n_fft=nfft, hop_length=nfft, window=scipy.signal.windows.hann, center=False)
-				)
-				speech_stft = np.transpose(speech_stft)  # stft转置
-				# 此处的stft仅仅为了求谱熵等，因此不需要特别长的生存时间，谱熵缓存可设置长一点
-				mem_item = MemItemStft(
-					user_id,
-					title,
-					fs,
-					nfft,
-					speech_stft,
-					timedelta(minutes=5)
-				)
-				self.container.set(wave_key, mem_item)
-				sub_wave = mem_item.get_subwave(start, end)
-				print(wave_key + " 未命中")
-			else:
-				sub_wave = sub_wave_item.get_subwave(start, end)
-				print(wave_key + " 命中")
-		except Exception as e:
-			print(e)
-		finally:
-			pass
-		return sub_wave
-
-
-class WaveMemSpectrumEntropy(WaveMem):
-	def __init__(self, wavemem_stft, maxsize):
-		super(WaveMemSpectrumEntropy, self).__init__(maxsize)
-		self.wavemem_stft = wavemem_stft
-
-	def achieve(self, user_id, title, fs, nfft, start, end):
-		"""
-		获取谱熵
-		:param title:名称
-		:param nfft: 帧长度
-		:param start: 起始帧
-		:param end: 终止帧
-		:param user_id: 用户id
-		:param fs: 采样率
-		:return: 谱熵
-		"""
-		sub_wave = []
-		try:
-			wave_key = user_id + "_" + title + "_" + "spectrum_entropy"  # 例子 pi_秋风词_stft
-			sub_wave_item = self.container.get(wave_key)
-			if sub_wave_item is None:
-				# 尝试从数据库获取wave.ee
-				print(wave_key + " 未命中")
-				wave = Wave.objects.get(create_user_id=user_id, title=title)
-				spectrum_entropy = pickle.loads(wave.ee)
-				print(spectrum_entropy)
-				mem_item = MemItemSpectrumEntropy(
-					user_id,
-					title,
-					fs,
-					nfft,
-					spectrum_entropy,
-					timedelta(minutes=5)
-				)
-				self.container.set(wave_key, mem_item)
-				sub_wave = mem_item.get_subwave(start, end)
-			else:
-				sub_wave = sub_wave_item.get_subwave(start, end)
-				print(wave_key + " 命中")
-		except Exception as e:
-			print(e)
-		finally:
-			pass
-		return sub_wave
-
-
-class WaveMemRmse(WaveMem):
-	def __init__(self, wavemem_wave, maxsize):
-		super(WaveMemRmse, self).__init__(maxsize)
-		self.wavemem_wave = wavemem_wave
-
-	def achieve(self, user_id, title, fs, nfft, start, end):
-		"""
-		获取制定片段，原始wave波形
-		:param title:名称
-		:param nfft: 帧长度
-		:param start: 起始帧
-		:param user_id: 用户id
-		:param fs: 采样率
-		:param end: 终止帧
-		:return: float32array
-		"""
-		sub_rmse = []
-		try:
-			wave_key = user_id + "_" + title + "_" + "rmse"  # 例子 pi_秋风词_rmse
-			sub_rmse_item = self.container.get(wave_key)
-			if sub_rmse_item is None:
-				# 尝试从数据库获取wave.rmse
-				print(wave_key + " 未命中")
-				wave = Wave.objects.get(create_user_id=user_id, title=title)
-				rmse = pickle.loads(wave.rmse)
-				mem_item = MemItemRmse(
-					user_id,
-					title,
-					fs,
-					nfft,
-					rmse,
-					obsolete=timedelta(minutes=60)
-				)
-				self.container.set(wave_key, mem_item)
-				sub_rmse = mem_item.get_subwave(start, end)
-			else:
-				print(wave_key + " 命中")
-				sub_rmse = sub_rmse_item.get_subwave(start, end)
-
-		except Exception as e:
-			print(e)
-		finally:
-			pass
-		return sub_rmse
+			return sub_wave
 
 
 def algorithm_cal_async(labeling, detector, stft, rmse, fs, nfft, algorithms_name, current_pos):
@@ -460,10 +364,10 @@ class TargetView(View):
 		重载初始化函数
 		"""
 		super(View, self).__init__()
-		self.wave_mem_wave = WaveMemWave(32)  # 构建缓存对象
-		self.wave_mem_stft = WaveMemStft(self.wave_mem_wave, 32)
-		self.wave_mem_spectrumEntropy = WaveMemSpectrumEntropy(self.wave_mem_stft, 32)
-		self.wave_mem_rmse = WaveMemRmse(self.wave_mem_wave, 32)
+		self.wave_mem_wave = WaveMemWave(512)  # 构建缓存对象
+		# self.wave_mem_stft = WaveMemStft(self.wave_mem_wave, 512)
+		# self.wave_mem_spectrumEntropy = WaveMemSpectrumEntropy(self.wave_mem_stft, 512)
+		# self.wave_mem_rmse = WaveMemRmse(self.wave_mem_wave, 512)
 		self.sender = None
 
 	@classmethod
@@ -497,10 +401,8 @@ class TargetView(View):
 
 	@method_decorator(login_required)
 	def add_tune(self, request):
-		print("hello")
 		tune_name = str(request.GET.get('tune_name'))
 		a4_hz = request.GET.get('a4_hz')
-		print(a4_hz)
 
 		do = str(request.GET.get('do'))
 		note1 = str(request.GET.get('note1'))
@@ -510,7 +412,6 @@ class TargetView(View):
 		note5 = str(request.GET.get('note5'))
 		note6 = str(request.GET.get('note6'))
 		note7 = str(request.GET.get('note7'))
-		print(note5)
 		try:
 			Tune.objects.update_or_create(
 				create_user_id=request.user,
@@ -540,19 +441,13 @@ class TargetView(View):
 		f_list = strings_str.split(',')
 		strings = []
 		for item in f_list:
-			print(item)
 			strings.append(float(item))
-		print(strings)
 		try:
 			wave_id = request.GET.get('wave_id')
 			wave = Wave.objects.get(id=wave_id)
 			chin = Chin()
-			print(do)
-			print(a4_hz)
 			chin.set_ahz(a4_hz)
 			chin.set_do(do)
-			print(strings)
-			print(chin)
 			chin.set_hzes(strings)
 			wave.chin = pickle.dumps(chin)
 			wave.save()
@@ -568,9 +463,7 @@ class TargetView(View):
 			os.makedirs(path)
 			print("文件夹已经创建:"+path)
 		file_name = path + upload_file.name
-		print(file_name)
 		wave_name = upload_file.name.split(".")[0]
-		print(wave_name)
 		already = Wave.objects.filter(create_user_id=user_id, title=wave_name)  # 已经存在的wave
 		if already.count() == 0:
 			try:
@@ -638,7 +531,6 @@ class TargetView(View):
 		for wave_name in wave_name_already:
 			name_exist.add(wave_name["title"])
 		for wave in waves:
-			print(wave)
 			if wave['title'] not in name_exist:
 				waves_filter.append(wave)
 
@@ -715,20 +607,11 @@ class TargetView(View):
 		labelinfo.current_frame = current_frame
 		labelinfo.save()
 		extend_rad = labelinfo.extend_rad
-		ee = self.wave_mem_spectrumEntropy.achieve(
-			user_id, title, fs, nfft,
-			max(current_frame-extend_rad, 0),
-			min(current_frame+extend_rad, end)
-		)
+
+		ee = pickle.loads(wave.ee)[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
 		ee = list(ee)
-		rmse = self.wave_mem_rmse.achieve(
-			user_id,
-			title,
-			fs,
-			nfft,
-			max(current_frame-extend_rad, 0),
-			min(current_frame+extend_rad, end)
-		)
+
+		rmse = pickle.loads(wave.rmse)[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
 		rmse = list(rmse)
 		vadrs = targetTools.vad(ee, rmse, thrart_ee, thrart_rmse, throp)
 		# 收集tones
@@ -838,7 +721,6 @@ class TargetView(View):
 				string_notes = chin.get_notes()
 				string_do = chin.get_do()
 				pitch_scaling = chin.get_scaling()
-				print(a4_hz)
 			except Exception as e:
 				pitch_scaling = 1
 
@@ -963,10 +845,9 @@ class TargetView(View):
 			labeling = Labeling.objects.get(id=labeling_id)
 			src_fft = pickle.loads(labeling.stft_set.get(startingPos=current_pos, length=1).src)
 			src_fft[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
-			fft_filtered = filter_by_base(src_fft, filter_frq, filter_width, nfft, fs)  # 过滤后fft
-			fft_filtered = fft_filtered.tolist()
-			fft_filtered = [round(i, 2) for i in fft_filtered]
-			return HttpResponse(json.dumps(fft_filtered))
+			fft_filtered = filter_by_base(src_fft, filter_frq, filter_width, nfft, fs).tolist()  # 过滤后fft
+			fft_filtered_round = [round(i, 2) for i in fft_filtered]
+			return HttpResponse(json.dumps(fft_filtered_round))
 		except Exception as e:
 			print(e)
 			return None
@@ -996,9 +877,7 @@ class TargetView(View):
 			wave_len = len(wave_arr)
 			wave_fft_src = fft(wave_arr)  # 自定义序列的fft
 			wave_fft = abs(wave_fft_src)[0:int((len(wave_fft_src)+1)/2)]
-			fft_len = len(wave_fft)
 			target_len = 2205
-			print(wave_len, fft_len)
 			labeling = Labeling.objects.get(id=labeling_id)
 			algorithms_name = labeling.primary_ref
 			detector = None
@@ -1024,9 +903,7 @@ class TargetView(View):
 				chin = pickle.loads(wave.chin)
 			else:
 				chin = None
-			print(chin)
 			possible_pos = chin.cal_possiblepos(primary_pitch)[1].replace("\n", "<br>")
-			print(possible_pos)
 			context = {
 				'primary_pitch': primary_pitch, 'src': list(src), 'filter_fft': filter_fft,
 				'medium': list(medium),
@@ -1041,7 +918,6 @@ class TargetView(View):
 	def algorithm_select(self, request):
 		algorithms_name = request.GET.get('algorithm_name')
 		labeling_id = int(request.GET.get('labeling_id'))
-		print(labeling_id)
 		labeling = Labeling.objects.get(id=labeling_id)
 		clips = labeling.algorithmsclips_set.filter(algorithms=algorithms_name)
 		clips_num = clips.count()
@@ -1067,7 +943,7 @@ class TargetView(View):
 	@staticmethod
 	def algorithm_cal_thread(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithms_name):
 		thread_num = 4
-		pool = multiprocessing.Pool(processes=thread_num)
+		pool = multiprocessing.Pool(processes=thread_num, maxtasksperchild=2)
 		for i in range(len(rmse_arr)):
 			stft = np.copy(stft_arr[i])
 			stft[0:int(30 * nfft / fs)] = 0  # 清零３０ｈｚ以下信号
@@ -1085,6 +961,7 @@ class TargetView(View):
 			algorithms_name = request.GET.get('algorithm_name')
 			labeling_id = int(request.GET.get('labeling_id'))
 			labeling = Labeling.objects.get(id=labeling_id)
+
 			clips_all = labeling.algorithmsclips_set.filter(algorithms=algorithms_name)
 			clips_num = clips_all.count()
 			clips_all.delete()
@@ -1096,11 +973,26 @@ class TargetView(View):
 			clips_num_oncreate = labeling.frameNum  # 需要创建数据总条目
 			user_id = labeling.create_user_id
 			title = labeling.title
+			wave = Wave.objects.get(create_user_id=user_id, title=title)
 			fs = labeling.fs
 			nfft = labeling.nfft
 
-			stft_arr = self.wave_mem_stft.achieve(user_id, title, fs, nfft, 0, 0)  # 短时傅里叶谱
-			rmse_arr = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, 0)  # 获取ｒｍｓｅ
+			# stft_arr = self.wave_mem_stft.achieve(user_id, title, fs, nfft, 0, 0)  # 短时傅里叶谱
+			# 获取原始左声道波形
+			stream = librosa.load(wave.waveFile, mono=False, sr=wave.fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
+			# 获取stft
+			stft_arr, phase = librosa.magphase(
+				librosa.stft(
+					stream, n_fft=wave.nfft,
+					hop_length=wave.nfft,
+					window=scipy.signal.windows.hann,
+					center=False
+				)
+			)
+			stft_arr = np.transpose(stft_arr)  # stft转置
+
+			# rmse_arr = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, 0)  # 获取ｒｍｓｅ
+			rmse_arr = pickle.loads(wave.rmse)
 			detector = None
 			if algorithms_name == "combDescan":
 				detector = BaseFrqDetector(True)  # 去扫描线算法
@@ -1169,17 +1061,17 @@ class TargetView(View):
 			labeling = Labeling.objects.get(id=labeling_id)
 			labeling.stft_set.all().delete()
 			user_id = str(request.user)
-			wave_key = user_id + "_" + labeling.title + "_" + "stft"  # 例子 pi_秋风词_stft
+			# wave_key = user_id + "_" + labeling.title + "_" + "stft"  # 例子 pi_秋风词_stft
 			wave = Wave.objects.get(create_user_id=user_id, title=labeling.title)
 			# 获取原始左声道波形
-			stream = self.wave_mem_wave.achieve(user_id, labeling.title, labeling.fs, labeling.nfft, 0, 0)
+			stream = librosa.load(wave.waveFile, mono=False, sr=wave.fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
 			# 获取stft
 			speech_stft, phase = librosa.magphase(
 				librosa.stft(stream, n_fft=wave.nfft, hop_length=wave.nfft, window=scipy.signal.windows.hann, center=False)
 			)
 			speech_stft = np.transpose(speech_stft)  # stft转置
 			# 此处的stft仅仅为了求谱熵等，因此不需要特别长的生存时间，谱熵缓存可设置长一点
-			mem_item = MemItemStft(
+			'''mem_item = MemItemStft(
 				user_id,
 				labeling.title,
 				labeling.fs,
@@ -1187,7 +1079,7 @@ class TargetView(View):
 				speech_stft,
 				timedelta(minutes=5)
 			)
-			self.wave_mem_stft.container.set(wave_key, mem_item)
+			self.wave_mem_stft.container.set(wave_key, mem_item)'''
 
 			stft_arr = speech_stft
 			# 短时傅里叶谱
@@ -1214,9 +1106,10 @@ class TargetView(View):
 			title = labeling.title
 			fs = labeling.fs
 			nfft = labeling.nfft
-
+			wave = Wave.objects.get(create_user_id=user_id, title=title)
 			# 获取原始左声道波形
-			stream = self.wave_mem_wave.achieve(user_id, title, fs, nfft, 0, 0)
+			# stream = self.wave_mem_wave.achieve(user_id, title, fs, nfft, 0, 0)
+			stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
 			# 获取stft
 			speech_stft, phase = librosa.magphase(
 				librosa.stft(
@@ -1255,8 +1148,9 @@ class TargetView(View):
 			title = labeling.title
 			fs = labeling.fs
 			nfft = labeling.nfft
-
-			stream = self.wave_mem_wave.achieve(user_id, title, fs, nfft, 0, 0)
+			wave = Wave.objects.get(create_user_id=user_id, title=title)
+			# stream = self.wave_mem_wave.achieve(user_id, title, fs, nfft, 0, 0)
+			stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
 			rmse = librosa.feature.rmse(
 				y=stream, S=None, frame_length=nfft,
 				hop_length=nfft, center=False
@@ -1390,31 +1284,36 @@ class TargetView(View):
 		获取音乐片段
 		:return:音乐片段wav格式2进制流
 		"""
-		user_id = str(request.user)
-		title = request.GET.get('title')
-		start = int(request.GET.get('start'))
-		end = int(request.GET.get('end'))
-		nfft = int(request.GET.get('nfft'))
-		fs = int(request.GET.get('fs'))
+		try:
+			user_id = str(request.user)
+			title = request.GET.get('title')
+			start = int(request.GET.get('start'))
+			end = int(request.GET.get('end'))
+			nfft = int(request.GET.get('nfft'))
+			fs = int(request.GET.get('fs'))
 
-		# self.wave_mem.add_mem(title)	# 试图将完整曲目加入缓存
-		wave_arr = self.wave_mem_wave.achieve(user_id, title, fs, nfft, start, end)  # 获取音频信号
-		wave_arr = np.array(wave_arr) * 32767
-		wave_arr = wave_arr.astype(np.int16)
-		io_stream = BytesIO()  # 内存文件
+			# self.wave_mem.add_mem(title)	# 试图将完整曲目加入缓存
+			wave_arr = self.wave_mem_wave.achieve(user_id, title, fs, nfft, start, end)  # 获取音频信号
+			wave_arr = np.array(wave_arr) * 32767
+			wave_arr = wave_arr.astype(np.int16)
+			io_stream = BytesIO()  # 内存文件
 
-		f = waveout.open(io_stream, 'wb')  # 定位于内存镜像
-		f.setnchannels(1)  # 设置为单通道
-		f.setsampwidth(2)  # 16位采样
-		f.setframerate(fs)  # 设置采样率
-		# 将wav_data转换为二进制数据写入文件
-		f.writeframes(wave_arr.tostring())  # 写入音频信息
-		f.close()  # 关闭写入流
-		seg = AudioSegment.from_wav(io_stream)
-		io_stream_flac = BytesIO()  # 内存文件
-		seg.export(io_stream_flac, format='wav')
-		blob_ori = io_stream_flac.getvalue()
-		return HttpResponse(blob_ori)
+			f = waveout.open(io_stream, 'wb')  # 定位于内存镜像
+			f.setnchannels(1)  # 设置为单通道
+			f.setsampwidth(2)  # 16位采样
+			f.setframerate(fs)  # 设置采样率
+			# 将wav_data转换为二进制数据写入文件
+			f.writeframes(wave_arr.tostring())  # 写入音频信息
+			f.close()  # 关闭写入流
+			seg = AudioSegment.from_wav(io_stream)
+			io_stream_flac = BytesIO()  # 内存文件
+			seg.export(io_stream_flac, format='wav')
+			blob_ori = io_stream_flac.getvalue()
+			return HttpResponse(blob_ori)
+
+		except Exception as e:
+			print(e)
+			return None
 
 	def post_phrase(self, request):
 		"""

@@ -18,7 +18,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8acc8f02-be45-420d-812a-1c53fb213d8d" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/liningbo.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/liningbo.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pitch/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/pitch/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/static/js/wave.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/static/js/wave.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/targetTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/targetTools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/views.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -34,8 +40,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/target/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="676">
-              <caret line="249" column="32" selection-start-line="249" selection-start-column="32" selection-end-line="249" selection-end-column="32" />
+            <state relative-caret-position="555">
+              <caret line="1433" column="26" lean-forward="true" selection-start-line="1433" selection-start-column="26" selection-end-line="1433" selection-end-column="26" />
               <folding>
                 <element signature="e#17#28#0" expanded="true" />
               </folding>
@@ -44,21 +50,21 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../.conda/envs/pitch/lib/python3.7/site-packages/librosa/core/audio.py">
+        <entry file="file://$PROJECT_DIR$/pitch/settings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="840">
-              <caret line="68" column="62" selection-start-line="68" selection-start-column="51" selection-end-line="68" selection-end-column="62" />
+            <state relative-caret-position="2010">
+              <caret line="134" selection-start-line="134" selection-end-line="134" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pitch/wsgi.py">
+        <entry file="file://$PROJECT_DIR$/chin.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="14" column="54" selection-start-line="14" selection-start-column="54" selection-end-line="14" selection-end-column="54" />
+            <state relative-caret-position="1620">
+              <caret line="114" column="17" selection-start-line="114" selection-start-column="12" selection-end-line="114" selection-end-column="17" />
               <folding>
-                <element signature="e#221#230#0" expanded="true" />
+                <element signature="e#0#11#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -67,8 +73,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/baseFrqComb.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3510">
-              <caret line="240" column="51" selection-start-line="240" selection-start-column="51" selection-end-line="240" selection-end-column="51" />
+            <state relative-caret-position="1620">
+              <caret line="114" column="17" selection-start-line="114" selection-start-column="12" selection-end-line="114" selection-end-column="17" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
               </folding>
@@ -91,8 +97,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/static/js/wave.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2115">
-              <caret line="141" column="14" selection-start-line="141" selection-start-column="2" selection-end-line="141" selection-end-column="14" />
+            <state relative-caret-position="1275">
+              <caret line="85" column="51" lean-forward="true" selection-start-line="85" selection-start-column="51" selection-end-line="85" selection-end-column="51" />
             </state>
           </provider>
         </entry>
@@ -100,8 +106,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3195">
-              <caret line="213" selection-start-line="213" selection-end-line="213" />
+            <state relative-caret-position="390">
+              <caret line="298" column="34" selection-start-line="298" selection-start-column="21" selection-end-line="298" selection-end-column="34" />
             </state>
           </provider>
         </entry>
@@ -110,7 +116,7 @@
         <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="4125">
-              <caret line="275" column="53" selection-start-line="275" selection-start-column="53" selection-end-line="275" selection-end-column="53" />
+              <caret line="275" column="42" selection-start-line="275" selection-start-column="32" selection-end-line="275" selection-end-column="42" />
               <folding>
                 <element signature="n#style#0;n#input#0;n#td#1;n#tr#5;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#input#0;n#td#1;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -129,8 +135,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/templates/wave.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1290">
-              <caret line="86" column="14" selection-start-line="86" selection-start-column="14" selection-end-line="86" selection-end-column="14" />
+            <state relative-caret-position="1140">
+              <caret line="76" column="24" selection-start-line="76" selection-start-column="24" selection-end-line="76" selection-end-column="24" />
               <folding>
                 <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -143,8 +149,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1515">
-              <caret line="101" column="28" selection-start-line="101" selection-start-column="6" selection-end-line="101" selection-end-column="28" />
+            <state relative-caret-position="1230">
+              <caret line="82" column="72" selection-start-line="82" selection-start-column="72" selection-end-line="82" selection-end-column="72" />
             </state>
           </provider>
         </entry>
@@ -161,36 +167,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>dictSeries</find>
-      <find>chart</find>
-      <find>addReference</find>
-      <find>cal_possiblepos</find>
-      <find>def labeling</find>
-      <find>addChart</find>
-      <find>possiblePos</find>
-      <find>filter</find>
-      <find>cal_cu</find>
-      <find>src_fft</find>
-      <find>display</find>
-      <find>librosa.display</find>
-      <find>core</find>
-      <find>favi</find>
-      <find>static</find>
-      <find>wave</find>
-      <find>selectClip</find>
-      <find>３</find>
-      <find>Cache</find>
-      <find>maxsize</find>
-      <find>WaveMem</find>
-      <find>get</find>
-      <find>get_phrase</find>
-      <find>play_clips</find>
       <find>play</find>
-      <find>time</find>
-      <find>algorithm_cal_async</find>
       <find>round</find>
-      <find>filter_by_base</find>
       <find>load</find>
+      <find>get_phrase</find>
+      <find>cal_ee</find>
+      <find>val_list</find>
+      <find>labeling</find>
+      <find>Labeling</find>
+      <find>play_clips</find>
+      <find>get_subwave</find>
+      <find>def labeling</find>
+      <find>print</find>
+      <find>librosa.load</find>
+      <find>media</find>
+      <find>/media/</find>
+      <find>MemitemWave</find>
+      <find>wave_mem_wave</find>
+      <find>WaveMemWave</find>
+      <find>stft</find>
+      <find>stream</find>
+      <find>time</find>
+      <find>achieve</find>
+      <find>filter_by_base</find>
+      <find>fft_filtered</find>
+      <find>labeling.stft_set</find>
+      <find>cal_stft</find>
+      <find>Wave.objects.get</find>
+      <find>algorithm_cal</find>
+      <find>algorithm_cal_thread</find>
+      <find>algorithm_cal_async</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -207,6 +213,7 @@
       <replace>LabelingAlgorithmsConf_set</replace>
       <replace>vadThrartEE</replace>
       <replace>labelingalgorithmsconf_set</replace>
+      <replace>/static/</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -255,16 +262,16 @@
         <option value="$PROJECT_DIR$/target/static/js/index.js" />
         <option value="$PROJECT_DIR$/target/templates/index.html" />
         <option value="$PROJECT_DIR$/target/static/css/labeling.css" />
-        <option value="$PROJECT_DIR$/target/targetTools.py" />
-        <option value="$PROJECT_DIR$/target/models.py" />
         <option value="$PROJECT_DIR$/target/templates/labeling.html" />
         <option value="$PROJECT_DIR$/pitch/wsgi.py" />
-        <option value="$PROJECT_DIR$/target/urls.py" />
-        <option value="$PROJECT_DIR$/target/static/js/wave.js" />
         <option value="$PROJECT_DIR$/target/templates/wave.html" />
         <option value="$PROJECT_DIR$/target/static/js/labeling.js" />
-        <option value="$PROJECT_DIR$/pitch/settings.py" />
+        <option value="$PROJECT_DIR$/target/urls.py" />
+        <option value="$PROJECT_DIR$/target/models.py" />
+        <option value="$PROJECT_DIR$/target/targetTools.py" />
         <option value="$PROJECT_DIR$/baseFrqComb.py" />
+        <option value="$PROJECT_DIR$/pitch/settings.py" />
+        <option value="$PROJECT_DIR$/target/static/js/wave.js" />
         <option value="$PROJECT_DIR$/target/views.py" />
       </list>
     </option>
@@ -281,6 +288,27 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope">
+        <subPane subId="Scope 'Changed Files'; set:Changed Files; ALL; class com.intellij.packageDependencies.ChangeListScope">
+          <expand>
+            <path>
+              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="pitch" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+            <path>
+              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="target" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -315,28 +343,14 @@
               <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
               <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
               <item name="target" type="462c0819:PsiDirectoryNode" />
+              <item name="static" type="462c0819:PsiDirectoryNode" />
+              <item name="js" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
+              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
+              <item name="target" type="462c0819:PsiDirectoryNode" />
               <item name="templates" type="462c0819:PsiDirectoryNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope">
-        <subPane subId="Scope 'Changed Files'; set:Changed Files; ALL; class com.intellij.packageDependencies.ChangeListScope">
-          <expand>
-            <path>
-              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
-            </path>
-            <path>
-              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
-              <item name="pitch" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
-              <item name="target" type="9f88c78c:ScopeViewTreeModel$FileNode" />
             </path>
           </expand>
           <select />
@@ -561,7 +575,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="217" y="99" width="2560" height="1400" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.62608695" visible="true" weight="0.3539858" />
       <window_info id="Structure" order="1" sideWeight="0.37391305" side_tool="true" weight="0.15181866" />
@@ -575,7 +588,7 @@
       <window_info anchor="bottom" id="TODO" order="6" sideWeight="0.4969929" weight="0.33623418" />
       <window_info anchor="bottom" id="Version Control" order="7" sideWeight="0.49894515" weight="0.3283228" />
       <window_info anchor="bottom" id="Terminal" order="8" sideWeight="0.4994726" weight="0.3306962" />
-      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.5030071" side_tool="true" visible="true" weight="0.15585443" />
+      <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.5030071" side_tool="true" weight="0.15585443" />
       <window_info anchor="bottom" id="Python Console" order="10" sideWeight="0.49894515" weight="0.16013438" />
       <window_info anchor="bottom" id="Messages" order="11" sideWeight="0.49972633" weight="0.26124197" />
       <window_info anchor="bottom" id="GitHub Pull Requests" order="12" sideWeight="0.49863163" weight="0.32976446" />
@@ -901,48 +914,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/targetTools.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="29" column="35" selection-start-line="29" selection-start-column="35" selection-end-line="29" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#16#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../.local/lib/python3.7/site-packages/cacheout/cache.py" />
-    <entry file="file://$PROJECT_DIR$/chin.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2895">
-          <caret line="199" column="23" selection-start-line="199" selection-start-column="8" selection-end-line="199" selection-end-column="23" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pitch/settings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="24" column="12" selection-start-line="24" selection-start-column="12" selection-end-line="24" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="676">
-          <caret line="249" column="32" selection-start-line="249" selection-start-column="32" selection-end-line="249" selection-end-column="32" />
-          <folding>
-            <element signature="e#17#28#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../.conda/envs/pitch/lib/python3.7/site-packages/librosa/core/audio.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="840">
-          <caret line="68" column="62" selection-start-line="68" selection-start-column="51" selection-end-line="68" selection-end-column="62" />
+        <state relative-caret-position="255">
+          <caret line="29" column="56" selection-start-line="29" selection-start-column="48" selection-end-line="29" selection-end-column="56" />
         </state>
       </provider>
     </entry>
@@ -956,10 +932,37 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/target/targetTools.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="780">
+          <caret line="53" column="17" selection-start-line="53" selection-start-column="12" selection-end-line="53" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#16#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pitch/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2010">
+          <caret line="134" selection-start-line="134" selection-end-line="134" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/chin.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1620">
+          <caret line="114" column="17" selection-start-line="114" selection-start-column="12" selection-end-line="114" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/baseFrqComb.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3510">
-          <caret line="240" column="51" selection-start-line="240" selection-start-column="51" selection-end-line="240" selection-end-column="51" />
+        <state relative-caret-position="1620">
+          <caret line="114" column="17" selection-start-line="114" selection-start-column="12" selection-end-line="114" selection-end-column="17" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
@@ -978,22 +981,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/target/static/js/wave.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2115">
-          <caret line="141" column="14" selection-start-line="141" selection-start-column="2" selection-end-line="141" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3195">
-          <caret line="213" selection-start-line="213" selection-end-line="213" />
+        <state relative-caret-position="1275">
+          <caret line="85" column="51" lean-forward="true" selection-start-line="85" selection-start-column="51" selection-end-line="85" selection-end-column="51" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4125">
-          <caret line="275" column="53" selection-start-line="275" selection-start-column="53" selection-end-line="275" selection-end-column="53" />
+          <caret line="275" column="42" selection-start-line="275" selection-start-column="32" selection-end-line="275" selection-end-column="42" />
           <folding>
             <element signature="n#style#0;n#input#0;n#td#1;n#tr#5;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#input#0;n#td#1;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -1010,8 +1006,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/target/templates/wave.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1290">
-          <caret line="86" column="14" selection-start-line="86" selection-start-column="14" selection-end-line="86" selection-end-column="14" />
+        <state relative-caret-position="1140">
+          <caret line="76" column="24" selection-start-line="76" selection-start-column="24" selection-end-line="76" selection-end-column="24" />
           <folding>
             <element signature="n#style#0;n#body#0;n#html#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -1022,8 +1018,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/target/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1515">
-          <caret line="101" column="28" selection-start-line="101" selection-start-column="6" selection-end-line="101" selection-end-column="28" />
+        <state relative-caret-position="1230">
+          <caret line="82" column="72" selection-start-line="82" selection-start-column="72" selection-end-line="82" selection-end-column="72" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="298" column="34" selection-start-line="298" selection-start-column="21" selection-end-line="298" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="555">
+          <caret line="1433" column="26" lean-forward="true" selection-start-line="1433" selection-start-column="26" selection-end-line="1433" selection-end-column="26" />
+          <folding>
+            <element signature="e#17#28#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

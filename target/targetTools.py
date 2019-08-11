@@ -54,14 +54,12 @@ class targetTools:
             print(e)
             maxRmse = 0
         info.append([currentInit, length, currentSum, maxRmse, maxEEPos])
-        print(info)
         clipStop = [item for item in info if (item[2] > throp)]
         clipStart = [item for item in info if (item[2] < (-1 * thrartEE) and item[3] > thrartRmse)]
         startPosOri = np.array([x[0]-1 for x in clipStart])
         startPosOri = startPosOri.astype(np.int32)
         stopPosOri = np.array([x[0]-1 for x in clipStop])  # 也要存储
         stopPosOri = stopPosOri.astype(np.int32)
-        print(startPosOri)
         vadrs = {'info': info, 'clipStart': clipStart,
                   'clipStop': clipStop, 'startPos': startPosOri, 'stopPos': stopPosOri, 'ee_diff': ee_diff}  # 融合后的ee区域，未进行rmse加权。(最后要输出)
 

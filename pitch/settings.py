@@ -131,4 +131,6 @@ STATICFILES_DIRS = [
     '../static/',
     '/home/liningbo/waveFiles/'
 ]
+
+
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
