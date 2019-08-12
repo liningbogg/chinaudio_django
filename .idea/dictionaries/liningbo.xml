@@ -48,6 +48,7 @@
       <w>nfft</w>
       <w>notesposition</w>
       <w>notesstr</w>
+      <w>onbeforeunload</w>
       <w>oncreate</w>
       <w>onload</w>
       <w>onreadystatechange</w>

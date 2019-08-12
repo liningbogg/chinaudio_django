@@ -47,11 +47,12 @@ class targetTools:
             else:
                 currentSum = currentSum + ee_diff[i]
 
-        ee_diff[currentInit:-1] = currentSum  # 补充最后一组
+        ee_diff[currentInit:] = currentSum  # 补充最后一组
         try:
-            maxRmse = max(rmse[currentInit:i])
+            maxRmse = max(rmse[currentInit:])
         except Exception as e:
             print(e)
+            print(currentInit,i,rmse)
             maxRmse = 0
         info.append([currentInit, length, currentSum, maxRmse, maxEEPos])
         clipStop = [item for item in info if (item[2] > throp)]

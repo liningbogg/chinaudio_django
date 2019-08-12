@@ -19,12 +19,8 @@
   <component name="ChangeListManager">
     <list default="true" id="8acc8f02-be45-420d-812a-1c53fb213d8d" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/dictionaries/liningbo.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/liningbo.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pitch/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/pitch/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/target/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/static/js/wave.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/static/js/wave.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/targetTools.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/targetTools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/target/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/static/js/labeling.js" beforeDir="false" afterPath="$PROJECT_DIR$/target/static/js/labeling.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -37,11 +33,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="555">
-              <caret line="1433" column="26" lean-forward="true" selection-start-line="1433" selection-start-column="26" selection-end-line="1433" selection-end-column="26" />
+            <state relative-caret-position="592">
+              <caret line="1435" column="24" lean-forward="true" selection-start-line="1435" selection-start-column="24" selection-end-line="1435" selection-end-column="24" />
               <folding>
                 <element signature="e#17#28#0" expanded="true" />
               </folding>
@@ -61,8 +57,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/chin.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1620">
-              <caret line="114" column="17" selection-start-line="114" selection-start-column="12" selection-end-line="114" selection-end-column="17" />
+            <state relative-caret-position="24">
+              <caret line="34" selection-start-line="34" selection-end-line="35" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -98,16 +94,16 @@
         <entry file="file://$PROJECT_DIR$/target/static/js/wave.js">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="1275">
-              <caret line="85" column="51" lean-forward="true" selection-start-line="85" selection-start-column="51" selection-end-line="85" selection-end-column="51" />
+              <caret line="85" column="51" selection-start-line="85" selection-start-column="51" selection-end-line="85" selection-end-column="51" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="298" column="34" selection-start-line="298" selection-start-column="21" selection-end-line="298" selection-end-column="34" />
+            <state relative-caret-position="1071">
+              <caret line="544" selection-start-line="544" selection-end-line="544" />
             </state>
           </provider>
         </entry>
@@ -115,8 +111,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4125">
-              <caret line="275" column="42" selection-start-line="275" selection-start-column="32" selection-end-line="275" selection-end-column="42" />
+            <state relative-caret-position="527">
+              <caret line="90" column="62" selection-start-line="90" selection-start-column="52" selection-end-line="90" selection-end-column="62" />
               <folding>
                 <element signature="n#style#0;n#input#0;n#td#1;n#tr#5;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
                 <element signature="n#style#0;n#input#0;n#td#1;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
@@ -149,8 +145,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/target/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1230">
-              <caret line="82" column="72" selection-start-line="82" selection-start-column="72" selection-end-line="82" selection-end-column="72" />
+            <state relative-caret-position="953">
+              <caret line="175" column="30" lean-forward="true" selection-start-line="175" selection-start-column="30" selection-end-line="175" selection-end-column="30" />
             </state>
           </provider>
         </entry>
@@ -167,7 +163,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>play</find>
       <find>round</find>
       <find>load</find>
       <find>get_phrase</find>
@@ -197,6 +192,7 @@
       <find>algorithm_cal</find>
       <find>algorithm_cal_thread</find>
       <find>algorithm_cal_async</find>
+      <find>getElementById</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -265,14 +261,14 @@
         <option value="$PROJECT_DIR$/target/templates/labeling.html" />
         <option value="$PROJECT_DIR$/pitch/wsgi.py" />
         <option value="$PROJECT_DIR$/target/templates/wave.html" />
-        <option value="$PROJECT_DIR$/target/static/js/labeling.js" />
         <option value="$PROJECT_DIR$/target/urls.py" />
-        <option value="$PROJECT_DIR$/target/models.py" />
         <option value="$PROJECT_DIR$/target/targetTools.py" />
         <option value="$PROJECT_DIR$/baseFrqComb.py" />
         <option value="$PROJECT_DIR$/pitch/settings.py" />
         <option value="$PROJECT_DIR$/target/static/js/wave.js" />
         <option value="$PROJECT_DIR$/target/views.py" />
+        <option value="$PROJECT_DIR$/target/static/js/labeling.js" />
+        <option value="$PROJECT_DIR$/target/models.py" />
       </list>
     </option>
   </component>
@@ -288,6 +284,22 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
+              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
+              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
+              <item name="target" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="Scope">
         <subPane subId="Scope 'Changed Files'; set:Changed Files; ALL; class com.intellij.packageDependencies.ChangeListScope">
           <expand>
@@ -304,53 +316,6 @@
               <item name="audio" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
               <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
               <item name="target" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-              <item name="pitch" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-              <item name="image" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="static" type="462c0819:PsiDirectoryNode" />
-              <item name="js" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="chinaudio" type="b2602c69:ProjectViewProjectNode" />
-              <item name="chinaudio" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -949,16 +914,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/chin.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1620">
-          <caret line="114" column="17" selection-start-line="114" selection-start-column="12" selection-end-line="114" selection-end-column="17" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/baseFrqComb.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1620">
@@ -982,25 +937,7 @@
     <entry file="file://$PROJECT_DIR$/target/static/js/wave.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1275">
-          <caret line="85" column="51" lean-forward="true" selection-start-line="85" selection-start-column="51" selection-end-line="85" selection-end-column="51" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4125">
-          <caret line="275" column="42" selection-start-line="275" selection-start-column="32" selection-end-line="275" selection-end-column="42" />
-          <folding>
-            <element signature="n#style#0;n#input#0;n#td#1;n#tr#5;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#1;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#1;n#tr#8;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#td#1;n#tr#9;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#1;n#div#4;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#0;n#div#5;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#1;n#div#5;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#2;n#div#5;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#input#2;n#div#6;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
-          </folding>
+          <caret line="85" column="51" selection-start-line="85" selection-start-column="51" selection-end-line="85" selection-end-column="51" />
         </state>
       </provider>
     </entry>
@@ -1016,27 +953,55 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/models.py">
+    <entry file="file://$PROJECT_DIR$/chin.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1230">
-          <caret line="82" column="72" selection-start-line="82" selection-start-column="72" selection-end-line="82" selection-end-column="72" />
+        <state relative-caret-position="24">
+          <caret line="34" selection-start-line="34" selection-end-line="35" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
+    <entry file="file://$PROJECT_DIR$/target/templates/labeling.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="298" column="34" selection-start-line="298" selection-start-column="21" selection-end-line="298" selection-end-column="34" />
+        <state relative-caret-position="527">
+          <caret line="90" column="62" selection-start-line="90" selection-start-column="52" selection-end-line="90" selection-end-column="62" />
+          <folding>
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#5;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#6;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#8;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#td#1;n#tr#9;n#table#0;n#div#1;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#1;n#div#4;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#0;n#div#5;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#1;n#div#5;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#2;n#div#5;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#input#2;n#div#6;n#div#1;n#div#1;n#body#0;n#html#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="953">
+          <caret line="175" column="30" lean-forward="true" selection-start-line="175" selection-start-column="30" selection-end-line="175" selection-end-column="30" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/target/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="555">
-          <caret line="1433" column="26" lean-forward="true" selection-start-line="1433" selection-start-column="26" selection-end-line="1433" selection-end-column="26" />
+        <state relative-caret-position="592">
+          <caret line="1435" column="24" lean-forward="true" selection-start-line="1435" selection-start-column="24" selection-end-line="1435" selection-end-column="24" />
           <folding>
             <element signature="e#17#28#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/target/static/js/labeling.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1071">
+          <caret line="544" selection-start-line="544" selection-end-line="544" />
         </state>
       </provider>
     </entry>

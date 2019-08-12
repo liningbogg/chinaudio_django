@@ -539,5 +539,9 @@ function move2Pos(labeling_id)
 
 /*刷新前提交*/
 window.onbeforeunload = function(){
-    
+   table_info = document.getElementById("table_info");
+   index_info = {"extend_rad":6};
+   extend_rad = table_info.rows[index_info["extend_rad"]].cells[1].getElementsByTagName("INPUT")[0].value;
+
+   console.log(extend_rad)
 }

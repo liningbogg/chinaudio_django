@@ -158,6 +158,7 @@ class Tune(BaseModel):
     note6 = models.CharField(max_length=16)
     note7 = models.CharField(max_length=16)
     objects = models.Manager()
+
     class Meta:
         unique_together = ["tune_name", "create_user_id"]
 
@@ -173,6 +174,7 @@ class Log(BaseModel):
     content = models.CharField(max_length=255)
     timestamp = models.DateTimeField()
     objects = models.Manager()
+
 
 class MarkedPhrase(BaseModel):
     """

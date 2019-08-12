@@ -226,31 +226,32 @@ class Chin:
                 tone = self.note2tone(noteTone)  # 计算音高 ，因为程序编写费时间，不提供直接设置tone的方式
                 tonestr = '%.1f_%d' % (tone[0], tone[1])  # tone[0] 是音高， tone[1]是grade
                 formatStr = formatStr + tonestr + "\n"
+            
+                # 散音检测
+                sanyinPred = self.cal_sanyinpred(pitch, thrsanyin)
+                if sanyinPred != []:
+                    possiblepos[i].append(sanyinPred)
+                    formatStr = formatStr + "s:%d弦散音 e:%.2f\n" % (sanyinPred[0][0], sanyinPred[0][1])
+                # 按音检测
+                anyinPrep = self.cal_anyinpred(pitch, thranyin, thranyinspace)
+                if anyinPrep != []:
+                    possiblepos[i].append(anyinPrep)
+                    formatStr = formatStr + "a:"
+                    for anyin in anyinPrep:
+                        formatStr = formatStr + "%d弦%.2f徽  " % (anyin[0], anyin[1])
+                    formatStr = formatStr + "\n"
+                # 泛音音位
+                fanyinpred = self.cal_fanyinpred(pitch, thrfanyin)
+                if fanyinpred != []:
+                    possiblepos[i].append(fanyinpred)
+                    formatStr = formatStr + "f:"
+                    for fanyin in fanyinpred:
+                        for huiwei in fanyin[1]:
+                            formatStr = formatStr + "%d弦%d徽  " % (fanyin[0], huiwei)
+                    formatStr = formatStr + "\n"
             else:
                 formatStr = ""
 
-            # 散音检测
-            sanyinPred = self.cal_sanyinpred(pitch, thrsanyin)
-            if sanyinPred != []:
-                possiblepos[i].append(sanyinPred)
-                formatStr = formatStr + "s:%d弦散音 e:%.2f\n" % (sanyinPred[0][0], sanyinPred[0][1])
-            # 按音检测
-            anyinPrep = self.cal_anyinpred(pitch, thranyin, thranyinspace)
-            if anyinPrep != []:
-                possiblepos[i].append(anyinPrep)
-                formatStr = formatStr + "a:"
-                for anyin in anyinPrep:
-                    formatStr = formatStr + "%d弦%.2f徽  " % (anyin[0], anyin[1])
-                formatStr = formatStr + "\n"
-            # 泛音音位
-            fanyinpred = self.cal_fanyinpred(pitch, thrfanyin)
-            if fanyinpred != []:
-                possiblepos[i].append(fanyinpred)
-                formatStr = formatStr + "f:"
-                for fanyin in fanyinpred:
-                    for huiwei in fanyin[1]:
-                        formatStr = formatStr + "%d弦%d徽  " % (fanyin[0], huiwei)
-                formatStr = formatStr + "\n"
         return [possiblepos, formatStr]
 
     def __init__(self, **kw):
