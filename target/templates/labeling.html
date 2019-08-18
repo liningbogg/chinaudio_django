@@ -5,8 +5,8 @@
     <title>数据：{{title}}</title>
     <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
-    <script src="/static/js/labeling.js?time='+new Date().getTime()+'"></script>
-    <link href="/static/css/labeling.css?time='+new Date().getTime()+'" rel="stylesheet" type="text/css" />
+    <script src="http://cdn.chinaudio.tech/static/js/labeling.js"></script>
+    <link href="http://cdn.chinaudio.tech/static/css/labeling.css" rel="stylesheet" type="text/css" />
 
 </head>
 <body >
@@ -31,8 +31,9 @@
 		</div>
 		<div class="strings_info" id="strings_info">
 		</div>
-		<div class="ref_info" id="ref_info" >
-			{{possible_pos|safe}}
+		<div class="ref_info" id="ref_info_a" >
+		</div>
+		<div class="ref_info" id="ref_info_b" >
 		</div>
 		<div class="tone_info" id="tone_info" >
 		</div>
@@ -604,6 +605,12 @@
 	divItem.innerHTML=clips_str;
 </script>
 <script>
+	//possible 显示
+	possible_pos = {{possible_pos|safe}};
+	document.getElementById("ref_info_a").innerHTML=possible_pos[0]
+	document.getElementById("ref_info_b").innerHTML=possible_pos[1]
+</script>
+<script>
     // 总是滚动到最低端
     function top_set(divName){
         var clipDiv = document.getElementById(divName);
@@ -612,6 +619,7 @@
     top_set("fingering");
     top_set("clips");
 </script>
+
 
 </body>
 </html>

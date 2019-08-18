@@ -83,7 +83,7 @@ class Labeling(BaseModel):
     cache_block_size = models.IntegerField(default=600)  # 缓存块大小，单位frame
     fs = models.IntegerField(default=44100)
     play_fs = models.IntegerField(default=44100)  # 用于记录当前片段播放的fs
-    primary_ref = models.CharField(max_length=255,default="combDescan")  # 主导算法数据
+    primary_ref = models.CharField(max_length=255, default="combDescan")  # 主导算法数据
     medium_resampling = models.BooleanField(default=True)
     objects = models.Manager()
 

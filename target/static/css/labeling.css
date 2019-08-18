@@ -177,15 +177,14 @@ body,div
     float:left;
     display:table;
 	left:1%;
-    width:98%;
+    width:49%;
     top:3%;
     height:4%;
     font-size:1rem;
     overflow-y:auto;
     overflow-x:auto;
     border-width:0.0625rem;
-    border-style:solid;
-    border-color:red;
+
 }
 .ref_info table{
     width:98%;

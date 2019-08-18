@@ -396,7 +396,7 @@ function set_refFilter(algorithm_name,labeling_id)
 {
     isFilter=document.getElementById("del_reference_select").value;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'setRefFilter/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name+"&isFilter="+isFilter, true);
+    xhr.open('GET', 'setRefFilter/?'+"labeling_id="+labeling_id+"&algorithm_name="+algorithm_name+"&is_filter="+isFilter, true);
     xhr.send(null);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功

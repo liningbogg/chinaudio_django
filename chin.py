@@ -54,7 +54,7 @@ class Chin:
         return [tone, grade]
 
     def cal___tones(self):
-        """
+        """cal_possiblepos
         确定唱名对应的音阶
         :return:
         """
@@ -203,13 +203,13 @@ class Chin:
         :param pitches:待解析的音高集合
         :return: 特定音高对应的可能的音位集合
         """
-        if isinstance(pitches,(list,np.ndarray)) is not True:
-            pitch=pitches
+        '''if isinstance(pitches, (list, np.ndarray)) is not True:
+            pitch = pitches
             pitches = []
-            pitches.append(pitch)
+            pitches.append(pitch)'''
         number = len(pitches)
         possiblepos = []  # 结果
-        formatStr = ""  # 格式化结果，用于打印
+        formatStrList = list()  # 格式化结果，用于打印
         for i in range(number):
             possiblepos.append([])
         thrsanyin = 0.2
@@ -217,42 +217,46 @@ class Chin:
         thranyinspace = 0.02 / 1.2
         thrfanyin = 0.0875  # 有待确定，确定这点比较难
 
-        for i in np.arange(number):
-            pitch = pitches[i]
-            formatStr = formatStr + "%.2f&nbsp&nbsp&nbsp&nbsp" % pitch
-            if pitch>20:
-                noteTone = librosa.hz_to_note(pitch / self.get_scaling(), cents=True)  # 用于测量tone的note，不求百分数
-                formatStr = formatStr + noteTone + "&nbsp&nbsp&nbsp&nbsp"
-                tone = self.note2tone(noteTone)  # 计算音高 ，因为程序编写费时间，不提供直接设置tone的方式
-                tonestr = '%.1f_%d' % (tone[0], tone[1])  # tone[0] 是音高， tone[1]是grade
-                formatStr = formatStr + tonestr + "\n"
-            
-                # 散音检测
-                sanyinPred = self.cal_sanyinpred(pitch, thrsanyin)
-                if sanyinPred != []:
-                    possiblepos[i].append(sanyinPred)
-                    formatStr = formatStr + "s:%d弦散音 e:%.2f\n" % (sanyinPred[0][0], sanyinPred[0][1])
-                # 按音检测
-                anyinPrep = self.cal_anyinpred(pitch, thranyin, thranyinspace)
-                if anyinPrep != []:
-                    possiblepos[i].append(anyinPrep)
-                    formatStr = formatStr + "a:"
-                    for anyin in anyinPrep:
-                        formatStr = formatStr + "%d弦%.2f徽  " % (anyin[0], anyin[1])
-                    formatStr = formatStr + "\n"
-                # 泛音音位
-                fanyinpred = self.cal_fanyinpred(pitch, thrfanyin)
-                if fanyinpred != []:
-                    possiblepos[i].append(fanyinpred)
-                    formatStr = formatStr + "f:"
-                    for fanyin in fanyinpred:
-                        for huiwei in fanyin[1]:
-                            formatStr = formatStr + "%d弦%d徽  " % (fanyin[0], huiwei)
-                    formatStr = formatStr + "\n"
-            else:
-                formatStr = ""
+        try:
+            for i in np.arange(number):
+                pitch = pitches[i]
+                if pitch > 20:
+                    formatStr = ""
+                    formatStr = formatStr + "%.2f&nbsp&nbsp&nbsp&nbsp" % pitch
+                    noteTone = librosa.hz_to_note(pitch / self.get_scaling(), cents=True)  # 用于测量tone的note，不求百分数
+                    formatStr = formatStr + noteTone + "&nbsp&nbsp&nbsp&nbsp"
+                    tone = self.note2tone(noteTone)  # 计算音高 ，因为程序编写费时间，不提供直接设置tone的方式
+                    tonestr = '%.1f_%d' % (tone[0], tone[1])  # tone[0] 是音高， tone[1]是grade
+                    formatStr = formatStr + tonestr + "\n"
+                    # 散音检测
+                    sanyinPred = self.cal_sanyinpred(pitch, thrsanyin)
+                    if sanyinPred != []:
+                        possiblepos[i].append(sanyinPred)
+                        formatStr = formatStr + "s:%d弦散音 e:%.2f\n" % (sanyinPred[0][0], sanyinPred[0][1])
+                    # 按音检测
+                    anyinPrep = self.cal_anyinpred(pitch, thranyin, thranyinspace)
+                    if anyinPrep != []:
+                        possiblepos[i].append(anyinPrep)
+                        formatStr = formatStr + "a:"
+                        for anyin in anyinPrep:
+                            formatStr = formatStr + "%d弦%.2f徽  " % (anyin[0], anyin[1])
+                        formatStr = formatStr + "\n"
+                    # 泛音音位
+                    fanyinpred = self.cal_fanyinpred(pitch, thrfanyin)
+                    if fanyinpred != []:
+                        possiblepos[i].append(fanyinpred)
+                        formatStr = formatStr + "f:"
+                        for fanyin in fanyinpred:
+                            for huiwei in fanyin[1]:
+                                formatStr = formatStr + "%d弦%d徽  " % (fanyin[0], huiwei)
+                        formatStr = formatStr + "\n"
+                    formatStrList.append(formatStr)
+                else:
+                    pass
+        except Exception as e:
+            print(e)
 
-        return [possiblepos, formatStr]
+        return [possiblepos, formatStrList]
 
     def __init__(self, **kw):
         """

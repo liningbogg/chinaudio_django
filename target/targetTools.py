@@ -62,6 +62,6 @@ class targetTools:
         stopPosOri = np.array([x[0]-1 for x in clipStop])  # 也要存储
         stopPosOri = stopPosOri.astype(np.int32)
         vadrs = {'info': info, 'clipStart': clipStart,
-                  'clipStop': clipStop, 'startPos': startPosOri, 'stopPos': stopPosOri, 'ee_diff': ee_diff}  # 融合后的ee区域，未进行rmse加权。(最后要输出)
+                  'clipStop': clipStop, 'startPos': list(startPosOri), 'stopPos': list(stopPosOri), 'ee_diff': list(ee_diff)}  # 融合后的ee区域，未进行rmse加权。(最后要输出)
 
         return vadrs
