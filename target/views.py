@@ -1,4 +1,5 @@
 # coding = utf-8
+import time
 import json
 import pickle
 import smtplib
@@ -33,18 +34,23 @@ from target.models import AlgorithmsClips
 from target.models import AlgorithmsMediums
 from target.models import LabelingAlgorithmsConf
 from target.models import Tune
+from target.models import TargetUser
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
 from abc import abstractmethod
 import scipy
 import scipy.signal.windows
+import scipy.signal as signal
 from target.targetTools import targetTools
 from baseFrqComb import BaseFrqDetector
 from scipy.interpolate import interp1d
 from scipy.fftpack import fft
 import multiprocessing
 from django.core.cache import cache
+import sys
+import soundfile
+
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -109,7 +115,7 @@ class MemitemWave(MemItem):
 
 
 class WaveMemWave:
-
+    
     @staticmethod
     def get_cache_name_list(user_id, title, fs, nfft, start, end):
         cache_name_list = []  # 程序目的输出　字典列表
@@ -119,7 +125,7 @@ class WaveMemWave:
             first_block_index = int(start / cache_block_size)  # 第一块缓存索引
             last_block_index = int(end / cache_block_size)  # 最后一块缓存索引
             for i in range(first_block_index, last_block_index + 1):
-                cache_name = user_id + "_" + title + "_" + "wave_" + str(fs) + "_" + str(i)
+                cache_name = str(user_id) + "_" + str(title) + "_" + "wave_" + str(fs) +"_"+str(cache_block_size)+ "_" + str(i)
                 cache_name = str(cache_name)
                 start_pos = max(i * cache_block_size, start)
                 end_pos = min((i + 1) * cache_block_size, end)  # 右侧区间开
@@ -136,7 +142,7 @@ class WaveMemWave:
             print(e)
         finally:
             return cache_name_list
-
+    
     def achieve(self, user_id, title, fs, nfft, start, end):
         """
         获取制定片段，原始wave波形
@@ -148,24 +154,23 @@ class WaveMemWave:
         :param fs: 采样率
         :return: float32array
         """
-
-        sub_wave = []  # 程序到目标输出，wave子串
+        index = 0
+        sub_wave = []
         try:
             wave = Wave.objects.get(create_user_id=user_id, title=title)
             chche_info = self.get_cache_name_list(user_id, title, fs, nfft, start, end)  # 获取缓存块信息
             for item in chche_info:
-
                 chche_block = cache.get(item["name"])
-                block_init = 1.0*item["block_frame_init"]*nfft/fs  # 缓存初始时刻，单位ｓ
-                block_len = 1.0*item["block_frame_num"]*nfft/fs  # 缓存持续时间，单位ｓ
+                block_init = item["block_frame_init"]*wave.nfft  # 缓存初始
+                block_len = item["block_frame_num"]*wave.nfft  # 缓存持续
                 if chche_block is None:
-                    stream = librosa.load(
-                        wave.waveFile,
-                        mono=False, sr=fs,
-                        res_type="kaiser_fast",
-                        offset=block_init,
-                        duration=block_len
-                    )[0][0]
+                    stream ,sr = soundfile.read(wave.waveFile, start=block_init, frames=block_len)
+                    stream = stream[:,0]
+                    if sr != fs:
+                        length = len(stream)
+                        result_num = int(length*fs/sr)
+                        stream = signal.resample(stream, result_num)
+                    stream = np.ascontiguousarray(stream, dtype=np.float32) 
                     mem_item = MemitemWave(
                         user_id,
                         title,
@@ -175,12 +180,13 @@ class WaveMemWave:
                         item["block_frame_num"],
                         stream
                     )
-                    cache.set(item["name"], pickle.dumps(mem_item))
-
+                    cache.set(item["name"], pickle.dumps(mem_item),nx=True)
+                    cache.expire(item["name"], 3600)
                     sub_wave_item = mem_item.get_subwave(
                         (item["start_pos"]-item["block_frame_init"])*nfft,
                         (item["end_pos"]-item["block_frame_init"])*nfft
-                    )  # 分段wave
+                    )
+                    # 分段wave
                     sub_wave.extend(sub_wave_item)
                 else:
                     sub_wave_item = pickle.loads(chche_block).get_subwave(
@@ -192,8 +198,7 @@ class WaveMemWave:
             print(e)
         finally:
             return sub_wave
-
-
+'''            
 def algorithm_cal_async(labeling, detector, stft, rmse, fs, nfft, algorithms_name, current_pos):
     try:
         reference_pitch = detector.getpitch(stft, fs, nfft, False)
@@ -225,7 +230,7 @@ def algorithm_cal_async(labeling, detector, stft, rmse, fs, nfft, algorithms_nam
         algorithm_medium.save()
     except Exception as e:
         print(e)
-
+'''
 
 # Create your views here.
 class TargetView(View):
@@ -690,7 +695,6 @@ class TargetView(View):
             'create_user_id': user_id,
             'possible_pos': possible_pos
         }
-
         return render(request, 'labeling.html', context)
 
     @method_decorator(login_required)
@@ -840,22 +844,28 @@ class TargetView(View):
 
     @staticmethod
     def algorithm_cal_thread(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithms_name):
-        thread_num = 4
-        pool = multiprocessing.Pool(processes=thread_num, maxtasksperchild=2)
         for i in range(len(rmse_arr)):
             stft = np.copy(stft_arr[i])
-            stft[0:int(30 * nfft / fs)] = 0  # 清零３０ｈｚ以下信号
-            pool.apply_async(
-                algorithm_cal_async,
-                args=(labeling, detector, stft, rmse_arr[i], fs, nfft, algorithms_name, i,)
-            )
-        pool.close()
-        pool.join()
+            stft[0:int(30*nfft/fs)] = 0
+            args=(labeling, detector, stft, rmse_arr[i], fs, nfft, algorithms_name, i,)
+            args={
+                "labeling": labeling,
+                "detector":detector,
+                "stft_arr":stft, 
+                "rmse":rmse_arr[i], 
+                "fs":fs, 
+                "nfft":nfft, 
+                "algorithms_name":algorithms_name,
+                "index":i 
+            }
+            key = "ref_"+str(labeling.title)+"_"+str(algorithms_name)+"_"+str(fs)+"_"+str(nfft)+"_"+str(i)
+            cache.set(key, args, nx=True)
+            cache.expire(key, 3600*72)
 
     @method_decorator(login_required)
     def algorithm_cal(self, request):
-        clips_num_oncreate = None
         try:
+            clips_num_oncreate = 0
             algorithms_name = request.GET.get('algorithm_name')
             labeling_id = int(request.GET.get('labeling_id'))
             labeling = Labeling.objects.get(id=labeling_id)
@@ -863,10 +873,10 @@ class TargetView(View):
             clips_all = labeling.algorithmsclips_set.filter(algorithms=algorithms_name)
             clips_num = clips_all.count()
             clips_all.delete()
-            print("删除算法参考数据"+str(algorithms_name)+str(clips_num)+"条")
+            # print("删除算法参考数据"+str(algorithms_name)+str(clips_num)+"条")
             medium_all = labeling.algorithmsmediums_set.filter(algorithms=algorithms_name)
             medium_all.delete()
-            print("删除算法中间结果" + str(algorithms_name) + str(clips_num) + "条")
+            # print("删除算法中间结果" + str(algorithms_name) + str(clips_num) + "条")
             # 创建数据
             clips_num_oncreate = labeling.frameNum  # 需要创建数据总条目
             user_id = labeling.create_user_id
@@ -874,11 +884,13 @@ class TargetView(View):
             wave = Wave.objects.get(create_user_id=user_id, title=title)
             fs = labeling.fs
             nfft = labeling.nfft
-
             # stft_arr = self.wave_mem_stft.achieve(user_id, title, fs, nfft, 0, 0)  # 短时傅里叶谱
             # 获取原始左声道波形
-            stream = librosa.load(wave.waveFile, mono=False, sr=wave.fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
             # 获取stft
+            stream ,sr = soundfile.read(wave.waveFile)
+            stream = stream[:,0]
+            stream = np.ascontiguousarray(stream, dtype=np.float32)
+            print(len(stream))
             stft_arr, phase = librosa.magphase(
                 librosa.stft(
                     stream, n_fft=wave.nfft,
@@ -887,10 +899,14 @@ class TargetView(View):
                     center=False
                 )
             )
-            stft_arr = np.transpose(stft_arr)  # stft转置
-
+            print(len(stft_arr))
+            '''
+            stft_arr = np.transpose(stft_arr)  # stft转置'''
+            '''
             # rmse_arr = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, 0)  # 获取ｒｍｓｅ
             rmse_arr = pickle.loads(wave.rmse)
+            
+            
             detector = None
             if algorithms_name == "combDescan":
                 detector = BaseFrqDetector(True)  # 去扫描线算法
@@ -901,12 +917,14 @@ class TargetView(View):
                 args=(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithms_name)
             )  # 创建监视线程
             thread.setDaemon(True)  # 设置为守护线程， 一旦用户线程消失，此线程自动回收
-            thread.start()
+            thread.start()'''
 
         except Exception as e:
             print(e)
-        context = {'clips_num_oncreate': clips_num_oncreate}
-        return HttpResponse(json.dumps(context))
+            return HttpResponse("")
+        finally:
+            context = {'clips_num_oncreate': clips_num_oncreate}
+            return HttpResponse(json.dumps(context))
 
     @method_decorator(login_required)
     def reference_select(self, request):
@@ -962,7 +980,10 @@ class TargetView(View):
             # wave_key = user_id + "_" + labeling.title + "_" + "stft"  # 例子 pi_秋风词_stft
             wave = Wave.objects.get(create_user_id=user_id, title=labeling.title)
             # 获取原始左声道波形
-            stream = librosa.load(wave.waveFile, mono=False, sr=wave.fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
+            # stream = librosa.load(wave.waveFile, mono=False, sr=wave.fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
+            stream ,sr = soundfile.read(wave.waveFile)
+            stream = stream[:,0]
+            stream = np.ascontiguousarray(stream, dtype=np.float32) 
             # 获取stft
             speech_stft, phase = librosa.magphase(
                 librosa.stft(
@@ -1013,7 +1034,10 @@ class TargetView(View):
             wave = Wave.objects.get(create_user_id=user_id, title=title)
             # 获取原始左声道波形
             # stream = self.wave_mem_wave.achieve(user_id, title, fs, nfft, 0, 0)
-            stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
+            # stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
+            stream ,sr = soundfile.read(wave.waveFile)
+            stream = stream[:,0]
+            stream = np.ascontiguousarray(stream, dtype=np.float32) 
             # 获取stft
             speech_stft, phase = librosa.magphase(
                 librosa.stft(
@@ -1054,10 +1078,16 @@ class TargetView(View):
             nfft = labeling.nfft
             wave = Wave.objects.get(create_user_id=user_id, title=title)
             # stream = self.wave_mem_wave.achieve(user_id, title, fs, nfft, 0, 0)
-            stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
+            #stream = librosa.load(wave.waveFile, mono=False, sr=fs, res_type="kaiser_fast")[0][0]  # 以Fs重新采样
+            stream ,sr = soundfile.read(wave.waveFile)
+            stream = stream[:,0]
+            stream = np.ascontiguousarray(stream, dtype=np.float32) 
             rmse = librosa.feature.rmse(
-                y=stream, S=None, frame_length=nfft,
-                hop_length=nfft, center=False
+                y=stream,
+                S=None,
+                frame_length=nfft,
+                hop_length=nfft,
+                center=False
             )[0]
             rmse = maxminnormalization(rmse, 0, 1)
             wave = Wave.objects.get(create_user_id=user_id, title=title)
@@ -1341,7 +1371,7 @@ class TargetView(View):
                     message = "用户已经存在"
                     return render(request, 'register.html', {'register_form': form, 'message': message})
                 # 添加到数据库（还可以加一些字段的处理）
-                user = User.objects.create_user(username=username, password=password)
+                user = TargetUser.objects.create_user(username=username, password=password)
                 user.save()
                 # 添加到session
                 request.session['username'] = username

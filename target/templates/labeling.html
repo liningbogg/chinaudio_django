@@ -7,7 +7,7 @@
     <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
     <script src="http://cdn.chinaudio.tech/static/js/labeling.js"></script>
     <link href="http://cdn.chinaudio.tech/static/css/labeling.css" rel="stylesheet" type="text/css" />
-
+    <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
 </head>
 <body >
 <div class="login" id="login" >
@@ -263,8 +263,7 @@
 				end
 				<input type="number" id="play_end" onfocus="if(this.value==this.defaultValue){this.value=''}"
 					   onblur="if(this.value==''){this.value=this.defaultValue}"  placeholder="终止帧"/>
-				fs
-				<select id="play_fs" value={{play_fs|safe}}>
+				<select id="play_fs" value={{play_fs|safe}}  style="visibility:hidden" >
   					<option value="44100">44100</option>
   					<option value="22050">22050</option>
 					<option value="13230">13230</option>
@@ -277,8 +276,7 @@
 					   onclick="play_clips('{{title|safe}}',{{nfft|safe}})" value="play">
 		</div>
 		<div class="mark_clips" id="mark_clips">
-			fs
-			<select id="mark_fs" value={{play_fs|safe}}>
+			<select id="mark_fs" value={{play_fs|safe}} style="visibility:hidden">
 				<option value="44100">44100</option>
 				<option value="22050">22050</option>
 				<option value="13230">13230</option>

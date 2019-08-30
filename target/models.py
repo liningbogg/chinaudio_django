@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import AbstractUser
 
 class BaseModel(models.Model):
     """模型类基类"""
@@ -11,7 +11,9 @@ class BaseModel(models.Model):
 
 
 # Create your models here.
-
+class TargetUser(AbstractUser):
+    wavefileRoot= models.CharField(max_length=255, default="/home/liningbo/waveFiles")
+    test = models.CharField(max_length=255,null=True)
 
 class Clip(BaseModel):
     """
@@ -80,7 +82,7 @@ class Labeling(BaseModel):
     vad_thrart_RMSE = models.FloatField(default=0.1)
     vad_throp_EE = models.FloatField(default=0.1)
     filter_rad = models.FloatField(default=30.0)
-    cache_block_size = models.IntegerField(default=600)  # 缓存块大小，单位frame
+    cache_block_size = models.IntegerField(default=600)  # 缓存块大小，单位s
     fs = models.IntegerField(default=44100)
     play_fs = models.IntegerField(default=44100)  # 用于记录当前片段播放的fs
     primary_ref = models.CharField(max_length=255, default="combDescan")  # 主导算法数据

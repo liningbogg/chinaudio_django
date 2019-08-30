@@ -59,7 +59,7 @@ urlpatterns = [
     path('index/addTune/', target_view.add_tune),
     path('labeling/tune_reset/', target_view.tune_reset),  # 此处是指根据曲调重新设置弦高的危险算操作
     path('labeling/strings_reset/', target_view.strings_reset),
-    path('favicon.ico', serve, {'path': '/image/favicon.ico'}),
+    # path('favicon.ico', serve, {'path': '/image/favicon.ico'}),
     url(r'^captcha', include('captcha.urls')),
     url('^$', target_view.index),
 ]

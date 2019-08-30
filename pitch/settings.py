@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '78dtgylo47j7ojgc0zepk%d64zmfxt8g(*23=0pw0@4-eik)s)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG =False
 
 ALLOWED_HOSTS = ['*']
 
@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'target',
     'captcha',
 ]
+
+AUTH_USER_MODEL = "target.TargetUser"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

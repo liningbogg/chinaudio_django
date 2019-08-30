@@ -8,6 +8,7 @@ from target.models import Wave
 from target.models import Stft
 from target.models import LabelingAlgorithmsConf
 from target.models import Tune
+from target.models import TargetUser
 
 # Register your models here.
 admin.site.register(Clip)
@@ -18,4 +19,5 @@ admin.site.register(Log)
 admin.site.register(Stft)
 admin.site.register(LabelingAlgorithmsConf)
 admin.site.register(Tune)
+admin.site.register(TargetUser)
 
