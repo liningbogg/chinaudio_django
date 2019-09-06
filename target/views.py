@@ -50,7 +50,7 @@ import multiprocessing
 from django.core.cache import cache
 import sys
 import soundfile
-
+import redis
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -248,6 +248,7 @@ class TargetView(View):
         # self.wave_mem_spectrumEntropy = WaveMemSpectrumEntropy(self.wave_mem_stft, 512)
         # self.wave_mem_rmse = WaveMemRmse(self.wave_mem_wave, 512)
         self.sender = None
+        self.redis_pool=redis.ConnectionPool(host='localhost', port=6379,db=0, password='1a2a3a', encoding='utf-8')
 
     @classmethod
     @method_decorator(login_required)
@@ -843,24 +844,29 @@ class TargetView(View):
         return HttpResponse(json.dumps(context))
 
     @staticmethod
-    def algorithm_cal_thread(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithms_name):
-        for i in range(len(rmse_arr)):
+    def algorithm_cal_thread(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithms_name, pool):
+        for i in range(len(stft_arr)):
             stft = np.copy(stft_arr[i])
             stft[0:int(30*nfft/fs)] = 0
-            args=(labeling, detector, stft, rmse_arr[i], fs, nfft, algorithms_name, i,)
             args={
-                "labeling": labeling,
+                "create_user_id":labeling.create_user_id,
+                "title":labeling.title,
                 "detector":detector,
                 "stft_arr":stft, 
                 "rmse":rmse_arr[i], 
                 "fs":fs, 
                 "nfft":nfft, 
                 "algorithms_name":algorithms_name,
-                "index":i 
+                "index":i,
+                "labeling_id":labeling.id
             }
-            key = "ref_"+str(labeling.title)+"_"+str(algorithms_name)+"_"+str(fs)+"_"+str(nfft)+"_"+str(i)
-            cache.set(key, args, nx=True)
-            cache.expire(key, 3600*72)
+
+            # key = "ref_"+str(labeling.title)+"_"+str(algorithms_name)+"_"+str(fs)+"_"+str(nfft)+"_"+str(i)
+            # cache.set(key, args, nx=True)
+            # cache.expire(key, 3600*72)
+            red = redis.Redis(connection_pool=pool)
+            red.rpush("refTask", pickle.dumps(args))  # 此处不做重复性检查
+
 
     @method_decorator(login_required)
     def algorithm_cal(self, request):
@@ -890,7 +896,6 @@ class TargetView(View):
             stream ,sr = soundfile.read(wave.waveFile)
             stream = stream[:,0]
             stream = np.ascontiguousarray(stream, dtype=np.float32)
-            print(len(stream))
             stft_arr, phase = librosa.magphase(
                 librosa.stft(
                     stream, n_fft=wave.nfft,
@@ -899,26 +904,26 @@ class TargetView(View):
                     center=False
                 )
             )
-            print(len(stft_arr))
-            '''
-            stft_arr = np.transpose(stft_arr)  # stft转置'''
-            '''
-            # rmse_arr = self.wave_mem_rmse.achieve(user_id, title, fs, nfft, 0, 0)  # 获取ｒｍｓｅ
-            rmse_arr = pickle.loads(wave.rmse)
-            
-            
+            stft_arr = np.transpose(stft_arr)  # stft转置'''a
+            rmse_arr = librosa.feature.rmse(
+                y=stream,
+                S=None,
+                frame_length=nfft,
+                hop_length=nfft,
+                center=False
+            )[0]
             detector = None
+            rmse_arr = maxminnormalization(rmse_arr, 0, 1)
             if algorithms_name == "combDescan":
                 detector = BaseFrqDetector(True)  # 去扫描线算法
             if algorithms_name == "comb":
                 detector = BaseFrqDetector(False)  # 不去扫描线算法
             thread = threading.Thread(
                 target=self.algorithm_cal_thread,
-                args=(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithms_name)
+                args=(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithms_name, self.redis_pool)
             )  # 创建监视线程
             thread.setDaemon(True)  # 设置为守护线程， 一旦用户线程消失，此线程自动回收
-            thread.start()'''
-
+            thread.start()
         except Exception as e:
             print(e)
             return HttpResponse("")

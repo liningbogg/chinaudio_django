@@ -494,7 +494,6 @@ body,div
 	font-size:1rem;
 	line-height:1;
 	width:50%;
-	height:99%;
 }
 .table_info tr td input{
 	width:98%;
@@ -554,7 +553,6 @@ body,div
     font-size:0.875rem;
 	line-height:1;
 	width:49.5%;
-	height:98%;
 }
 .pre_strings_set select
 {
@@ -583,7 +581,6 @@ body,div
 .ref_set input
 {
     width:35%;
-    height:90%;
 	font-size:0.875rem;
 	line-height:1;
 }
@@ -606,7 +603,6 @@ body,div
 .customRef input
 {
     width:25%;
-    height:90%;
 	font-size:0.875rem;
 	line-height:1;
 }
@@ -707,7 +703,6 @@ body,div
 .clips tr td input
 {
     width:96%;
-    height:100%;
     font-size:0.875rem;
 }
 .add_tone{
@@ -738,7 +733,6 @@ body,div
 }
 .add_tone_table_div table tr td input{
     width:100%;
-    height:95%;
     font-size:0.875rem;
 }
 .add_tone_table_div table{
