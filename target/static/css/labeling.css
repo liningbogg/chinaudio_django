@@ -15,9 +15,6 @@ body,div
     float:left;
     position:relative;
     font-size:1.5rem;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
     display:table;
     top:0%;
     height:3%;
@@ -36,9 +33,6 @@ body,div
     width:99%;
     top:1%;
     height:95%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:red;
 }
 /*显示部分*/
 .display
@@ -48,9 +42,6 @@ body,div
     width:70%;
     top:1%;
     height:96%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
     overflow-y:auto;
     overflow-x:auto;
 }
@@ -63,9 +54,6 @@ body,div
     width:98%;
     top:1%;
     height:15%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:red;
 }
 
 /*局部音高参考*/
@@ -77,9 +65,6 @@ body,div
     width:98%;
     top:1%;
     height:15%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
 }
 /*局部音高标记*/
 .local_target
@@ -90,9 +75,6 @@ body,div
     width:98%;
     top:1%;
     height:15%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:red;
 }
 /*fft及其中间结果*/
 .sampling_data
@@ -103,9 +85,6 @@ body,div
     width:98%;
     top:2%;
     height:15%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:purple;
 }
 /*fft*/
 .sampling_fft
@@ -116,9 +95,6 @@ body,div
     width:49%;
     top:1%;
     height:98%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
 }
 /*中间结果*/
 .sampling_medium
@@ -129,9 +105,6 @@ body,div
     width:49%;
     top:1%;
     height:98%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:green;
 }
 
 /*定弦信息*/
@@ -145,9 +118,6 @@ body,div
     top:2.5%;
     height:2%;
     font-size:1rem;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:purple;
 }
 .strings_info strings_info_table
 {
@@ -169,6 +139,12 @@ body,div
 	width:10%;
 }
 
+.strings_info_table tr td input
+{
+    font-size:1rem;
+	line-height:1;
+	width:10%;
+}
 
 /*标记参考，包括历史信息和当前帧指法推测*/
 .ref_info
@@ -183,7 +159,6 @@ body,div
     font-size:1rem;
     overflow-y:auto;
     overflow-x:auto;
-    border-width:0.0625rem;
 
 }
 .ref_info table{
@@ -201,9 +176,6 @@ body,div
     top:3%;
     height:4%;
     font-size:0.875rem;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
     overflow-y:auto;
     overflow-x:auto;
 }
@@ -225,9 +197,6 @@ body,div
     height:9%;
     top:5%;
     font-size:0.875rem;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:green;
     overflow-y:auto;
 
 }
@@ -250,9 +219,6 @@ body,div
     width:29%;
     top:1%;
     height:96%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
     overflow-y:auto;
 }
 
@@ -297,6 +263,7 @@ body,div
 .algorithm_select select
 {
     font-size:0.75rem;
+    float:right;
     vertical-align:middle;
     height:95%;
     width:60%;
@@ -322,7 +289,7 @@ body,div
     position:relative;
 	float:left;
 	display:table;
-	\vertical-align:middle;
+    vertical-align:middle;
 	left:0%;
     width:100%;
     top:0%;
@@ -348,6 +315,7 @@ body,div
     font-size:0.75rem;
     vertical-align:middle;
     top:0%;
+    float:right;
     height:95%;
     width:60%;
 }
@@ -473,9 +441,7 @@ body,div
     width:99%;
     top:0%;
     height:20%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:red;
+    font-size:0.875rem;
 	overflow-y:auto;
 }
 .table_info
@@ -496,7 +462,8 @@ body,div
 	width:50%;
 }
 .table_info tr td input{
-	width:98%;
+	width:100%;
+    height:100%;
 	table-layout:fixed;
 	font-size:0.875rem;
 	line-height:1;
@@ -513,25 +480,37 @@ body,div
     top:0%;
     height:4%;
     font-size:1rem;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
     overflow-y:auto;
     overflow-x:auto;
 }
 
-.strings_set tr td
+.strings_set_table
+{
+    position:relative;
+    float:left;
+    display:table;
+	left:0%;
+    width:100%;
+    top:0%;
+    height:100%;
+    font-size:1rem;
+    overflow-y:auto;
+    overflow-x:auto;
+}
+.strings_set_table tr td
 {
     font-size:0.875rem;
+    width:100%;
+    height:100%;
 	line-height:1;
 	width:11%;
 }
-.strings_set tr td input
+.strings_set_table tr td input
 {
     width:98%;
-	table-layout:fixed;
+    height:100%;
 	font-size:0.875rem;
-	line-height:1;
+	line-height:0.0625rem;
 }
 
 /*提交定弦*/
@@ -553,6 +532,7 @@ body,div
     font-size:0.875rem;
 	line-height:1;
 	width:49.5%;
+    height:100%
 }
 .pre_strings_set select
 {
@@ -572,10 +552,7 @@ body,div
     width:45%;
     top:0%;
     height:2%;
-    border-width:0.0625rem;
     font-size:0.875rem;
-    border-style:solid;
-    border-color:red;
 	overflow-y:auto;
 }
 .ref_set input
@@ -594,10 +571,7 @@ body,div
     width:52%;
     top:0%;
     height:2%;
-    border-width:0.0625rem;
     font-size:0.875rem;
-    border-style:solid;
-    border-color:red;
 	overflow-y:auto;
 }
 .customRef input
@@ -616,9 +590,6 @@ body,div
     top:0%;
     height:2%;
     display:table;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:green;
 	overflow-y:auto;
 }
 .filter_set input
@@ -638,9 +609,6 @@ body,div
     top:0%;
     height:2%;
     display:table;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:red;
 	overflow-y:auto;
 }
 .play_clips input
@@ -664,9 +632,6 @@ body,div
     width:99%;
     top:0%;
     height:2%;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:green;
     display:table;
 	overflow-y:auto;
 	font-size:1rem;
@@ -688,9 +653,6 @@ body,div
     top:0%;
     height:22%;
     display:table-row;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
 	overflow-y:auto;
 }
 .clips table{
@@ -713,9 +675,6 @@ body,div
     top:0%;
     height:2%;
     display:table;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:red;
 	overflow-y:auto;
 }
 .add_tone_table_div{
@@ -726,9 +685,6 @@ body,div
     top:0%;
     height:100%;
     display:table;
-    border-width:0.0625rem;
-    border-style:solid;
-    border-color:blue;
 	overflow-y:auto;
 }
 .add_tone_table_div table tr td input{
@@ -741,7 +697,7 @@ body,div
 .add_tone_sub
 {
     position:relative;
-	float:left;
+	float:right;
 	left:0%;
     width:12%;
     top:0%;

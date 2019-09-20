@@ -110,7 +110,7 @@ function cal_pitch_pos(title)
             try{
                 var pitch_pos = xhr.response;
                 //在html上显示信息
-                document.getElementById('ref_info').innerHTML=pitch_pos;
+                document.getElementById('ref_info_a').innerHTML=pitch_pos;
             }catch(err){
                 alert(xhr.response);
             }
@@ -279,10 +279,10 @@ function algorithm_selectFunc(algorithm_name, labeling_id)
             var context = JSON.parse(xhr.response);
             try{
                 var algorithm_string = "";
-                algorithm_string+="总帧数:"+context["frame_num"]+" 已完成:"+context["clips_num"];
-                algorithm_string+='  <input type="button" value="计算" onclick="cal_algorithm(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
-                algorithm_string+='&nbsp<input type="button" value="清空" onclick="clear_algorithm(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
-                algorithm_string+='&nbsp<input type="button" value="刷新" onclick="algorithm_selectFunc(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
+                algorithm_string+="All:"+context["frame_num"]+" Done:"+context["clips_num"];
+                algorithm_string+='  <input type="button" value="cal" onclick="cal_algorithm(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
+                algorithm_string+='&nbsp<input type="button" value="clear" onclick="clear_algorithm(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
+                algorithm_string+='&nbsp<input type="button" value="update" onclick="algorithm_selectFunc(\''+algorithm_name+'\',\''+labeling_id+'\')"></input>';
                 document.getElementById('algorithm_opt').innerHTML=algorithm_string;
             }catch(e)
             {
@@ -424,15 +424,15 @@ function reference_selectFunc(algorithm_name,labeling_id)
                 var algorithm_num=context["algorithms_num"];
                 if(algorithm_num<1){
                     //显示添加
-                    var div_string='<select id="add_reference_select"><option value="1">过滤</option><option value="0">不过滤</option></select>';
-                    div_string+='&nbsp&nbsp&nbsp<input type="button" value="添加" onclick="add_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
+                    var div_string='<select id="add_reference_select"><option value="1">Filter</option><option value="0">WithoutFilter</option></select>';
+                    div_string+='&nbsp&nbsp&nbsp<input type="button" value="add" onclick="add_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     document.getElementById('reference_opt').innerHTML=div_string;
 
                 }else{
                     //显示重置　删除
-                    var div_string='<select id="del_reference_select" onclick="set_refFilter(\''+algorithm_name+'\',\''+labeling_id+'\')"'+'><option value="1" >过滤</option><option value="0">不过滤</option></select>';
-                    div_string+='&nbsp<input type="button" value="删除" onclick="del_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
-                    div_string+='&nbsp<input type="button" value="设置主参考" onclick="set_primary(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
+                    var div_string='<select id="del_reference_select" onclick="set_refFilter(\''+algorithm_name+'\',\''+labeling_id+'\')"'+'><option value="1" >filter</option><option value="0">without_filter</option></select>';
+                    div_string+='&nbsp<input type="button" value="delete" onclick="del_reference(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
+                    div_string+='&nbsp<input type="button" value="set as primary" onclick="set_primary(\''+algorithm_name+'\',\''+labeling_id+'\')"/>';
                     document.getElementById('reference_opt').innerHTML=div_string;
                 }
             }catch(e)
@@ -539,9 +539,24 @@ function move2Pos(labeling_id)
 
 /*刷新前提交*/
 window.onbeforeunload = function(){
-   table_info = document.getElementById("table_info");
-   index_info = {"extend_rad":6};
-   extend_rad = table_info.rows[index_info["extend_rad"]].cells[1].getElementsByTagName("INPUT")[0].value;
-
-   console.log(extend_rad)
+    var table_info = document.getElementById("table_info");
+    var title = table_info.rows[1].cells[1].getElementsByTagName("INPUT")[0].value;
+    var frameNum = table_info.rows[2].cells[1].getElementsByTagName("INPUT")[0].value;
+    var current_frame = table_info.rows[3].cells[1].getElementsByTagName("INPUT")[0].value;
+    var manual_pos = table_info.rows[4].cells[1].getElementsByTagName("INPUT")[0].value;
+    var nfft = table_info.rows[5].cells[1].getElementsByTagName("INPUT")[0].value;
+    var extend_rad = table_info.rows[6].cells[1].getElementsByTagName("INPUT")[0].value;
+    var tone_extend_rad = table_info.rows[7].cells[1].getElementsByTagName("INPUT")[0].value;
+    var vad_thrart_ee = table_info.rows[8].cells[1].getElementsByTagName("INPUT")[0].value;
+    var vad_throp_ee = table_info.rows[9].cells[1].getElementsByTagName("INPUT")[0].value;
+    var vad_thrart_rmse = table_info.rows[10].cells[1].getElementsByTagName("INPUT")[0].value;
+    var create_user_id = table_info.rows[11].cells[1].getElementsByTagName("INPUT")[0].value;
+    var primary_ref = table_info.rows[12].cells[1].getElementsByTagName("INPUT")[0].value;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'labeling_reset/?'+'title='+title+'&frameNum='+frameNum+'&current_frame='+current_frame+"&manual_pos="+manual_pos+"&nfft="+nfft+"&extend_rad="+extend_rad+"&tone_extend_rad="+tone_extend_rad+"&vad_thrart_ee="+vad_thrart_ee+"&vad_throp_ee="+vad_throp_ee+"&vad_thrart_rmse="+vad_thrart_rmse+"&create_user_id="+create_user_id+"&primary_ref="+primary_ref, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+        }
+    }
 }

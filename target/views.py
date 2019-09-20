@@ -198,39 +198,6 @@ class WaveMemWave:
             print(e)
         finally:
             return sub_wave
-'''            
-def algorithm_cal_async(labeling, detector, stft, rmse, fs, nfft, algorithms_name, current_pos):
-    try:
-        reference_pitch = detector.getpitch(stft, fs, nfft, False)
-        reference_pitch_filtered = 0  # 过滤后的ｓｔｆｔ
-
-        if reference_pitch[0] > 65 and rmse > 0.1:
-            filtered_sgn = filter_by_base(stft, reference_pitch[0], 30, nfft, fs)
-            filtered = detector.getpitch(filtered_sgn, fs, nfft, False)
-            reference_pitch_filtered = filtered[0]
-
-        tar = list()  # 得到的pitch
-        tar.append(reference_pitch[0])
-        tar.append(reference_pitch_filtered)
-        algorithm_clip = AlgorithmsClips(
-            labeling=labeling,
-            algorithms=algorithms_name,
-            startingPos=current_pos,
-            length=1,
-            tar=pickle.dumps(tar)
-        )
-        algorithm_clip.save()
-        algorithm_medium = AlgorithmsMediums(
-            labeling=labeling,
-            algorithms=algorithms_name,
-            startingPos=current_pos,
-            length=1,
-            medium=pickle.dumps(reference_pitch[2])
-        )
-        algorithm_medium.save()
-    except Exception as e:
-        print(e)
-'''
 
 # Create your views here.
 class TargetView(View):
@@ -704,6 +671,8 @@ class TargetView(View):
         user_id = str(request.user)
         primary_pitch = float(request.GET.get('primary_pitch'))
         wave = Wave.objects.get(create_user_id=user_id, title=title)
+        pitch_array = []
+        pitch_array.append(primary_pitch)
         if wave.chin is not None:
             # 获得chin class
             chin = pickle.loads(wave.chin)
@@ -711,7 +680,7 @@ class TargetView(View):
             # chin class 不存在
             chin = None
         if chin is not None:
-            possible_pos = chin.cal_possiblepos(primary_pitch)[1].replace("\n", "<br>")
+            possible_pos = chin.cal_possiblepos(pitch_array)[1][0].replace("\n", "<br>")
         else:
             possible_pos = "尚未设置chin信息"
         return HttpResponse(possible_pos)
@@ -1292,6 +1261,24 @@ class TargetView(View):
         self.sender.login(self.msg_from, self.passwd)
         self.sender.sendmail(self.msg_from, self.msg_to, msg.as_string())
         return HttpResponse("posted")
+
+    @method_decorator(login_required)
+    def labeling_reset(self, request):
+        wave_title = request.GET.get('title')
+        extend_rad = int(request.GET.get('extend_rad'))
+        tone_extend_rad= int(request.GET.get('tone_extend_rad'))
+        vad_thrart_ee= float(request.GET.get('vad_thrart_ee'))
+        vad_throp_ee= float(request.GET.get('vad_throp_ee'))
+        vad_thrart_rmse= float(request.GET.get('vad_thrart_rmse'))
+        user_id = request.GET.get('create_user_id')
+        labeling = Labeling.objects.get(create_user_id=user_id,title=wave_title)
+        labeling.extend_rad=extend_rad
+        labeling.tone_extend_rad=tone_extend_rad
+        labeling.vad_thrart_EE=vad_thrart_ee
+        labeling.vad_throp_EE=vad_throp_ee
+        labeling.vad_thrart_RMSE=vad_thrart_rmse
+        labeling.save()
+        return HttpResponse("labeling reset done")
 
     @classmethod
     def db_access(cls, request):
