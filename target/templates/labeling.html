@@ -5,6 +5,7 @@
     <title>Data：{{title}}</title>
     <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="https://cdn.bootcss.com/echarts/4.3.0-rc.2/echarts.min.js"></script>
     <script src="http://cdn.chinaudio.tech/static/js/labeling.js"></script>
     <link href="http://cdn.chinaudio.tech/static/css/labeling.css" rel="stylesheet" type="text/css" />
     <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
@@ -28,6 +29,11 @@
 			</div>
 			<div class="sampling_medium" id="sampling_medium" >
 			</div>
+            <div class="fft_range" id="fft_range" >
+            </div>
+            <div class="fft_range_ctrl" id="fft_range_ctrl" >
+                <input type="button" id=fft_range_ctrl_button" value="show" onclick="spectrogram_dspl(this,{{labeling_id|safe}},{{current_frame|safe}})" /> 
+            </div>
 		</div>
 		<div class="strings_info" id="strings_info">
 		</div>
@@ -606,8 +612,10 @@
 <script>
 	//possible 显示
 	possible_pos = {{possible_pos|safe}};
-	document.getElementById("ref_info_a").innerHTML=possible_pos[0]
-	document.getElementById("ref_info_b").innerHTML=possible_pos[1]
+	document.getElementById("ref_info_a").innerHTML=possible_pos[0];
+	document.getElementById("ref_info_b").innerHTML=possible_pos[1];
+    //fft_range={{fft_range}};
+    //console.log(fft_range);
 </script>
 <script>
     // 总是滚动到最低端

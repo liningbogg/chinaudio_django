@@ -92,7 +92,7 @@ body,div
     position:relative;
     float:left;
 	left:0.5%;
-    width:49%;
+    width:47%;
     top:1%;
     height:98%;
 }
@@ -101,10 +101,42 @@ body,div
 {
     position:relative;
     float:left;
-	left:1.5%;
-    width:49%;
+	left:0.5%;
+    width:47%;
     top:1%;
     height:98%;
+}
+/*时频图*/
+.fft_range
+{
+    position:relative;
+    display:None;
+    float:left;
+	left:0.5%;
+    width:47%;
+    top:1%;
+    height:98%;
+}
+
+/*时频显示控制*/
+.fft_range_ctrl
+{
+    position:relative;
+    float:right;
+	left:0.5%;
+    width:4%;
+    top:1%;
+    height:98%;
+}
+
+.fft_range_ctrl input
+{
+    position:relative;
+    float:right;
+    text-align:center;
+    vertical-align:center;
+    width:99%;
+    height:99%;
 }
 
 /*定弦信息*/

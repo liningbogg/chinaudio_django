@@ -1,4 +1,6 @@
 //临时用inc数组
+var hasSpectrogram=false;
+var spectrogram;
 var indexArr=new Array(100000);
 for(var i=0;i<99999;i++){
     indexArr[i]=i;
@@ -140,10 +142,133 @@ function filter_fft(srcFFT,title,currentPos,nfft,fs,labeling_id)
                 addChart("",srcChartDictSeries,srcChartDictLine,440*nfft/fs,"sampling_fft",0,parseInt(4000*nfft/fs));
             }catch(err){
                 //alert(xhr.response);
-                alert(err)
+                alert(err);
             }
         }
     };
+}
+
+//热力图显示封装
+function hetmap_dspl_base(xData, yData, data, max_data, min_data, div_name, series_name)
+{
+    option = {
+        tooltip: {
+            
+        },
+        toolbox: 
+        {
+            feature: 
+            {
+                dataZoom:
+                {
+                    show: true,
+
+                }
+            }
+        },
+        xAxis: {
+            type: 'category',
+            data: xData
+        },
+        yAxis: {
+            type: 'category',
+            data: yData
+        },
+        visualMap: {
+            min: min_data,
+            max: max_data,
+            calculable: true,
+            realtime: false,
+            inRange: {
+                color: ['#000000', '#ffffff']
+            }
+        },
+        grid:{
+            x: "10%",
+            y: "1%",
+            x2: "1%",
+            y2: "12%"
+        },
+        series: [{
+            name: series_name,
+            type: 'heatmap',
+            data: data,
+            itemStyle: {
+                emphasis: {
+                    borderColor: '#333',
+                    borderWidth: 0
+                }
+            },
+            progressive: 1000,
+            animation: false
+        }]
+    }; 
+    var myChart = echarts.init(document.getElementById(div_name));
+    myChart.setOption(option);
+}
+
+
+//控制时频图显示
+function spectrogram_dspl(obj,labeling_id,current_frame)
+{
+    if(obj.value=="show")
+    {
+        obj.value="hidden";
+        var sampling_fft_div=document.getElementById('sampling_fft');
+        sampling_fft_div.style.width="23.5%";
+        var sampling_medium_div=document.getElementById('sampling_medium');
+        sampling_medium_div.style.width="23.5%";
+        var fft_range_div=document.getElementById('fft_range');
+        fft_range_div.style.display="table";
+        //接收并显示时频图
+        if(hasSpectrogram==false){
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'get_spectrogram/?'+"labeling_id="+labeling_id+"&current_frame="+current_frame, true);
+            xhr.send(null);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+                    try{
+                        var context = JSON.parse(xhr.response);
+                        console.log(context); 
+                        var number=context["number"];
+                        var length=context["length"];
+                        var spectrogram=context["spectrogram"];
+                        var max_fft_range=context["max_fft_range"];
+                        var min_fft_range=context["min_fft_range"];
+                        max_fft_range=min_fft_range+(max_fft_range-min_fft_range)*0.7;
+                        min_fft_range=min_fft_range+(max_fft_range-min_fft_range)*0.1;
+
+                        var data=[];
+                        var xData=[];
+                        var yData=[];
+                        for(var i=0;i<number;i++){
+                            for(var j=0;j<length;j++){
+                                data.push([i,j,spectrogram[i][j]]);
+                            }
+                            xData.push(i);
+                        }
+                        for(var j=0;j<length;j++)
+                        {
+                            yData.push(j);
+                        }
+                        hetmap_dspl_base(xData,yData,data,max_fft_range,min_fft_range,"fft_range","spectrogram");
+
+                    }catch(err){
+                        alert(err);
+                    }
+                }
+            }
+        }
+    }else
+    {
+        obj.value="show";
+        var fft_range_div=document.getElementById('fft_range');
+        fft_range_div.style.display="None";
+        var sampling_fft_div=document.getElementById('sampling_fft');
+        sampling_fft_div.style.width="47%";
+        var sampling_medium_div=document.getElementById('sampling_medium');
+        sampling_medium_div.style.width="47%";
+    }
 }
 
 //计算自定义片段的音高
@@ -175,7 +300,8 @@ function cal_customRef(title,nfft,fs,labeling_id)
 	            srcChartDictLine=[];
 	            //此处的４４０要跟随是否降低采样变化，尚未实现
                 addChart("",srcChartDictSeries,srcChartDictLine,4400*medium.length/14000,"sampling_medium",0,medium.length);
-                document.getElementById('ref_info').innerHTML=possible_pos;
+                document.getElementById('ref_info_a').innerHTML=possible_pos[0];
+                document.getElementById('ref_info_b').innerHTML=possible_pos[1];
             }catch(err){
                 console.log(err);
             }

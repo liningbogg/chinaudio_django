@@ -51,6 +51,7 @@ from django.core.cache import cache
 import sys
 import soundfile
 import redis
+from target.np_encoder import NpEncoder
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -492,17 +493,18 @@ class TargetView(View):
             reference_name = algorithmsConf.algorithms
             local_reference_clips = labelinfo.algorithmsclips_set.filter(
                 algorithms=reference_name,
-                startingPos__range=(current_frame-extend_rad, current_frame+extend_rad-1)
+                startingPos__range=(current_frame-extend_rad, current_frame+extend_rad-1),
+                length=1
             )
             primary_arr = np.zeros(end_ref-start_ref)  # 算法主数据
             for reference_clip in local_reference_clips:
-                primary_arr[reference_clip.startingPos-tones_start] = pickle.loads(reference_clip.tar)[0]
+                primary_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[0]
             reference.update({reference_name: list(primary_arr)})
             if algorithmsConf.is_filter is True:
                 reference_name = reference_name+"_filter"
                 filter_arr = np.zeros(end_ref - start_ref)  # 算法主数据
                 for reference_clip in local_reference_clips:
-                    filter_arr[reference_clip.startingPos-tones_start] = pickle.loads(reference_clip.tar)[1]
+                    filter_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[1]
                 reference.update({reference_name: list(filter_arr)})
         target = [[0] * (end_ref-start_ref), [0] * (end_ref-start_ref), [0] * (end_ref-start_ref)]  # 存储前三个音高的二维数组
         try:
@@ -515,11 +517,12 @@ class TargetView(View):
                 tar = pickle.loads(clip.tar)
                 index = 0
                 for pitch in tar:
-                    target[index][pos-tones_start] = pitch
+                    target[index][pos-start_ref] = pitch
                     index = index+1
         except Exception as e:
             pass
         # fft及中间结果
+        # fft_range=list(range(extend_rad*2))
         try:
             src_fft = pickle.loads(labelinfo.stft_set.get(startingPos=current_frame, length=1).src)
             src_fft[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
@@ -571,6 +574,7 @@ class TargetView(View):
             filter_fft = []
             current_tar = [0]
             filter_rad = 0
+            print(e)
         # 可能的位置
         chin = None
         string_hzes = None
@@ -639,6 +643,7 @@ class TargetView(View):
             'primary_ref': labelinfo.primary_ref,
             'startPos': vadrs['startPos'],
             'ee_diff': vadrs['ee_diff'],
+            # "fft_range":list(fft_range),
             "src_fft": list(src_fft),
             "medium": list(medium),
             'filter_fft': list(filter_fft),
@@ -664,6 +669,39 @@ class TargetView(View):
             'possible_pos': possible_pos
         }
         return render(request, 'labeling.html', context)
+
+    @method_decorator(login_required)
+    def get_spectrogram(self, request):
+        labeling_id = int(request.GET.get('labeling_id'))
+        current_frame = int(request.GET.get('current_frame'))
+        try:
+            labelinfo = Labeling.objects.get(id=labeling_id)
+            extend_rad = labelinfo.extend_rad
+            nfft = labelinfo.nfft
+            fs = labelinfo.fs
+            stft_set=labelinfo.stft_set.filter(startingPos__range=(current_frame-extend_rad,current_frame+extend_rad-1),length=1)
+            counter=0
+            fft_range=list(range(stft_set.count()))
+            for stft in stft_set:
+                stft_src=list(pickle.loads(stft.src)[0:int(4000*nfft/fs)])
+                stft_src = [round(i, 4) for i in stft_src]
+                fft_range[counter]=stft_src
+                counter=counter+1
+            max_fft_range_medium=max(fft_range)
+            max_fft_range = max(max_fft_range_medium)
+            min_fft_range_medium=min(fft_range)
+            min_fft_range = min(min_fft_range_medium)
+            context = {
+                'number': int(counter),
+                'length': int(4000*nfft/fs),
+                "spectrogram": fft_range,
+                "max_fft_range": max_fft_range,
+                "min_fft_range": min_fft_range
+            }
+            return HttpResponse(json.dumps(context, cls=NpEncoder))
+        except Exception as e:
+            print(e)
+            return None
 
     @method_decorator(login_required)
     def cal_pitch_pos(self, request):
@@ -745,6 +783,8 @@ class TargetView(View):
         end = int(request.GET.get('end'))
         labeling_id = int(request.GET.get('labeling_id'))
         try:
+            pitch=[]
+            possible_pos=[]
             wave_arr = self.wave_mem_wave.achieve(user_id, title, fs, nfft, start, end)  #
             wave_len = len(wave_arr)
             wave_fft_src = fft(wave_arr)  # 自定义序列的fft
@@ -762,11 +802,14 @@ class TargetView(View):
             src = TargetView.resampling(wave_fft, target_len)[0:int(4000*4410/fs)]  # 重新采样后的适合显示的fft
             primary_pitch = reference_pitch_allinfo[0]  # 主音高
             medium = reference_pitch_allinfo[2]  # 中间结果
+            pitch.append(primary_pitch)
             is_resampling = labeling.medium_resampling
             if is_resampling is True:
                 medium = TargetView.resampling(medium, int(len(medium)/10))
             if primary_pitch > 40:
                 filter_fft = filter_by_base(src, primary_pitch, labeling.filter_rad, nfft, fs)  # 过滤后fft
+                filter_pith_allinfo = detector.getpitch(filter_fft, fs, wave_len, False)
+                pitch.append(filter_pith_allinfo[0])
                 filter_fft = [round(i, 4) for i in filter_fft]
             else:
                 filter_fft = []
@@ -775,11 +818,15 @@ class TargetView(View):
                 chin = pickle.loads(wave.chin)
             else:
                 chin = None
-            possible_pos = chin.cal_possiblepos(primary_pitch)[1].replace("\n", "<br>")
+            possible_pos_set = chin.cal_possiblepos(pitch)[1]
+            for pos in possible_pos_set:
+                possible_pos.append(pos.replace("\n", "<br>"))
+            while(len(possible_pos)<2):
+                possible_pos.append("")
             context = {
                 'primary_pitch': primary_pitch, 'src': list(src), 'filter_fft': filter_fft,
                 'medium': list(medium),
-                "possible_pos": possible_pos
+                "possible_pos": list(possible_pos)
             }
             return HttpResponse(json.dumps(context))
         except Exception as e:

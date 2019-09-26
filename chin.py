@@ -234,6 +234,7 @@ class Chin:
                         possiblepos[i].append(sanyinPred)
                         formatStr = formatStr + "s:%d弦散音 e:%.2f\n" % (sanyinPred[0][0], sanyinPred[0][1])
                     # 按音检测
+                    
                     anyinPrep = self.cal_anyinpred(pitch, thranyin, thranyinspace)
                     if anyinPrep != []:
                         possiblepos[i].append(anyinPrep)
