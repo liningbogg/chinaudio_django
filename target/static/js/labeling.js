@@ -153,7 +153,8 @@ function hetmap_dspl_base(xData, yData, data, max_data, min_data, div_name, seri
 {
     option = {
         tooltip: {
-            
+            trigger:'item',
+            formatter:'{a}<br>{c}'
         },
         toolbox: 
         {
