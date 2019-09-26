@@ -106,17 +106,6 @@ body,div
     top:1%;
     height:98%;
 }
-/*时频图*/
-.fft_range
-{
-    position:relative;
-    display:None;
-    float:left;
-	left:0.5%;
-    width:47%;
-    top:1%;
-    height:98%;
-}
 
 /*时频显示控制*/
 .fft_range_ctrl
@@ -243,10 +232,24 @@ body,div
     width:100%;
     font-size:0.875rem;
 }
+
+
+/*时频图*/
+.fft_range
+{
+    position:relative;
+    display:None;
+    float:left;
+	left:0.5%;
+    width:23%;
+    top:1%;
+    height:98%;
+}
+
 /*参数设置及其他操作*/
 .opt{
     position:relative;
-    float:left;
+    float:right;
 	left:0.5%;
     width:29%;
     top:1%;
@@ -747,3 +750,4 @@ input::-webkit-inner-spin-button{
     margin: 0;
 }
 input[type="number"]{-moz-appearance:textfield;}
+

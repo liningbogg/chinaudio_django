@@ -17,7 +17,7 @@
 </div>
 
 <div class="main" id="main">
-	<div class="display" name="display">
+	<div class="display" id="display">
 		<div  class="vad" id="vad">
 		</div>
 		<div class="local_pitch" id="local_pitch" >
@@ -29,8 +29,6 @@
 			</div>
 			<div class="sampling_medium" id="sampling_medium" >
 			</div>
-            <div class="fft_range" id="fft_range" >
-            </div>
             <div class="fft_range_ctrl" id="fft_range_ctrl" >
                 <input type="button" id=fft_range_ctrl_button" value="show" onclick="spectrogram_dspl(this,{{labeling_id|safe}},{{current_frame|safe}})" /> 
             </div>
@@ -47,8 +45,9 @@
 		</div>
 	</div>
 
-	<div class = "opt" name="opt" >
-
+    <div class="fft_range" id="fft_range" >
+    </div>
+	<div class = "opt" id="opt" >
 		<div class="input_opt" id="input_opt">
 			<details>
 				<summary>hidden info</summary>

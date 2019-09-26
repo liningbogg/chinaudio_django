@@ -154,6 +154,12 @@ function hetmap_dspl_base(xData, yData, data, max_data, min_data, div_name, seri
     option = {
         tooltip: {
             trigger:'item',
+            position: function (pos, params, el, elRect, size) {
+                var obj = {top: 10};
+                obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 30;
+                return obj;
+            },
+            extraCssText: "width: 30%;height: 10%",
             formatter:'{a}<br>{c}'
         },
         toolbox: 
@@ -188,7 +194,7 @@ function hetmap_dspl_base(xData, yData, data, max_data, min_data, div_name, seri
             x: "10%",
             y: "1%",
             x2: "1%",
-            y2: "12%"
+            y2: "4%"
         },
         series: [{
             name: series_name,
@@ -215,12 +221,12 @@ function spectrogram_dspl(obj,labeling_id,current_frame)
     if(obj.value=="show")
     {
         obj.value="hidden";
-        var sampling_fft_div=document.getElementById('sampling_fft');
-        sampling_fft_div.style.width="23.5%";
-        var sampling_medium_div=document.getElementById('sampling_medium');
-        sampling_medium_div.style.width="23.5%";
+        var sampling_fft_div=document.getElementById('display');
+        sampling_fft_div.style.width="60%";
+        var sampling_medium_div=document.getElementById('opt');
+        sampling_medium_div.style.width="14%";
         var fft_range_div=document.getElementById('fft_range');
-        fft_range_div.style.display="table";
+        fft_range_div.style.display="inline";
         //接收并显示时频图
         if(hasSpectrogram==false){
             var xhr = new XMLHttpRequest();
@@ -265,10 +271,10 @@ function spectrogram_dspl(obj,labeling_id,current_frame)
         obj.value="show";
         var fft_range_div=document.getElementById('fft_range');
         fft_range_div.style.display="None";
-        var sampling_fft_div=document.getElementById('sampling_fft');
-        sampling_fft_div.style.width="47%";
-        var sampling_medium_div=document.getElementById('sampling_medium');
-        sampling_medium_div.style.width="47%";
+        var sampling_fft_div=document.getElementById('display');
+        sampling_fft_div.style.width="70%";
+        var sampling_medium_div=document.getElementById('opt');
+        sampling_medium_div.style.width="29%";
     }
 }
 
