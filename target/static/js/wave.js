@@ -199,11 +199,11 @@ function download_phrase(title,start,end,fileName,fs,nfft){
 }
 
 //邮件发送片段
-function post_phrase(title,start,end,fileName, fs,nfft){
+function post_phrase(title,start,end,file_name, fs,nfft){
     var xhr = new XMLHttpRequest();
     start=Math.round(start*fs/nfft);
     end=Math.round(end*fs/nfft);
-    xhr.open('GET', 'post_phrase/?'+"title="+title+"&start="+start+"&end="+end+"&nfft="+nfft+"&fs="+fs+"&fileName="+fileName, true);
+    xhr.open('GET', 'post_phrase/?'+"title="+title+"&start="+start+"&end="+end+"&nfft="+nfft+"&fs="+fs+"&file_name="+file_name, true);
     xhr.send(null);
     //请求成功回调函数
     xhr.onreadystatechange = function() {

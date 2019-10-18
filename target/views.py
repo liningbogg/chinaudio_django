@@ -1205,7 +1205,7 @@ class TargetView(View):
             item.tar = pickle.loads(clip.tar)
             for index in np.arange(len(item.tar)):
                 item.tar[index] = round(item.tar[index], 2)
-            item.possible_pos = chin.cal_possiblepos(item.tar)[1].replace("\n", "<br>")
+            item.possible_pos = chin.cal_possiblepos(item.tar)[1][0].replace("\n", "<br>")
             item.id = clip.id
             for index in np.arange(len(item.tar)):
                 try:
@@ -1281,7 +1281,7 @@ class TargetView(View):
         end = int(request.GET.get('end'))
         nfft = int(request.GET.get('nfft'))
         fs = int(request.GET.get('fs'))
-        file_name = request.GET.get('file_name')
+        email_file_name = request.GET.get('file_name')
         # self.wave_mem.add_mem(title)  # 试图将完整曲目加入缓存
         wave_arr = self.wave_mem_wave.achieve(user_id, title, fs, nfft, start, end)  # 获取音频信号
         wave_arr = np.array(wave_arr) * 32767
@@ -1294,11 +1294,11 @@ class TargetView(View):
         # 将wav_data转换为二进制数据写入文件
         f.writeframes(wave_arr.tostring())  # 写入音频信息
         f.close()  # 关闭写入流"""
-        subject = file_name  # 主题
+        subject = email_file_name  # 主题
         wav_patch = MIMEApplication(io_stream.getvalue())
         wav_patch.add_header(
             'Content-Disposition', 'attachment',
-            file_name=('gbk', '', file_name + '.wav')
+            filename=('gbk', '', email_file_name + '.wav')
         )
         msg = wav_patch
         msg['Subject'] = subject
