@@ -247,6 +247,16 @@ class TargetView(View):
         context = {'waves': waves, 'tunes': tunes}
         return render(request, 'index.html', context)
 
+    @classmethod
+    @method_decorator(login_required)
+    def digital(cls,request):
+        """
+        古琴数字化数据库首页
+        
+        """
+        context = {'info':"digital"}
+        return render(request,'digital.html',context)
+
     @method_decorator(login_required)
     def add_tune(self, request):
         tune_name = str(request.GET.get('tune_name'))

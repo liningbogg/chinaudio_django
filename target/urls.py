@@ -35,6 +35,7 @@ urlpatterns = [
     path('labeling/get_phrase/', target_view.get_phrase),
     path('wave/post_phrase/', target_view.post_phrase),
     path('wave/access/', target_view.db_access),
+    path('digital/',target_view.digital),
     path('labeling/', target_view.labeling),
     path('login/', target_view.login),
     path('accounts/login/', target_view.login),

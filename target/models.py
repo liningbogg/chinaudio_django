@@ -189,3 +189,27 @@ class MarkedPhrase(BaseModel):
     start = models.FloatField()
     length = models.FloatField()
     objects = models.Manager()
+
+
+class OcrPDF(BaseModel):
+    """
+    用以ocr识别的pdf文件信息
+    title:pdf名称
+    file_name:pdf文件名
+    file_size:pdf文件尺寸，单位KB
+    frame_num:pdf帧数
+    current_frame:当前帧标记位置
+    manual_pos:如果指定位置则标记至指定值，否则为-1自动计算当前位置
+    """
+    title = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=255)
+    file_size = models.FloatField(default=0.0)
+    frame_num = models.IntegerField(default=0)
+    current_frame = models.IntegerField(default=0)
+    manual_pos = models.IntegerField(default=-1)
+    objects = models.Manager()
+
+    class Meta:
+        unique_together = ["title", "create_user_id"]
+
+
