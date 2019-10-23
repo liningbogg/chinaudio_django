@@ -35,6 +35,7 @@ from target.models import AlgorithmsMediums
 from target.models import LabelingAlgorithmsConf
 from target.models import Tune
 from target.models import TargetUser
+from target.models import OcrPDF
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
@@ -316,7 +317,6 @@ class TargetView(View):
 
     @classmethod
     def handle_upload_file(cls, upload_file, path, user_id):
-
         if not os.path.exists(path):
             os.makedirs(path)
             print("文件夹已经创建:"+path)
@@ -360,6 +360,35 @@ class TargetView(View):
             print(wave_name + " already existed")
             return "err"
 
+    def handle_upload_file_pdf(self, upload_file, path, user_id):
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print("文件夹已经创建:"+path)
+        file_name = path + upload_file.name
+        base_name = upload_file.name.split(".")[0]
+        already = OcrPDF.objects.filter(create_user_id=user_id, title=base_name)  # 已经存在的pdf
+        if already.count() == 0:
+            try:
+                destination = open(file_name, 'wb+')
+                for chunk in upload_file.chunks():
+                    destination.write(chunk)
+                destination.close()
+                # 插入数据库
+                ocrPDF = OcrPDF(
+                    create_user_id=user_id,
+                    title=base_name,
+                    file_name=file_name,
+                )
+                ocrPDF.save()
+                # 解压pdf
+
+            except Exception as e:
+                print(e)
+                return "err"
+        else:
+            print(wave_name + " already existed")
+            return "err"
+
     @classmethod
     @method_decorator(login_required)
     def addwaves(cls, request):
@@ -372,6 +401,18 @@ class TargetView(View):
             for wave in content:
                 cls.handle_upload_file(wave, path, user_id)
         return HttpResponse("add waves done")
+
+    @method_decorator(login_required)
+    def addpdfs(self,request):
+        if request.method == 'POST':
+            content = request.FILES.getlist("upload_pdf")
+            if not content:
+                return HttpResponse("没有上传内容")
+            user_id = str(request.user)
+            path = "/home/liningbo/pdfFiles/"+user_id+"/"
+            for pdf in content:
+                self.handle_upload_file_pdf(pdf, path, user_id)
+        return HttpResponse("add pdfs done")
 
     @classmethod
     @method_decorator(login_required)

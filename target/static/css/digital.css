@@ -1,0 +1,62 @@
+html
+{
+    font-size: calc(100vw/1920*16);
+}
+body,div
+{
+    position:fixed;
+    margin:0;padding:0;
+    height:100%;
+    width:100%;
+}
+.login
+{
+    position:relative;
+    float:left;
+    width:99%;
+    height:3%;
+    font-size:1.25rem;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
+}
+/*主信息窗体*/
+.main
+{
+    position:relative;
+    float:left;
+    width:99%;
+    top:0%;
+    height:96%;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+    overflow-y:auto;
+}
+/*标题*/
+.title
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:6%;
+    display:table;
+    font-size:2rem;
+    border-color:yellow;
+    border-width:0.05rem;
+    border-style:solid;
+}
+/*上传pdf*/
+.upload
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:6%;
+    display:table;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
+}
