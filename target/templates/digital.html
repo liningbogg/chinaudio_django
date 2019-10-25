@@ -26,6 +26,34 @@
                 <input type="submit" value="上传"/>
             </form>
         </div>
+        <div class="ocrPDFList" id="ocrPDFList">
+            <table class="ocrPDFTable" id="ocrPDFTable" border="1">
+                <thead>
+                    <tr style="font-size:1rem;line-height:1">
+                        <th>文档</th>
+                        <th>帧数</th>
+                        <th>完成程度</th>
+                        <th>标注文档</th>
+                    </tr>
+                </thead>
+                {% for ocrPDF in ocrPDFList %}
+                <tr>
+                    <td style="color:blue;font-size:1rem;line-height:2">
+                        {{ocrPDF.title}}
+                    </td> 
+                    <td style="font-size:1rem;line-height:2">
+                        {{ocrPDF.frame_num}}
+                    </td>
+                    <td style="font-size:1rem;line-height:2">
+                        {{ocrPDF.current_frame}}
+                    </td>
+                    <td style="color:blue;font-size:1rem;line-height:2">
+                        <a href="../ocr_labeling/?id={{ocrPDF.id}}">标注</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
     </div>
 </body>
 <html>

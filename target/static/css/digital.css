@@ -60,3 +60,25 @@ body,div
     border-width:0.05rem;
     border-style:solid;
 }
+/*ocrPDF列表*/
+.ocrPDFList{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:76%;
+    display:table;
+    border-color:red;
+    font-size:1rem;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.ocrPDFTable{
+    width:50%;
+}
+.ocrPDFTable thead{
+    width:99%;
+}
+.ocrPDFTable thead tr th{
+    font-size:1rem;
+}

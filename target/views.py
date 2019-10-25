@@ -36,6 +36,7 @@ from target.models import LabelingAlgorithmsConf
 from target.models import Tune
 from target.models import TargetUser
 from target.models import OcrPDF
+from target.models import PDFImage
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
@@ -52,6 +53,7 @@ from django.core.cache import cache
 import sys
 import soundfile
 import redis
+import fitz
 from target.np_encoder import NpEncoder
 
 # 归一化函数
@@ -255,7 +257,8 @@ class TargetView(View):
         古琴数字化数据库首页
         
         """
-        context = {'info':"digital"}
+        ocrPDFList = OcrPDF.objects.filter(create_user_id=request.user)
+        context = {'ocrPDFList':ocrPDFList}
         return render(request,'digital.html',context)
 
     @method_decorator(login_required)
@@ -374,19 +377,48 @@ class TargetView(View):
                     destination.write(chunk)
                 destination.close()
                 # 插入数据库
-                ocrPDF = OcrPDF(
+                ocrPDFItem = OcrPDF(
                     create_user_id=user_id,
                     title=base_name,
                     file_name=file_name,
+
                 )
-                ocrPDF.save()
+                ocrPDFItem.save()
                 # 解压pdf
+                args={
+                    "create_user_id":user_id,
+                    "title":base_name,
+                    "file_name":file_name,
+                    "ocrPDF_id":ocrPDFItem.id
+                }
+                red = redis.Redis(connection_pool=self.redis_pool)
+                red.rpush("pdfUnpackTask", json.dumps(args))  # 此处不做重复性检查
+                '''doc = fitz.open(file_name)
+                count=0
+                for page in doc:
+                    pix = page.getPixmap()
+                    if pix:
+                        dataPNG=pix.getPNGData()  # png图片二进制流
+                        pdfImage=PDFImage(
+                            ocrPDF=ocrPDFItem,
+                            frame_id=count,
+                            data_byte=dataPNG,
+                            data_type="png",
+                            height=pix.height,
+                            width=pix.width
+                        )
+                        pdfImage.save()
+                        count=count+1
+                ocrPDFItem.frame_num=count
+                ocrPDFItem.save()
+                '''
+
 
             except Exception as e:
                 print(e)
                 return "err"
         else:
-            print(wave_name + " already existed")
+            print(base_name + " already existed")
             return "err"
 
     @classmethod
@@ -1411,6 +1443,23 @@ class TargetView(View):
         src = pickle.loads(clip.src)
         src = src.tolist()[0:cutoff]
         return HttpResponse(json.dumps(src))
+
+    
+    @method_decorator(login_required)
+    def ocr_labeling(self, request):
+        try:
+            ocrpdf_id = request.GET.get('id')  # ocrpdf_id
+            ocrpdf = OcrPDF.objects.get(id=ocrpdf_id)
+            ocrimage = ocrpdf.pdfimage_set.get(frame_id=ocrpdf.current_frame)
+            
+            context={
+                "title":ocrpdf.title,
+                "data_byte":ocrimage.data_byte
+            }
+            return render(request, 'ocr_labeling.html', context)
+        except Exception as e:
+            print(e)
+            return render(request, 'ocr_labeling.html', None)
 
     @classmethod
     def login(cls, request):

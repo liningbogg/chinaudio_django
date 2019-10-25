@@ -212,4 +212,19 @@ class OcrPDF(BaseModel):
     class Meta:
         unique_together = ["title", "create_user_id"]
 
+class PDFImage(BaseModel):
+    """
+    ocrPDF:对应的PDF
+    frame_id:当前帧数
+    data_byte:数据
+    data_type:数据类型
+    """
+    ocrPDF= models.ForeignKey('OcrPDF', on_delete=models.CASCADE)  # 对应的PDF
+    frame_id=models.IntegerField(default=-1)
+    data_byte=models.BinaryField(null=True)
+    data_type=models.CharField(max_length=255)
+    height=models.IntegerField(default=0)
+    width=models.IntegerField(default=0)
 
+    class Meta:
+        unique_together = ["ocrPDF", "frame_id"]    
