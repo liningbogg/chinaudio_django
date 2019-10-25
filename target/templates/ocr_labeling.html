@@ -14,7 +14,9 @@
             {% include "login_info_base.html" %}
         </div>
         <script>
-            console.log({{data_byte}});
+            console.log({{trans_width|safe}});
+            console.log({{trans_height|safe}});
+            //{{data_byte|safe}};
         </script>
     </body>
 </html>

@@ -1,4 +1,4 @@
-# coding = utf-8
+#encoding = utf-8
 import time
 import json
 import pickle
@@ -54,7 +54,9 @@ import sys
 import soundfile
 import redis
 import fitz
+import io
 from target.np_encoder import NpEncoder
+from PIL import Image
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -1444,6 +1446,23 @@ class TargetView(View):
         src = src.tolist()[0:cutoff]
         return HttpResponse(json.dumps(src))
 
+    @staticmethod
+    def resize(w, h, w_box, h_box, pil_image):
+        '''
+        resize a pil_image object so it will fit into
+        a box of size w_box times h_box, but retain aspect ratio
+        对一个pil_image对象进行缩放，让它在一个矩形框内，还能保持比例
+        '''
+        if ((w-h)*(w_box-h_box))<0:
+            w_box,h_box=h_box,w_box    
+        f1 = 1.0*w_box/w # 1.0 forces float division in Python2
+        f2 = 1.0*h_box/h
+        factor = min([f1, f2])
+        #print(f1, f2, factor) # test
+        # use best down-sizing filter
+        width = int(w*factor)
+        height = int(h*factor)
+        return pil_image.resize((width, height), Image.ANTIALIAS)
     
     @method_decorator(login_required)
     def ocr_labeling(self, request):
@@ -1451,10 +1470,19 @@ class TargetView(View):
             ocrpdf_id = request.GET.get('id')  # ocrpdf_id
             ocrpdf = OcrPDF.objects.get(id=ocrpdf_id)
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=ocrpdf.current_frame)
-            
+            data_stream=io.BytesIO(ocrimage.data_byte)
+            pil_image = Image.open(data_stream)
+            width, height = pil_image.size
+            image_resized = TargetView.resize(width,height,1280,960,pil_image)
+            trans_width,trans_height=image_resized.size
+            new_imageIO = BytesIO() 
+            image_resized.save(new_imageIO,"JPEG")
+            data_byte=new_imageIO.getvalue()
             context={
                 "title":ocrpdf.title,
-                "data_byte":ocrimage.data_byte
+                "data_byte":data_byte,
+                "trans_width":trans_width,
+                "trans_height":trans_height
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
