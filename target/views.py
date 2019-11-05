@@ -52,6 +52,7 @@ import multiprocessing
 from django.core.cache import cache
 import sys
 import soundfile
+import base64
 import redis
 import fitz
 import io
@@ -1469,7 +1470,32 @@ class TargetView(View):
         try:
             ocrpdf_id = request.GET.get('id')  # ocrpdf_id
             ocrpdf = OcrPDF.objects.get(id=ocrpdf_id)
+            current_frame=0
+            if ocrpdf.manual_pos == -1:
+                current_frame=ocrpdf.current_frame
+            else:
+                current_frame=ocrpdf.manual_pos
+                ocrpdf.manual_pos=-1
+                ocrpdf.save()
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=ocrpdf.current_frame)
+            context={
+                "image_id":ocrimage.id,
+                "title":ocrpdf.title,
+                "ocr_pdf_id":ocrpdf.id,
+                "frame_id":ocrimage.frame_id,
+                "frame_num":ocrpdf.frame_num,
+                "ori_width":ocrimage.width,
+                "ori_height":ocrimage.height,
+            }
+            return render(request, 'ocr_labeling.html', context)
+        except Exception as e:
+            print(e)
+            return render(request, 'ocr_labeling.html', None)
+
+    @method_decorator(login_required)
+    def ocr_get_image(self, request):
+        try:
+            ocrimage=PDFImage.objects.get(id=request.GET['frame_id'])        
             data_stream=io.BytesIO(ocrimage.data_byte)
             pil_image = Image.open(data_stream)
             width, height = pil_image.size
@@ -1478,16 +1504,27 @@ class TargetView(View):
             new_imageIO = BytesIO() 
             image_resized.save(new_imageIO,"JPEG")
             data_byte=new_imageIO.getvalue()
-            context={
-                "title":ocrpdf.title,
-                "data_byte":data_byte,
-                "trans_width":trans_width,
-                "trans_height":trans_height
-            }
-            return render(request, 'ocr_labeling.html', context)
+            return HttpResponse(data_byte, 'image/jpeg')
+            
         except Exception as e:
             print(e)
-            return render(request, 'ocr_labeling.html', None)
+            return None
+
+    @method_decorator(login_required)
+    def ocr_move_page(self, request):
+        try:
+            page_apointed = int(request.GET.get("page_apointed"))
+            ocr_pdf_id = int(request.GET.get("ocr_pdf"))
+            ocr_pdf=OcrPDF.objects.get(id=ocr_pdf_id)
+            ocr_pdf.manual_pos=page_apointed
+            ocr_pdf.current_frame=page_apointed
+            ocr_pdf.save()
+            
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
 
     @classmethod
     def login(cls, request):

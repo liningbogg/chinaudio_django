@@ -669,7 +669,6 @@ function move2Pos(labeling_id)
 }
 
 
-
 /*刷新前提交*/
 window.onbeforeunload = function(){
     var table_info = document.getElementById("table_info");

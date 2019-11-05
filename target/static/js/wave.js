@@ -1,5 +1,5 @@
-//曲线颜色列表
 const color_chart=["red","blue","black"];
+//曲线颜色列表
 
 //播放器列表
 var audios=new Array();

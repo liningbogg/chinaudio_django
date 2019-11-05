@@ -4,8 +4,8 @@
         <meta charset="UTF-8">
         <title>Data：{{title}}</title>
         <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="http://cdn.chinaudio.tech/static/js/ocr_labeling.js"></script>
-        <link href="http://cdn.chinaudio.tech/static/css/ocr_labeling.css" rel="stylesheet" type="text/css" />
+        <script src="http://www.chinaudio.tech/static/js/ocr_labeling.js"></script>
+        <link href="http://www.chinaudio.tech/static/css/ocr_labeling.css" rel="stylesheet" type="text/css" />
         <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
     </head>
     <body >
@@ -13,10 +13,40 @@
             <a href="../index/">Home</a>
             {% include "login_info_base.html" %}
         </div>
+        <div class="main" id="main" >
+            <div class="title" id="title">
+                ocr标注数据库:{{title}}
+            </div>
+            <div class="image_info" id="image_info">
+                frame_id:{{frame_id}}&nbsp&nbspori_width:{{ori_width}}&nbsp&nbspori_height:{{ori_height}}
+            </div>
+            <div class="page_image" id= "page_image">
+                <img src="../ocr_labeling/get_image/?frame_id={{image_id}}" />
+            </div>
+            <div class="select_page" id="select_page">
+                <table>
+                    <tr>
+                        <td>
+                            <input type="number" id="input_page_id" min="0" max="{{frame_num|add:-1}}" value="{{frame_id}}"/>
+                        </td>
+                        <td>
+                            <input type="button" id="sub_page_id" value="跳转" onclick="jump_page({{ocr_pdf_id}},{{frame_num}})"/>
+                        </td>
+                        <td>
+                            <input type="button" id="prior_page" value="上一帧" onclick="move2prior({{ocr_pdf_id}},{{frame_id}},{{frame_num}})"/>
+                        </td>
+                        <td>
+                            <input type="button" id="next_page" value="下一帧" onclick="move2next({{ocr_pdf_id}},{{frame_id}},{{frame_num}})"/>
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
         <script>
-            console.log({{trans_width|safe}});
-            console.log({{trans_height|safe}});
-            //{{data_byte|safe}};
+            document.getElementsByTagName('img')[0].onmousedown = function(e){
+                e.preventDefault()
+            };
         </script>
     </body>
 </html>
