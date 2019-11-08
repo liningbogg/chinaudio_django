@@ -71,17 +71,6 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
-    overflow-y:auto;
-}
-.page_image img
-{
-    position:relative;
-    float:left;
-    top:0%;
-    font-size:1rem;
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
 }
 .select_page
 {

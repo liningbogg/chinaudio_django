@@ -1448,7 +1448,7 @@ class TargetView(View):
         return HttpResponse(json.dumps(src))
 
     @staticmethod
-    def resize(w, h, w_box, h_box, pil_image):
+    def cal_size(w, h, w_box, h_box):
         '''
         resize a pil_image object so it will fit into
         a box of size w_box times h_box, but retain aspect ratio
@@ -1463,8 +1463,8 @@ class TargetView(View):
         # use best down-sizing filter
         width = int(w*factor)
         height = int(h*factor)
-        return pil_image.resize((width, height), Image.ANTIALIAS)
-    
+        return [width, height]
+
     @method_decorator(login_required)
     def ocr_labeling(self, request):
         try:
@@ -1478,6 +1478,7 @@ class TargetView(View):
                 ocrpdf.manual_pos=-1
                 ocrpdf.save()
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=ocrpdf.current_frame)
+            width, height = TargetView.cal_size(ocrimage.width,ocrimage.height,1280,960)
             context={
                 "image_id":ocrimage.id,
                 "title":ocrpdf.title,
@@ -1486,6 +1487,8 @@ class TargetView(View):
                 "frame_num":ocrpdf.frame_num,
                 "ori_width":ocrimage.width,
                 "ori_height":ocrimage.height,
+                "tar_width":width,
+                "tar_height":height
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
@@ -1496,10 +1499,12 @@ class TargetView(View):
     def ocr_get_image(self, request):
         try:
             ocrimage=PDFImage.objects.get(id=request.GET['frame_id'])        
+            tar_width = int(request.GET.get('tar_width'))
+            tar_height = int(request.GET.get('tar_height'))
             data_stream=io.BytesIO(ocrimage.data_byte)
             pil_image = Image.open(data_stream)
             width, height = pil_image.size
-            image_resized = TargetView.resize(width,height,1280,960,pil_image)
+            image_resized = pil_image.resize((tar_width, tar_height), Image.ANTIALIAS)
             trans_width,trans_height=image_resized.size
             new_imageIO = BytesIO() 
             image_resized.save(new_imageIO,"JPEG")
