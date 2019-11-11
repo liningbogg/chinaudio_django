@@ -19,7 +19,6 @@
                 ocr标注数据库:{{title}}
             </div>
             <div class="image_info" id="image_info">
-                frame_id:{{frame_id}}&nbsp&nbspori_width:{{ori_width}}&nbsp&nbspori_height:{{ori_height}}&nbsp&nbsptar_width:{{tar_width}}&nbsp&nbsptar_height:{{tar_height}}
             </div>
             <div class="page_image" id="page_image">
             </div>
@@ -44,21 +43,64 @@
             </div>
         </div>
         <script>
-            const labeling_window_width = 1920;  // 预期标注窗口宽度（参考）
-            const labeling_window_height = 1080; // 预期标注窗口高度（参考）
             $(document).ready(function() {
                 while(typeof gDBox == "undefined"){
                     
                 }
+                var div_img=document.getElementById("page_image");
+                var div_width = div_img.offsetWidth;
+                var div_height = div_img.offsetHeight;
+                tar_size = cal_size(div_width,div_height,{{ori_width}},{{ori_height}});
+                console.log(tar_size);
+                tar_width = tar_size["width"];
+                tar_height = tar_size["height"];
+                tar_room = Math.max(tar_width,tar_height);
+                // 显示尺度信息
+                document.getElementById("image_info").innerHTML="frame_id:"+{{frame_id}}+"&nbsp&nbsp ori_width:"+{{ori_width}}+"&nbsp&nbsp ori_height:"+{{ori_height}}+"&nbsp&nbsp tar_width:"+tar_width+"&nbsp&nbsp tar_height:"+tar_height+"&nbsp&nbsp div_width:"+div_width+"&nbsp&nbsp div_height:"+div_height;
                 // 常用样式声明
                 const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 2});
                 // 容器对象声明
-                let gMap = new gDBox.Map('page_image', {zoom: labeling_window_width, cx: 0, cy: 0, zoomMax: labeling_window_width* 10, zoomMin: 1920 / 10});
+                let gMap = new gDBox.Map('page_image', {w:tar_width, zoom: tar_room, cx: 0, cy: 0, zoomMax: tar_width* 10, zoomMin: tar_width / 10});
                 // 设置当前操作模式为‘drawRect’
                 gMap.setMode('drawRect', gFetureStyle);
                 // 图片层实例\添加
-                let gImageLayer = new gDBox.Layer.Image('img', '../ocr_labeling/get_image/?frame_id={{image_id}}&tar_width={{tar_width|safe}}&tar_height={{tar_height|safe}}', {w: {{tar_width|safe}}, h: {{tar_height|safe}}}, {zIndex: 1});
+                let gImageLayer = new gDBox.Layer.Image('img', "../ocr_labeling/get_image/?frame_id={{image_id}}&tar_width="+tar_width+"&tar_height="+tar_height, {w:tar_width, h: tar_height}, {zIndex: 1});
                 gMap.addLayer(gImageLayer);
+                // 矢量层实例\添加
+                let gFeatureLayer = new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true});
+                gMap.addLayer(gFeatureLayer);
+
+                gMap.events.on('geometryDrawDone', function (type, points) {
+                    // 生成元素唯一标志（时间戳）
+                    const timestamp = new Date().getTime();
+                    // 元素添加展示
+                    let fea = new gDBox.Feature.Polygon(
+                        `feature-${timestamp}`,
+                        points,
+                        {
+                            name: 'ocr_labeling'
+                        },
+                        gFetureStyle
+                    );
+                    gFeatureLayer.addFeature(fea);
+                    labeling_points=gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
+                    add_labeling_polygon({{image_id}}, labeling_points);
+                });
+                gMap.events.on(
+                    'geometryEditDone', 
+                    function (type, activeFeature, points) {
+                        activeFeature.update({points});
+                        activeFeature.show();
+                    }
+                );
+                // feature-reset监听
+                gMap.events.on(
+                    'featureStatusReset',
+                    function () {
+                        gMap.mLayer.removeAllMarkers();
+                    }
+                );
+
             });
         </script>
     </body>

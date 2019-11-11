@@ -71,6 +71,8 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
+    overflow-y:auto;
+    overflow-x:auto;
 }
 .select_page
 {

@@ -43,3 +43,52 @@ function jump_page(ocr_pdf,frame_num){
         move_page(ocr_pdf,page_apointed);
     }
 }
+
+/*gdbox-图像矩阵坐标映射*/
+function gdbox2img_map(points, width, height,width_ori,height_ori){
+    var points_img=new Array();
+    for(var point of points){
+        mapx=Math.round((width/2.0 + point["x"])*width_ori/width);
+        mapy=Math.round((height/2.0 - point["y"])*height_ori/height);
+        points_img.push({"x":mapx,"y":mapy});
+    }
+    return points_img;
+}
+
+/*计算图片大小*/
+function cal_size(w_box,h_box,w,h){
+    if ((w-h)*(w_box-h_box)<0){
+        var t;
+        t=w_box;
+        w_box=h_box;
+        h_box=t;
+    }
+    f1 = 1.0*w_box/w ;
+    f2 = 1.0*h_box/h;
+    factor = Math.min(f1, f2);
+    console.log(factor);
+    // use best down-sizing filter
+    width = Math.round(w*factor);
+    height = Math.round(h*factor);
+    console.log(width);
+    return {"width":width,"height":height};
+}
+
+/*增加多边形*/
+function add_labeling_polygon(image_id, points){
+    var xhr = new XMLHttpRequest();
+    var pointsStr=JSON.stringify(points);
+    xhr.open('GET', 'add_labeling_polygon/?'+"image_id="+image_id+"&points="+pointsStr, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+            var context = xhr.response;
+            try{
+                console.log(context)
+            }catch(e)
+            {
+                console.log(e);
+            }
+        }
+    };
+}

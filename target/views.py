@@ -1478,7 +1478,7 @@ class TargetView(View):
                 ocrpdf.manual_pos=-1
                 ocrpdf.save()
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=ocrpdf.current_frame)
-            width, height = TargetView.cal_size(ocrimage.width,ocrimage.height,1280,960)
+            # width, height = TargetView.cal_size(ocrimage.width,ocrimage.height,1280,960)
             context={
                 "image_id":ocrimage.id,
                 "title":ocrpdf.title,
@@ -1487,8 +1487,6 @@ class TargetView(View):
                 "frame_num":ocrpdf.frame_num,
                 "ori_width":ocrimage.width,
                 "ori_height":ocrimage.height,
-                "tar_width":width,
-                "tar_height":height
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
@@ -1530,6 +1528,15 @@ class TargetView(View):
             print(e)
             return HttpResponse("err")
 
+    @method_decorator(login_required)
+    def add_labeling_polygon(self, request):
+        try:
+            pointsStr = request.GET.get("points")
+            points = json.loads(pointsStr)
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err");
 
     @classmethod
     def login(cls, request):

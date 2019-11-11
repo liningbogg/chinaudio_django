@@ -66,6 +66,7 @@ urlpatterns = [
     path('ocr_labeling/', target_view.ocr_labeling),
     path('ocr_labeling/get_image/', target_view.ocr_get_image),
     path('ocr_labeling/move_page/', target_view.ocr_move_page),
+    path('ocr_labeling/add_labeling_polygon/', target_view.add_labeling_polygon),
     # path('favicon.ico', serve, {'path': '/image/favicon.ico'}),
     url(r'^captcha', include('captcha.urls')),
     url('^$', target_view.index),

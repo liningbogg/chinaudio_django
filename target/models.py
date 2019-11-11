@@ -219,12 +219,21 @@ class PDFImage(BaseModel):
     data_byte:数据
     data_type:数据类型
     """
-    ocrPDF= models.ForeignKey('OcrPDF', on_delete=models.CASCADE)  # 对应的PDF
-    frame_id=models.IntegerField(default=-1)
-    data_byte=models.BinaryField(null=True)
-    data_type=models.CharField(max_length=255)
-    height=models.IntegerField(default=0)
-    width=models.IntegerField(default=0)
+    ocrPDF = models.ForeignKey('OcrPDF', on_delete=models.CASCADE)  # 对应的PDF
+    frame_id = models.IntegerField(default=-1)
+    data_byte = models.BinaryField(null=True)
+    data_type = models.CharField(max_length=255)
+    height = models.IntegerField(default=0)
+    width = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ["ocrPDF", "frame_id"]    
+
+class OcrLabelingPolygon(BaseModel):
+    """
+    ocr 的多边形标注数据
+    pdfImage: 所属图片
+    polygon: 标注多边形
+    """
+    pdfImage = models.ForeignKey('PDFImage', on_delete=models.CASCADE)  # 对应的PDF IMAGE
+    polygon = models.BinaryField(null=True)
