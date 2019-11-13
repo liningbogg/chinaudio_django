@@ -37,6 +37,8 @@ from target.models import Tune
 from target.models import TargetUser
 from target.models import OcrPDF
 from target.models import PDFImage
+from target.models import OcrAssistRequest
+from target.models import OcrAssist
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
@@ -260,9 +262,56 @@ class TargetView(View):
         古琴数字化数据库首页
         
         """
+        user_id = str(request.user)
         ocrPDFList = OcrPDF.objects.filter(create_user_id=request.user)
-        context = {'ocrPDFList':ocrPDFList}
+        assist_request_set = OcrAssistRequest.objects.filter(owner=user_id)
+        context = {'ocrPDFList':ocrPDFList,"assist_request_set":assist_request_set}
         return render(request,'digital.html',context)
+
+
+    @classmethod
+    @method_decorator(login_required)
+    def ocrPDF_assist_request(cls, request):
+        """
+        从其他用户获取wave,然后复制至特定用户
+        :param request:
+        :return:
+        """
+        try:
+            user_id = str(request.user)
+            pdfs_set = OcrPDF.objects.filter(~Q(create_user_id=user_id))
+            pdfs_dict = {}
+            for pdf in pdfs_set:
+                pdfs_dict[pdf.id]={"title":pdf.title,"create_user_id":pdf.create_user_id,"assist_num":pdf.assist_num}
+            assist_set = OcrAssist.objects.filter(create_user_id=user_id)
+            for assist in assist_set:
+                if assist.ocrPDF in pdfs_dict:
+                    pdfs_dict.pop(assist.ocrPDF)
+        except Exception as e:
+            print(e)
+        context = {'pdfs': pdfs_dict}
+        return render(request, 'ocrPDF_assist_request.html', context)
+
+    @method_decorator(login_required)
+    def sub_and_execute_assist_ocr(self,request):
+        try:
+            user_id = str(request.user)
+            pdfs_selected = json.loads(request.GET.get("pdfs_selected"))
+            context_str="request pushed."
+            success_str="\nsuccess:"
+            fault_str="\nfault:"
+            for pdf in pdfs_selected:
+                owner_name = pdf["user_name"]
+                pdf_title = pdf["pdf_title"]
+                try:
+                    OcrAssistRequest(owner=owner_name,title=pdf_title,create_user_id=user_id).save()
+                    success_str=success_str+"\n    "+owner_name+"/"+pdf_title+";";
+                except Exception as e:
+                    print(e)
+                    fault_str=fault_str+"\n   "+owner_name+"/"+pdf_title+";"
+            return HttpResponse(context_str+success_str+fault_str)
+        except Exception as e:
+            return HttpResponse("err")
 
     @method_decorator(login_required)
     def add_tune(self, request):
@@ -1470,15 +1519,7 @@ class TargetView(View):
         try:
             ocrpdf_id = request.GET.get('id')  # ocrpdf_id
             ocrpdf = OcrPDF.objects.get(id=ocrpdf_id)
-            current_frame=0
-            if ocrpdf.manual_pos == -1:
-                current_frame=ocrpdf.current_frame
-            else:
-                current_frame=ocrpdf.manual_pos
-                ocrpdf.manual_pos=-1
-                ocrpdf.save()
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=ocrpdf.current_frame)
-            # width, height = TargetView.cal_size(ocrimage.width,ocrimage.height,1280,960)
             context={
                 "image_id":ocrimage.id,
                 "title":ocrpdf.title,

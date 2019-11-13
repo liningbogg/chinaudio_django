@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/static/tree-multiselect/dist/jquery.tree-multiselect.min.css">
+    <script src="/static/tree-multiselect/vendor/jquery-1.11.3.min.js"></script>
+    <script src="/static/tree-multiselect/vendor/jquery-ui.min.js"></script>
+    <script src="/static/tree-multiselect/dist/jquery.tree-multiselect.js"></script>
+
+</head>
+<body>
+
+<div class="login" id="login" style="border-width:1px; color:blue">
+    <a href="../../index/">主页</a>
+    {% include "login_info_base.html" %}
+</div>
+<select id="user_pdf" multiple="multiple">
+
+</select>
+<div id="subSelectRs" style="border-width:1px; border-style:solid; border-color:green;">
+    <button onclick="assist_request()">发出协助</button>
+</div>
+
+<script>
+    var $select = $('#user_pdf');
+    var pdfs={{pdfs|safe}};
+    console.log(pdfs);
+    for (var pdf in pdfs){
+        var $option = $('<option value="'+pdfs[pdf]["title"]+'" data-section="'+pdfs[pdf]["create_user_id"]
+        +  '"selected="selected">'+pdfs[pdf]["title"]+'</option>');
+        $select.append($option);
+    }
+    var tree1 = $select.treeMultiselect({ enableSelectAll: true, sortable: true, hideSidePanel: false, searchable: true, startCollapsed: true});
+</script>
+<script>
+    function assist_request(){
+        var pdfs_selected = [];
+        $("#user_pdf option:selected").each(function () {
+            var user_name=$(this).attr("data-section");
+            var pdf_title=$(this).attr("value");
+            var pdf_item={"user_name":user_name, "pdf_title":pdf_title};
+            pdfs_selected.push(pdf_item);
+        });
+        console.log(pdfs_selected);
+        var msg = "确定要发出协助？\n\n请确认！";
+        if (confirm(msg)==false){
+            return;
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'sub_and_execute/?'+"pdfs_selected="+JSON.stringify(pdfs_selected), true);
+        xhr.send(null);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
+                var result = xhr.response;
+                //是否复制删除
+                if(result.indexOf("request pushed") != -1){
+                    alert(result);
+                    window.location.href='/digital/';
+                }
+                console.log(result);
+
+            }
+        };
+    }
+
+</script>
+</body

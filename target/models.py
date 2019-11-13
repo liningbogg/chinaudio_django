@@ -206,11 +206,31 @@ class OcrPDF(BaseModel):
     file_size = models.FloatField(default=0.0)
     frame_num = models.IntegerField(default=0)
     current_frame = models.IntegerField(default=0)
-    manual_pos = models.IntegerField(default=-1)
+    assist_num = models.IntegerField(default=0)
     objects = models.Manager()
 
     class Meta:
         unique_together = ["title", "create_user_id"]
+
+
+class OcrAssist(BaseModel):
+    """
+    ocrPDF:OCRPDF源
+    """
+    ocrPDF = models.ForeignKey('OcrPDF', on_delete=models.CASCADE)  # 对应的OCRPDF
+    current_frame = models.IntegerField(default=0)
+    assist_user_name = models.CharField(max_length=255,null=True)
+    objects = models.Manager()
+    class Meta:
+        unique_together = ["ocrPDF", "assist_user_name"]    
+
+class OcrAssistRequest(BaseModel):
+    """
+    """
+    owner = models.CharField(max_length=255,null=True)
+    title = models.CharField(max_length=255,null=True)
+    class Meta:
+        unique_together = ["owner", "create_user_id","title"]    
 
 class PDFImage(BaseModel):
     """

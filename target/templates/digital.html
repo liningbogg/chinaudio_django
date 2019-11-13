@@ -32,8 +32,10 @@
                     <tr style="font-size:1rem;line-height:1">
                         <th>文档</th>
                         <th>帧数</th>
-                        <th>完成程度</th>
-                        <th>标注文档</th>
+                        <th>当前帧</th>
+                        <th>参与用户数</th>
+                        <th>操作选项</th>
+                        <th>类型备注</th>
                     </tr>
                 </thead>
                 {% for ocrPDF in ocrPDFList %}
@@ -47,12 +49,45 @@
                     <td style="font-size:1rem;line-height:2">
                         {{ocrPDF.current_frame}}
                     </td>
+                    <td>
+                        {{ocrPDF.assist_num|add:1}}
+                    </td>
                     <td style="color:blue;font-size:1rem;line-height:2">
                         <a href="../ocr_labeling/?id={{ocrPDF.id}}">标注</a>
+                    </td>
+                    <td>
+                        自创样本
+                    </td>
+                </tr>
+                {% endfor %}
+
+                {% for assist_request in assist_request_set %}
+                <tr>
+                    <td style="color:red;font-size:1rem;line-height:2">
+                        {{assist_request.title}}
+                    </td> 
+                    <td style="font-size:1rem;line-height:2">
+                        
+                    </td>
+                    <td style="font-size:1rem;line-height:2">
+                        
+                    </td>
+                    <td>
+                    
+                    </td>
+                    <td style="color:red;font-size:1rem;line-height:2">
+                        <a style="color:red;font-size:1rem;line-height:2" href="../ocr_labeling/?id={{ocrPDF.id}}">通过</a>
+                        <a style="color:red;font-size:1rem;line-height:2" href="../ocr_labeling/?id={{ocrPDF.id}}">拒绝</a>
+                    </td>
+                    <td style="color:red;font-size:1rem;line-height:2">
+                        协助申请:{{assist_request.create_user_id}}
                     </td>
                 </tr>
                 {% endfor %}
             </table>
+        </div>  
+        <div class="ocrPDFAssistRequest" id="ocrPDFAssistRequest">
+            <a href="./ocrPDF_assist_request">协助其他用户标注</a>
         </div>
     </div>
 </body>

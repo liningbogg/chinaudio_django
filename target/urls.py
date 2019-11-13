@@ -36,6 +36,8 @@ urlpatterns = [
     path('wave/post_phrase/', target_view.post_phrase),
     path('wave/access/', target_view.db_access),
     path('digital/',target_view.digital),
+    path('digital/ocrPDF_assist_request/',target_view.ocrPDF_assist_request),
+    path('digital/ocrPDF_assist_request/sub_and_execute/',target_view.sub_and_execute_assist_ocr),
     path('labeling/', target_view.labeling),
     path('login/', target_view.login),
     path('accounts/login/', target_view.login),
