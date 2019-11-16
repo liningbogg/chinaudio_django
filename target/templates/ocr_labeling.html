@@ -21,6 +21,28 @@
             <div class="image_info" id="image_info">
             </div>
             <div class="page_image" id="page_image">
+                <div class="page_image_disp" id="page_image_disp">
+                </div>
+                <div class="page_image_tool" id="page_image_tool">
+                    <label style="font-size:2rem">
+                        <input type="radio" name="labeling_mode" />
+                        手动标注工具
+                    </label>
+                    <br>
+                    <label style="font-size:2rem">
+                        <input type="radio" name="labeling_mode" />
+                        标注推荐工具
+                    </label>
+                    <br>
+                    <label style="font-size:2rem">
+                        <input type="radio" name="labeling_mode" />
+                        区域删除工具
+                    </label>
+                    <br>
+                    <label style="font-size:2rem">
+                        <input style="font-size:2rem" type="button" id="delete_all_label" value="整页删除"/>
+                    </label>
+                </div>
             </div>
             <div class="select_page" id="select_page">
                 <table>
@@ -47,7 +69,7 @@
                 while(typeof gDBox == "undefined"){
                     
                 }
-                var div_img=document.getElementById("page_image");
+                var div_img=document.getElementById("page_image_disp");
                 var div_width = div_img.offsetWidth;
                 var div_height = div_img.offsetHeight;
                 tar_size = cal_size(div_width,div_height,{{ori_width}},{{ori_height}});
@@ -58,9 +80,9 @@
                 // 显示尺度信息
                 document.getElementById("image_info").innerHTML="frame_id:"+{{frame_id}}+"&nbsp&nbsp ori_width:"+{{ori_width}}+"&nbsp&nbsp ori_height:"+{{ori_height}}+"&nbsp&nbsp tar_width:"+tar_width+"&nbsp&nbsp tar_height:"+tar_height+"&nbsp&nbsp div_width:"+div_width+"&nbsp&nbsp div_height:"+div_height;
                 // 常用样式声明
-                const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 2});
+                const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 1});
                 // 容器对象声明
-                let gMap = new gDBox.Map('page_image', {w:tar_width, zoom: tar_room, cx: 0, cy: 0, zoomMax: tar_width* 10, zoomMin: tar_width / 10});
+                let gMap = new gDBox.Map('page_image_disp', {w:tar_width, zoom: tar_room, cx: 0, cy: 0, zoomMax: tar_width* 10, zoomMin: tar_width / 10});
                 // 设置当前操作模式为‘drawRect’
                 gMap.setMode('drawRect', gFetureStyle);
                 // 图片层实例\添加
@@ -69,27 +91,26 @@
                 // 矢量层实例\添加
                 let gFeatureLayer = new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true});
                 gMap.addLayer(gFeatureLayer);
-
+                //显示所有标注框
+                var polygon_list = {{polygon_list|safe}};
+                for (polygon in polygon_list){
+                    var polygon_points=JSON.parse(polygon_list[polygon]['points']);
+                    polygon_map = img2gdbox_map(polygon_points,tar_width,tar_height,{{ori_width}},{{ori_height}});
+                    add_polygon_disp(gFeatureLayer,gFetureStyle, polygon_map);
+                }
+                console.log(gFeatureLayer);
                 gMap.events.on('geometryDrawDone', function (type, points) {
                     // 生成元素唯一标志（时间戳）
-                    const timestamp = new Date().getTime();
-                    // 元素添加展示
-                    let fea = new gDBox.Feature.Polygon(
-                        `feature-${timestamp}`,
-                        points,
-                        {
-                            name: 'ocr_labeling'
-                        },
-                        gFetureStyle
-                    );
-                    gFeatureLayer.addFeature(fea);
+                    add_polygon_disp(gFeatureLayer,gFetureStyle, points);
                     labeling_points=gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
                     add_labeling_polygon({{image_id}}, labeling_points);
                 });
                 gMap.events.on(
                     'geometryEditDone', 
                     function (type, activeFeature, points) {
+                        console.log(activeFeature.points);
                         activeFeature.update({points});
+                        console.log(activeFeature.points);
                         activeFeature.show();
                     }
                 );

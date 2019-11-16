@@ -66,9 +66,7 @@
                            '{{clip.possible_pos|safe}}',{{wave.fs|safe}},{{wave.nfft|safe}},
                            {{wave.frameNum|safe}})"
                            type="radio">
-                    {% if perms.target.delete_clip%}
-                        <button onclick="deleteTone('delete', 'clip', {{clip.id}})">delete</button>
-                    {% endif %}
+                    <button onclick="deleteTone('delete', 'clip', {{clip.id}})">delete</button>
 
                 </h2>
                 {% endfor %}

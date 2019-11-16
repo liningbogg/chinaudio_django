@@ -229,6 +229,7 @@ class OcrAssistRequest(BaseModel):
     """
     owner = models.CharField(max_length=255,null=True)
     title = models.CharField(max_length=255,null=True)
+    status = models.CharField(max_length=255,null=True)
     class Meta:
         unique_together = ["owner", "create_user_id","title"]    
 
@@ -256,4 +257,4 @@ class OcrLabelingPolygon(BaseModel):
     polygon: 标注多边形
     """
     pdfImage = models.ForeignKey('PDFImage', on_delete=models.CASCADE)  # 对应的PDF IMAGE
-    polygon = models.BinaryField(null=True)
+    polygon = models.BinaryField(null=True)  # json编码

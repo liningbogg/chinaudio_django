@@ -39,6 +39,7 @@ from target.models import OcrPDF
 from target.models import PDFImage
 from target.models import OcrAssistRequest
 from target.models import OcrAssist
+from target.models import OcrLabelingPolygon
 from .forms import RegisterForm
 from chin import Chin
 from .forms import UserFormWithoutCaptcha
@@ -264,8 +265,10 @@ class TargetView(View):
         """
         user_id = str(request.user)
         ocrPDFList = OcrPDF.objects.filter(create_user_id=request.user)
-        assist_request_set = OcrAssistRequest.objects.filter(owner=user_id)
-        context = {'ocrPDFList':ocrPDFList,"assist_request_set":assist_request_set}
+        assist_request_in_set = OcrAssistRequest.objects.filter(owner=user_id,status="pushed")
+        assist_request_out_set = OcrAssistRequest.objects.filter(create_user_id=user_id)
+        ocr_assist_set = OcrAssist.objects.filter(assist_user_name=user_id)
+        context = {'ocrPDFList':ocrPDFList,"assist_request_in_set":assist_request_in_set,"assist_request_out_set":assist_request_out_set,"ocr_assist_set":ocr_assist_set}
         return render(request,'digital.html',context)
 
 
@@ -273,7 +276,7 @@ class TargetView(View):
     @method_decorator(login_required)
     def ocrPDF_assist_request(cls, request):
         """
-        从其他用户获取wave,然后复制至特定用户
+        申请协助其他用户进行标注
         :param request:
         :return:
         """
@@ -304,7 +307,7 @@ class TargetView(View):
                 owner_name = pdf["user_name"]
                 pdf_title = pdf["pdf_title"]
                 try:
-                    OcrAssistRequest(owner=owner_name,title=pdf_title,create_user_id=user_id).save()
+                    OcrAssistRequest(owner=owner_name,title=pdf_title,create_user_id=user_id,status="pushed").save()
                     success_str=success_str+"\n    "+owner_name+"/"+pdf_title+";";
                 except Exception as e:
                     print(e)
@@ -312,6 +315,78 @@ class TargetView(View):
             return HttpResponse(context_str+success_str+fault_str)
         except Exception as e:
             return HttpResponse("err")
+
+
+    @classmethod
+    @method_decorator(login_required)
+    def ocrPDF_assist_request_accept(cls, request):
+        """
+        通过其他用户的协助申请
+        :param request:
+        :return:
+        """
+        try:
+            user_name = str(request.user)  # 当前用户名
+            assert user_name == request.GET.get("owner")
+            assist_user_name = request.GET.get("create_user_id")
+            pdf_title = request.GET.get("title")
+            ocrPDF = OcrPDF.objects.get(create_user_id=user_name,title=pdf_title)
+            ocrAssist = OcrAssist(ocrPDF=ocrPDF,current_frame=0,assist_user_name=assist_user_name,create_user_id=user_name)
+            ocrPDF.assist_num=ocrPDF.assist_num+1
+            ocrPDF.save()
+            ocrAssist.save()
+            ocrAssistRequest = OcrAssistRequest.objects.get(owner=user_name,create_user_id=assist_user_name,title=pdf_title)
+            ocrAssistRequest.status="accepted"
+            ocrAssistRequest.save()
+        except Exception as e:
+            print(e)
+        finally:
+            return redirect('/digital')
+    
+
+    @classmethod
+    @method_decorator(login_required)
+    def ocrPDF_assist_request_deny(cls, request):
+        """
+        拒绝其他用户的协助申请
+        :param request:
+        :return:
+        """
+        try:
+            user_name = str(request.user)  # 当前用户名
+            assert user_name == request.GET.get("owner")
+            assist_user_name = request.GET.get("create_user_id")
+            pdf_title = request.GET.get("title")
+            ocrAssistRequest = OcrAssistRequest.objects.get(owner=user_name,create_user_id=assist_user_name,title=pdf_title)
+            ocrAssistRequest.status="denied"
+            ocrAssistRequest.save()
+            
+        except Exception as e:
+            print(e)
+        finally:
+            return redirect('/digital')
+
+    @classmethod
+    @method_decorator(login_required)
+    def ocrPDF_assist_request_delete(cls, request):
+        """
+        拒绝其他用户的协助申请
+        :param request:
+        :return:
+        """
+        try:
+            user_name = str(request.user)  # 当前用户名
+            owner = request.GET.get("owner")
+            assist_user_name = request.GET.get("create_user_id")
+            pdf_title = request.GET.get("title")
+            ocrAssistRequest = OcrAssistRequest.objects.get(owner=owner,create_user_id=assist_user_name,title=pdf_title)
+            ocrAssistRequest.status="deleted"
+            ocrAssistRequest.delete()
+            
+        except Exception as e:
+            print(e)
+        finally:
+            return redirect('/digital')
 
     @method_decorator(login_required)
     def add_tune(self, request):
@@ -1519,7 +1594,23 @@ class TargetView(View):
         try:
             ocrpdf_id = request.GET.get('id')  # ocrpdf_id
             ocrpdf = OcrPDF.objects.get(id=ocrpdf_id)
-            ocrimage = ocrpdf.pdfimage_set.get(frame_id=ocrpdf.current_frame)
+            current_frame = 0
+            if ocrpdf.create_user_id == str(request.user):
+                current_frame = ocrpdf.current_frame
+            else:
+                current_frame = ocrpdf.ocrassist_set.get(assist_user_name=str(request.user)).current_frame
+            ocrimage = ocrpdf.pdfimage_set.get(frame_id=current_frame)
+            polygon_set = ocrimage.ocrlabelingpolygon_set.all()
+            polygon_list = list()
+            for polygon in polygon_set:
+                polygon_list.append(
+                    {
+                        "polygon_id":polygon.id,
+                        "image_id":polygon.pdfImage.id,
+                        "create_user_id":polygon.create_user_id,
+                        "points":str(polygon.polygon,'utf-8')
+                    }
+                )
             context={
                 "image_id":ocrimage.id,
                 "title":ocrpdf.title,
@@ -1528,6 +1619,7 @@ class TargetView(View):
                 "frame_num":ocrpdf.frame_num,
                 "ori_width":ocrimage.width,
                 "ori_height":ocrimage.height,
+                "polygon_list":json.dumps(polygon_list),
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
@@ -1560,9 +1652,13 @@ class TargetView(View):
             page_apointed = int(request.GET.get("page_apointed"))
             ocr_pdf_id = int(request.GET.get("ocr_pdf"))
             ocr_pdf=OcrPDF.objects.get(id=ocr_pdf_id)
-            ocr_pdf.manual_pos=page_apointed
-            ocr_pdf.current_frame=page_apointed
-            ocr_pdf.save()
+            if str(request.user) == ocr_pdf.create_user_id:
+                ocr_pdf.current_frame = page_apointed
+                ocr_pdf.save()
+            else:
+                ocr_assist = ocr_pdf.ocrassist_set.get(assist_user_name=str(request.user))
+                ocr_assist.current_frame = page_apointed
+                ocr_assist.save()
             
             return HttpResponse("ok")
         except Exception as e:
@@ -1573,7 +1669,10 @@ class TargetView(View):
     def add_labeling_polygon(self, request):
         try:
             pointsStr = request.GET.get("points")
-            points = json.loads(pointsStr)
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)  # 被标注的图片
+            OcrLabelingPolygon(pdfImage=image, polygon=pointsStr.encode("utf-8"), create_user_id=str(request.user)).save()
+
             return HttpResponse("ok")
         except Exception as e:
             print(e)
