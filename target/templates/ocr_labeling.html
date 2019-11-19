@@ -24,24 +24,28 @@
                 <div class="page_image_disp" id="page_image_disp">
                 </div>
                 <div class="page_image_tool" id="page_image_tool">
-                    <label style="font-size:2rem">
-                        <input type="radio" name="labeling_mode" />
-                        手动标注工具
-                    </label>
-                    <br>
-                    <label style="font-size:2rem">
-                        <input type="radio" name="labeling_mode" />
-                        标注推荐工具
-                    </label>
-                    <br>
-                    <label style="font-size:2rem">
-                        <input type="radio" name="labeling_mode" />
-                        区域删除工具
-                    </label>
-                    <br>
-                    <label style="font-size:2rem">
-                        <input style="font-size:2rem" type="button" id="delete_all_label" value="整页删除"/>
-                    </label>
+                    <div class="page_image_tool_a" id="page_image_tool_a">
+                        <div class="page_image_tool_select" id="page_image_tool_select" >
+                            <label style="font-size:2rem">
+                                <input type="radio" name="labeling_mode" value="manual_select" checked="true" onchange="labeling_mode=this.value"/>
+                                手动标注
+                            </label>
+                            <br>
+                            <label style="font-size:2rem">
+                                <input type="radio" name="labeling_mode" value="recommend_select"  onchange="labeling_mode=this.value"/>
+                                标注推荐
+                            </label>
+                            <br>
+                            <label style="font-size:2rem">
+                                <input type="radio" name="labeling_mode" value="clear_select"  onchange="labeling_mode=this.value"/>
+                                区域删除
+                            </label>
+                            <br>
+                            <label style="font-size:2rem">
+                                <input style="font-size:2rem" type="button" id="delete_all_polygon" value="整页删除" onclick="delete_all_polygon({{image_id}})"/>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="select_page" id="select_page">
@@ -65,6 +69,7 @@
             </div>
         </div>
         <script>
+            var labeling_mode="manual_select";
             $(document).ready(function() {
                 while(typeof gDBox == "undefined"){
                     
@@ -73,7 +78,6 @@
                 var div_width = div_img.offsetWidth;
                 var div_height = div_img.offsetHeight;
                 tar_size = cal_size(div_width,div_height,{{ori_width}},{{ori_height}});
-                console.log(tar_size);
                 tar_width = tar_size["width"];
                 tar_height = tar_size["height"];
                 tar_room = Math.max(tar_width,tar_height);
@@ -95,22 +99,31 @@
                 var polygon_list = {{polygon_list|safe}};
                 for (polygon in polygon_list){
                     var polygon_points=JSON.parse(polygon_list[polygon]['points']);
+                    var polygon_id = JSON.parse(polygon_list[polygon]['polygon_id']);
                     polygon_map = img2gdbox_map(polygon_points,tar_width,tar_height,{{ori_width}},{{ori_height}});
-                    add_polygon_disp(gFeatureLayer,gFetureStyle, polygon_map);
+                    add_polygon_disp(gFeatureLayer,gFetureStyle, polygon_map, polygon_id);
                 }
-                console.log(gFeatureLayer);
                 gMap.events.on('geometryDrawDone', function (type, points) {
-                    // 生成元素唯一标志（时间戳）
-                    add_polygon_disp(gFeatureLayer,gFetureStyle, points);
-                    labeling_points=gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
-                    add_labeling_polygon({{image_id}}, labeling_points);
+                    switch(labeling_mode){
+                        case "manual_select":
+                            labeling_points=gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
+                            image_id = add_labeling_polygon({{image_id}}, labeling_points);
+                            add_polygon_disp(gFeatureLayer,gFetureStyle, points, polygon_id);
+                            break;
+                        case "recommend_select":
+                            console.log(labeling_mode);
+                            break;
+                        case "clear_select":
+                            console.log(labeling_mode);
+                            break;
+                        case "default":
+                            alser("labeling_mode err!");
+                    }
                 });
                 gMap.events.on(
                     'geometryEditDone', 
                     function (type, activeFeature, points) {
-                        console.log(activeFeature.points);
                         activeFeature.update({points});
-                        console.log(activeFeature.points);
                         activeFeature.show();
                     }
                 );
@@ -121,6 +134,7 @@
                         gMap.mLayer.removeAllMarkers();
                     }
                 );
+
 
             });
         </script>

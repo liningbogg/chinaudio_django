@@ -1671,9 +1671,25 @@ class TargetView(View):
             pointsStr = request.GET.get("points")
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)  # 被标注的图片
-            OcrLabelingPolygon(pdfImage=image, polygon=pointsStr.encode("utf-8"), create_user_id=str(request.user)).save()
+            polygon = OcrLabelingPolygon(pdfImage=image, polygon=pointsStr.encode("utf-8"), create_user_id=str(request.user))
+            polygon.save()
+            polygon_id = polygon.id
 
-            return HttpResponse("ok")
+            return HttpResponse(polygon_id)
+        except Exception as e:
+            print(e)
+            return HttpResponse("err");
+
+    # 删除当前当前用户进行的制定页面的标注
+    @method_decorator(login_required)
+    def delete_all_polygon(self, request):
+        try:
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)  # 被标注的图片
+            item_delete = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))
+            count = item_delete.count()
+            item_delete.delete()
+            return HttpResponse(count)
         except Exception as e:
             print(e)
             return HttpResponse("err");

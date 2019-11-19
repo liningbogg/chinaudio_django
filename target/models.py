@@ -258,3 +258,4 @@ class OcrLabelingPolygon(BaseModel):
     """
     pdfImage = models.ForeignKey('PDFImage', on_delete=models.CASCADE)  # 对应的PDF IMAGE
     polygon = models.BinaryField(null=True)  # json编码
+    is_fine = models.BooleanField(default=False)

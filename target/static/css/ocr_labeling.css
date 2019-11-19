@@ -102,9 +102,47 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
-    overflow-y:auto;
-    overflow-x:auto;
 }
+
+.page_image_tool_a
+{
+    position:relative;
+    float:left;
+    width:99.5%;
+    top:0%;
+    height:50%;
+    font-size:1rem;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.page_image_tool_select
+{
+    position:relative;
+    float:left;
+    width:49.5%;
+    top:0%;
+    height:100%;
+    font-size:1rem;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.page_image_tool_tip
+{
+    position:relative;
+    float:left;
+    width:49.5%;
+    top:0%;
+    height:100%;
+    font-size:1rem;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
 .select_page
 {
     position:relative;
