@@ -26,24 +26,37 @@
                 <div class="page_image_tool" id="page_image_tool">
                     <div class="page_image_tool_a" id="page_image_tool_a">
                         <div class="page_image_tool_select" id="page_image_tool_select" >
-                            <label style="font-size:2rem">
-                                <input type="radio" name="labeling_mode" value="manual_select" checked="true" onchange="labeling_mode=this.value"/>
-                                手动标注
-                            </label>
-                            <br>
-                            <label style="font-size:2rem">
-                                <input type="radio" name="labeling_mode" value="recommend_select"  onchange="labeling_mode=this.value"/>
-                                标注推荐
-                            </label>
-                            <br>
-                            <label style="font-size:2rem">
-                                <input type="radio" name="labeling_mode" value="clear_select"  onchange="labeling_mode=this.value"/>
-                                区域删除
-                            </label>
-                            <br>
-                            <label style="font-size:2rem">
-                                <input style="font-size:2rem" type="button" id="delete_all_polygon" value="整页删除" onclick="delete_all_polygon({{image_id}})"/>
-                            </label>
+                            <table style="width:99%" border="">
+                                <tr>
+                                    <td>
+                                        <label style="font-size:2rem">
+                                            <input type="radio" name="labeling_mode" value="manual_select" checked="true" onchange="labeling_mode=this.value"/>
+                                            手动标注
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label style="font-size:2rem">
+                                            <input type="radio" name="labeling_mode" value="recommend_select"  onchange="labeling_mode=this.value"/>
+                                            标注推荐
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <label style="font-size:2rem;width:100%">
+                                            <input type="radio" name="labeling_mode" value="clear_select"  onchange="labeling_mode=this.value"/>
+                                            区域删除
+                                        </label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input style="font-size:2rem;width:100%" type="button" id="delete_all_polygon" value="整页删除" onclick="delete_all_polygon({{image_id}})"/>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -82,7 +95,15 @@
                 tar_height = tar_size["height"];
                 tar_room = Math.max(tar_width,tar_height);
                 // 显示尺度信息
-                document.getElementById("image_info").innerHTML="frame_id:"+{{frame_id}}+"&nbsp&nbsp ori_width:"+{{ori_width}}+"&nbsp&nbsp ori_height:"+{{ori_height}}+"&nbsp&nbsp tar_width:"+tar_width+"&nbsp&nbsp tar_height:"+tar_height+"&nbsp&nbsp div_width:"+div_width+"&nbsp&nbsp div_height:"+div_height;
+                document.getElementById("image_info").innerHTML
+                    ="frame_id:"+{{frame_id}}
+                    +"&nbsp&nbsp image_id:"+{{image_id}}
+                    +"&nbsp&nbsp ori_width:"+{{ori_width}}
+                    +"&nbsp&nbsp ori_height:"+{{ori_height}}
+                    +"&nbsp&nbsp tar_width:"+tar_width
+                    +"&nbsp&nbsp tar_height:"+tar_height
+                    +"&nbsp&nbsp div_width:"+div_width
+                    +"&nbsp&nbsp div_height:"+div_height;
                 // 常用样式声明
                 const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 1});
                 // 容器对象声明

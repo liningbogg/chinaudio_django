@@ -122,11 +122,16 @@ function add_polygon_disp(gFeatureLayer,gFetureStyle,points, polygon_id){
 }
 /*删除用户下所有与页面相关的标注*/
 function delete_all_polygon(image_id){
-    var msg = "确定要删除整页标注？？\n\n请确认危险操作！";
-    if (confirm(msg)==false){
+    var msg = "要删除整页标注？？\n\n请输入image_id以确认危险操作！";
+    prompt_str = prompt(msg);
+    if(!prompt_str){
+        alert("删除操作已经取消");
         return;
     }
-
+    if(prompt_str!=image_id){
+        alert("整页删除失败,输入的image_id="+prompt_str);
+        return;
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'delete_all_polygon/?'+"image_id="+image_id, true);
     xhr.send(null);
@@ -143,7 +148,3 @@ function delete_all_polygon(image_id){
     };
 }
 
-/**/
-function set_labeling_mode(mode){
-    labeling_mode=mode;
-}

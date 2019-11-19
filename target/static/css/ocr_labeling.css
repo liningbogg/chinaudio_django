@@ -31,7 +31,6 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
-    overflow-y:auto;
 }
 /*标题*/
 .title
@@ -72,8 +71,6 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
-    overflow-y:auto;
-    overflow-x:auto;
 }
 
 .page_image_disp
@@ -87,8 +84,6 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
-    overflow-y:auto;
-    overflow-x:auto;
 }
 
 .page_image_tool
