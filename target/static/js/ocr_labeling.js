@@ -84,7 +84,9 @@ function cal_size(w_box,h_box,w,h){
 }
 
 /*增加多边形*/
-function add_labeling_polygon(image_id, points){
+function add_labeling_polygon(image_id, points, fea_points, gFeatureLayer, gFetureStyle){
+    const id = new Date().getTime(); 
+    fea = add_polygon_disp(gFeatureLayer,gFetureStyle, fea_points, id);
     var xhr = new XMLHttpRequest();
     var pointsStr=JSON.stringify(points);
     xhr.open('GET', 'add_labeling_polygon/?'+"image_id="+image_id+"&points="+pointsStr, true);
@@ -92,24 +94,16 @@ function add_labeling_polygon(image_id, points){
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
             var context = xhr.response;
-            try{
-                console.log(context)
-                return context;
-            }catch(e)
-            {
-                console.log(e);
-                return str(e);
-            }
+            fea.id=context;
         }
     };
 }
 
 /*多边形显示*/
 function add_polygon_disp(gFeatureLayer,gFetureStyle,points, polygon_id){
-    const timestamp = new Date().getTime();
     // 元素添加展示
     let fea = new gDBox.Feature.Polygon(
-            `feature-${timestamp}`,
+            polygon_id,
             points,
             {
                 polygon_id: polygon_id
@@ -117,8 +111,7 @@ function add_polygon_disp(gFeatureLayer,gFetureStyle,points, polygon_id){
             gFetureStyle
         );
     gFeatureLayer.addFeature(fea);
-    //console.log(fea.data['polygon_id']);
-    console.log(gFeatureLayer);
+    return fea;
 }
 /*删除用户下所有与页面相关的标注*/
 function delete_all_polygon(image_id){

@@ -83,6 +83,7 @@
         </div>
         <script>
             var labeling_mode="manual_select";
+            var dict_polygon_feature = new Array();
             $(document).ready(function() {
                 while(typeof gDBox == "undefined"){
                     
@@ -128,14 +129,13 @@
                     switch(labeling_mode){
                         case "manual_select":
                             labeling_points=gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
-                            image_id = add_labeling_polygon({{image_id}}, labeling_points);
-                            add_polygon_disp(gFeatureLayer,gFetureStyle, points, polygon_id);
+                            polygon_id = add_labeling_polygon({{image_id}}, labeling_points, points, gFeatureLayer, gFetureStyle);
                             break;
                         case "recommend_select":
                             console.log(labeling_mode);
                             break;
                         case "clear_select":
-                            console.log(labeling_mode);
+                            
                             break;
                         case "default":
                             alser("labeling_mode err!");
