@@ -1601,13 +1601,18 @@ class TargetView(View):
                 current_frame = ocrpdf.ocrassist_set.get(assist_user_name=str(request.user)).current_frame
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=current_frame)
             polygon_set = ocrimage.ocrlabelingpolygon_set.all()
-            polygon_list = list()
+            create_user_id_set = polygon_set.values("create_user_id").distinct()  # achieve distinct create_user_id 
+            # build a dictionary with create_user_id as its key and polygon list as its value
+            polygon_dict = dict()
+            for create_user_id in create_user_id_set:
+                polygon_dict[create_user_id["create_user_id"]] = list()  # initialized as an empty list
+                
             for polygon in polygon_set:
-                polygon_list.append(
+                polygon_dict[polygon.create_user_id].append(
                     {
                         "polygon_id":polygon.id,
                         "image_id":polygon.pdfImage.id,
-                        "create_user_id":polygon.create_user_id,
+                        "create_user_id":polygon.create_user_id,  # redundant data for a verification
                         "points":str(polygon.polygon,'utf-8')
                     }
                 )
@@ -1619,11 +1624,11 @@ class TargetView(View):
                 "frame_num":ocrpdf.frame_num,
                 "ori_width":ocrimage.width,
                 "ori_height":ocrimage.height,
-                "polygon_list":json.dumps(polygon_list),
+                "polygon_dict":json.dumps(polygon_dict),
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
-            print(e)
+            print("ocr_labeling:"+str(e))
             return render(request, 'ocr_labeling.html', None)
 
     @method_decorator(login_required)
@@ -1674,8 +1679,9 @@ class TargetView(View):
             polygon = OcrLabelingPolygon(pdfImage=image, polygon=pointsStr.encode("utf-8"), create_user_id=str(request.user))
             polygon.save()
             polygon_id = polygon.id
-
-            return HttpResponse(polygon_id)
+            polygon_create_user_id = polygon.create_user_id
+            context = {"polygon_id":polygon_id,"polygon_create_user_id":polygon_create_user_id}
+            return HttpResponse(json.dumps(context))
         except Exception as e:
             print(e)
             return HttpResponse("err");

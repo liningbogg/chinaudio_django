@@ -84,6 +84,67 @@
         <script>
             var labeling_mode="manual_select";
             var dict_polygon_feature = new Array();
+            class GdboxConfigure {
+                constructor(current_user, gMap){
+                    console.log(current_user);
+                    this.current_user=current_user;
+                    this.gMap=gMap;
+                    this.lineWeight=1;
+                    this.current_user_color="#0000ff"; new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true})  // color assing to current_user (blue)
+                    this.nonactive_current_index=0;  // color index assign to non-active user
+                    this.nonactive_color_list=[
+                        {"color_name":"red","color_value":"#ff0000"},
+                        {"color_name":"green","color_value":"#00ff00"},
+                    ];
+                    // user_name feature_style map
+                    this.feature_style_set={
+                    };  
+                    this.feature_style_set[this.current_user] = new gDBox.Style({strokeColor: this.current_user_color, lineWeight: this.lineWeight});
+                    // user_name layer map
+                    this.layer_set={
+                    };
+                    this.layer_set[this.current_user]= new gDBox.Layer.Feature(this.current_user, {zIndex: 2, transparent: true});
+                    this.gMap.addLayer(this.layer_set[current_user]);
+
+                }
+                get_style(user_name){
+                    if(user_name!=this.current_user){
+                        //non-activate user
+                        if(this.feature_style_set.hasOwnProperty(user_name)){
+                            return this.feature_style_set[user_name];
+                        }else{
+                            this.feature_style_set[user_name]
+                                =new gDBox.Style(
+                                {
+                                    strokeColor: this.nonactive_color_list[this.nonactive_current_index]["color_value"],
+                                    lineWeight: this.lineWeight
+                                }
+                            );
+
+                            return this.feature_style_set[user_name];
+                        }
+                    }else{
+                        //current user
+                        console.log(this.feature_style_set);
+                        return this.feature_style_set[user_name];
+                    }
+                }
+                get_layer(user_name){
+                    if(user_name!=this.current_user){
+                        if(this.layer_set.hasOwnProperty(user_name)){
+                            return this.layer_set[user_name];
+                        }else{
+                            this.layer_set[user_name] = new gDBox.Layer.Feature(user_name, {zIndex: 2, transparent: true, opacity: false});
+                            this.gMap.addLayer(this.layer_set[user_name]);
+                            return this.layer_set[user_name];
+                        }
+
+                    }else{
+                        return this.layer_set[user_name];
+                    }
+                }
+
+            }
             $(document).ready(function() {
                 while(typeof gDBox == "undefined"){
                     
@@ -115,21 +176,32 @@
                 let gImageLayer = new gDBox.Layer.Image('img', "../ocr_labeling/get_image/?frame_id={{image_id}}&tar_width="+tar_width+"&tar_height="+tar_height, {w:tar_width, h: tar_height}, {zIndex: 1});
                 gMap.addLayer(gImageLayer);
                 // 矢量层实例\添加
-                let gFeatureLayer = new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true});
-                gMap.addLayer(gFeatureLayer);
+                //let gFeatureLayer = new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true});
+                //gMap.addLayer(gFeatureLayer);
+                let gdboxConfigure = new GdboxConfigure("{{request.user}}", gMap);
+                console.log(gdboxConfigure);
+
                 //显示所有标注框
-                var polygon_list = {{polygon_list|safe}};
-                for (polygon in polygon_list){
-                    var polygon_points=JSON.parse(polygon_list[polygon]['points']);
-                    var polygon_id = JSON.parse(polygon_list[polygon]['polygon_id']);
-                    polygon_map = img2gdbox_map(polygon_points,tar_width,tar_height,{{ori_width}},{{ori_height}});
-                    add_polygon_disp(gFeatureLayer,gFetureStyle, polygon_map, polygon_id);
+                let user_polygon_dict = {{polygon_dict|safe}};
+                console.log(user_polygon_dict);
+                for(user_polygon in user_polygon_dict){
+                    console.log(user_polygon);
+                    let layer = gdboxConfigure.get_layer(user_polygon);
+                    let style = gdboxConfigure.get_style(user_polygon);
+                    for(polygon in user_polygon_dict[user_polygon]){
+                        let elem = user_polygon_dict[user_polygon][polygon];
+                        console.log(elem);
+                        let polygon_points = JSON.parse(elem['points']);
+                        let polygon_id = elem['polygon_id'];
+                        polygon_map = img2gdbox_map(polygon_points,tar_width,tar_height,{{ori_width}},{{ori_height}});
+                        add_polygon_disp(layer, style, polygon_map, polygon_id, user_polygon);
+                    }
                 }
                 gMap.events.on('geometryDrawDone', function (type, points) {
                     switch(labeling_mode){
                         case "manual_select":
                             labeling_points=gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
-                            polygon_id = add_labeling_polygon({{image_id}}, labeling_points, points, gFeatureLayer, gFetureStyle);
+                            polygon_id = add_labeling_polygon({{image_id}}, labeling_points, points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"));
                             break;
                         case "recommend_select":
                             console.log(labeling_mode);
@@ -144,7 +216,11 @@
                 gMap.events.on(
                     'geometryEditDone', 
                     function (type, activeFeature, points) {
-                        activeFeature.update({points});
+                        if(activeFeature.data.create_user_id!="{{request.user}}"){
+                            alert("数据不属于当前用户");
+                        }else{
+                            activeFeature.update({points});
+                        }
                         activeFeature.show();
                     }
                 );
@@ -155,8 +231,6 @@
                         gMap.mLayer.removeAllMarkers();
                     }
                 );
-
-
             });
         </script>
     </body>
