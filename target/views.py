@@ -1684,7 +1684,62 @@ class TargetView(View):
             return HttpResponse(json.dumps(context))
         except Exception as e:
             print(e)
-            return HttpResponse("err");
+            return HttpResponse("err")
+
+    @staticmethod
+    def get_rect_info(point_a, point_b):
+        try:
+             x = min(point_a['x'], point_b['x'])
+             x_ = max(point_a['x'], point_b['x'])
+             y = min(point_a['y'], point_b['y'])
+             y_ = max(point_a['y'], point_b['y'])
+             w = abs(x_-x)
+             h = abs(y_-y)
+             area = w*h
+             return {'x':x, 'y':y, 'x_':x_, 'y_':y_, 'w':w, 'h':h, 'area':area}
+        except Exception as e:
+            print(e)
+
+    # caculate intersection ratio
+    @staticmethod
+    def cal_intersection_ratio(rect_a, rect_b):
+        try:
+            dist_x = max(rect_a['x_'], rect_b['x_']) - min(rect_a['x'], rect_b['x'])
+            dist_y = max(rect_a['y_'], rect_b['y_']) - min(rect_a['y'], rect_b['y'])
+            w_intersection = max(rect_a['w']+rect_b['w']-dist_x , 0)
+            h_intersection = max(rect_a['h']+rect_b['h']-dist_y , 0)
+            area_intersection = w_intersection * h_intersection
+            intersection_ratio_a = area_intersection / (rect_a['area']*1.0)
+            intersection_ratio_b = area_intersection / (rect_b['area']*1.0)
+            return {'ratio_a':intersection_ratio_a, 'ratio_b':intersection_ratio_b, 'area':area_intersection}
+        except Exception as e:
+            print(e)
+    
+    # delete labeles relate to an apointed region
+    @method_decorator(login_required)
+    def delete_region(self, request):
+        delete_info = []
+        try:
+            select_pointsStr = request.GET.get("select_points")
+            select_points = json.loads(select_pointsStr)  # region to be deleted
+            image_id = request.GET.get("image_id")  # related picture
+            image = PDFImage.objects.get(id=image_id) 
+            user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
+            rect_region = TargetView.get_rect_info(select_points[0], select_points[2])
+
+            for polygon in user_polygon_set:
+                points = json.loads(polygon.polygon)
+                rect_candidate = TargetView.get_rect_info(points[0], points[2])
+                intersection = TargetView.cal_intersection_ratio(rect_region, rect_candidate)
+                intersection_ratio = intersection['ratio_b']
+                if intersection_ratio > 0.75:
+                    delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
+                    polygon.delete()
+            return HttpResponse(json.dumps(delete_info))
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
 
     # 删除当前当前用户进行的制定页面的标注
     @method_decorator(login_required)
@@ -1698,7 +1753,7 @@ class TargetView(View):
             return HttpResponse(count)
         except Exception as e:
             print(e)
-            return HttpResponse("err");
+            return HttpResponse("err")
 
     @classmethod
     def login(cls, request):

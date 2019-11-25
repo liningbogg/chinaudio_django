@@ -94,12 +94,12 @@ function add_labeling_polygon(image_id, points, fea_points, gFeatureLayer, gFetu
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 &&xhr.status ==200) {//请求成功
             var context = xhr.response;
-            console.log(points);
-            let info_polygon = JSON.stringify(context);
+            let info_polygon = JSON.parse(context);
             let id = info_polygon["polygon_id"];
             let create_user_id = info_polygon["polygon_create_user_id"];
             fea.id=id;
             fea.data.create_user_id=create_user_id;
+            console.log(fea);
         }
     };
 }
@@ -116,9 +116,9 @@ function add_polygon_disp(gFeatureLayer,gFetureStyle,points, polygon_id, create_
             gFetureStyle
         );
     gFeatureLayer.addFeature(fea);
-    console.log(fea);
     return fea;
 }
+
 /*删除用户下所有与页面相关的标注*/
 function delete_all_polygon(image_id){
     var msg = "要删除整页标注？？\n\n请输入image_id以确认危险操作！";
@@ -147,3 +147,22 @@ function delete_all_polygon(image_id){
     };
 }
 
+/*delete all labeles related to a region */
+function delete_region(image_id, select_points){    
+    var xhr = new XMLHttpRequest();
+    select_points_str = JSON.stringify(select_points);
+    xhr.open('GET', 'delete_region/?'+"image_id="+image_id+"&select_points="+select_points_str, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            if(context == "err"){
+                alert("删除过程出错,网页刷新");
+                location.reload();
+            }else{
+                let delete_info = JSON.parse(context);
+                console.log(delete_info);
+            }
+        }
+    };
+}
