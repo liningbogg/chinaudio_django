@@ -59,6 +59,14 @@
                             </table>
                         </div>
                     </div>
+                    <div class="page_image_rotate" id="page_image_rotate">
+                        <input type="number" id="rotate_degree" min="-5" max="5" value={{current_rotate}} step="0.5" style="height:89%;font-size:1.5rem;width:15%"/>
+                        <input type="button" id="rotate__degree_reset" onclick="rotate_degree_reset({{image_id}})" value="重设旋转角度" style="height:99%;font-size:1.5rem;width:38%"/>
+                        <select id="document_direction" value="vertical" style="width:43%;height:99%;font-size:1.5rem">
+                            <option value="vertical">竖直</option>
+                            <option value="horizontal">水平</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="select_page" id="select_page">
@@ -187,12 +195,17 @@
                         let elem = user_polygon_dict[user_polygon][polygon];
                         let polygon_points = JSON.parse(elem['points']);
                         let polygon_id = elem['polygon_id'];
-                        polygon_map = img2gdbox_map(polygon_points,tar_width,tar_height,{{ori_width}},{{ori_height}});
+                        //rotate the label 
+                        let rotate={{current_rotate}};
+                        polygon_rotated = rotate_polygon(polygon_points,rotate,{{ori_width}},{{ori_height}});
+                        //map it into feature layer
+                        polygon_map = img2gdbox_map(polygon_rotated, tar_width,tar_height,{{ori_width}},{{ori_height}});
                         add_polygon_disp(layer, style, polygon_map, polygon_id, user_polygon);
                     }
                 }
                 gMap.events.on('geometryDrawDone', function (type, points) {
                     let select_points = gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
+                    select_points = rotate_polygon(select_points, -1*{{current_rotate}}, {{ori_width}}, {{ori_height}});
                     switch(labeling_mode){
                         case "manual_select":
                             let polygon_id = add_labeling_polygon({{image_id}}, select_points, points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"));
@@ -201,7 +214,7 @@
                             console.log(labeling_mode);
                             break;
                         case "clear_select":
-                            let labeling_delete = delete_region({{image_id}}, select_points);
+                            let labeling_delete = delete_region({{image_id}}, select_points, gdboxConfigure.get_layer("{{request.user}}"));
                             break;
                         case "default":
                             alser("labeling_mode err!");

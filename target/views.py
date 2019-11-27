@@ -1616,6 +1616,8 @@ class TargetView(View):
                         "points":str(polygon.polygon,'utf-8')
                     }
                 )
+            
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
             context={
                 "image_id":ocrimage.id,
                 "title":ocrpdf.title,
@@ -1625,6 +1627,7 @@ class TargetView(View):
                 "ori_width":ocrimage.width,
                 "ori_height":ocrimage.height,
                 "polygon_dict":json.dumps(polygon_dict),
+                "current_rotate":image_user_conf.rotate_degree
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
@@ -1640,7 +1643,12 @@ class TargetView(View):
             data_stream=io.BytesIO(ocrimage.data_byte)
             pil_image = Image.open(data_stream)
             width, height = pil_image.size
-            image_resized = pil_image.resize((tar_width, tar_height), Image.ANTIALIAS)
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
+            if abs(image_user_conf.rotate_degree)>0.0001:
+                image_rotated = pil_image.rotate(image_user_conf.rotate_degree)
+            else:
+                image_rotated = pil_image
+            image_resized = image_rotated.resize((tar_width, tar_height), Image.ANTIALIAS)
             trans_width,trans_height=image_resized.size
             new_imageIO = BytesIO() 
             image_resized.save(new_imageIO,"JPEG")
@@ -1732,6 +1740,7 @@ class TargetView(View):
                 rect_candidate = TargetView.get_rect_info(points[0], points[2])
                 intersection = TargetView.cal_intersection_ratio(rect_region, rect_candidate)
                 intersection_ratio = intersection['ratio_b']
+                print(intersection_ratio)
                 if intersection_ratio > 0.75:
                     delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
                     polygon.delete()
@@ -1754,6 +1763,24 @@ class TargetView(View):
         except Exception as e:
             print(e)
             return HttpResponse("err")
+
+
+    # rotate degree reset
+    @method_decorator(login_required)
+    def rotate_degree_reset(self, request):
+        try:
+            image_id = request.GET.get("image_id")
+            rotate_degree = request.GET.get("rotate_degree")
+            image = PDFImage.objects.get(id=image_id)  # 被标注的图片
+            image_user_conf, isCreate = image.imageuserconf_set.get_or_create(create_user_id=str(request.user), defaults={"rotate_degree":rotate_degree})
+            if isCreate==False:
+                image_user_conf.rotate_degree=rotate_degree
+                image_user_conf.save()
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
 
     @classmethod
     def login(cls, request):

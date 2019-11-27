@@ -148,7 +148,7 @@ function delete_all_polygon(image_id){
 }
 
 /*delete all labeles related to a region */
-function delete_region(image_id, select_points){    
+function delete_region(image_id, select_points, gFeatureLayer){    
     var xhr = new XMLHttpRequest();
     select_points_str = JSON.stringify(select_points);
     xhr.open('GET', 'delete_region/?'+"image_id="+image_id+"&select_points="+select_points_str, true);
@@ -161,8 +161,49 @@ function delete_region(image_id, select_points){
                 location.reload();
             }else{
                 let delete_info = JSON.parse(context);
-                console.log(delete_info);
+                let length_delete = delete_info.length;
+                for(index=0;index<length_delete;++index){
+                    let polygon_id = delete_info[index]['polygon_id'];
+                    //delete feature related
+                    gFeatureLayer.removeFeatureById(polygon_id);
+                }
             }
         }
     };
+}
+
+/*rotate a polygon*/
+function  rotate_polygon(polygon_points, current_rotate, width, height){
+    let polygon_rotated = Array();
+    for(point_index in polygon_points){
+        point = polygon_points[point_index];
+        x = point['x'];
+        y = point['y'];
+        x_shift = x-width/2.0;
+        y_shift = y-height/2.0;
+        rotate_rad = current_rotate/180.0*Math.PI;
+        nx = x_shift*Math.cos(rotate_rad)+y_shift*Math.sin(rotate_rad)+width/2.0;
+        ny = -x_shift*Math.sin(rotate_rad)+y_shift*Math.cos(rotate_rad)+height/2.0;
+        polygon_rotated.push({'x':nx,'y':ny});
+    }
+    return polygon_rotated;
+}
+
+/*reset rotate degree*/
+function rotate_degree_reset(image_id){
+    let xhr = new XMLHttpRequest();
+    let rotate_degree = document.getElementById("rotate_degree").value;
+    xhr.open('GET', 'rotate_degree_reset/?'+"image_id="+image_id+"&rotate_degree="+rotate_degree, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            if(context == "err"){
+                alert("旋转角度设置错误");
+                location.reload();
+            }else{
+                location.reload();
+            }
+        }
+    }
 }

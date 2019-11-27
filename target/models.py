@@ -250,6 +250,17 @@ class PDFImage(BaseModel):
     class Meta:
         unique_together = ["ocrPDF", "frame_id"]    
 
+class ImageUserConf(BaseModel):
+    """
+    image:对应的图片 
+    rotate_degree:image角度
+    """
+    image = models.ForeignKey('PDFImage', on_delete=models.CASCADE)
+    rotate_degree = models.FloatField(default=0,null=False)
+
+    class Meta:
+        unique_together = ["image", "create_user_id"]
+
 class OcrLabelingPolygon(BaseModel):
     """
     ocr 的多边形标注数据
