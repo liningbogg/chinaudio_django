@@ -1,3 +1,10 @@
+var indexArr=new Array(100000);
+for(var i=0;i<99999;i++){
+    indexArr[i]=i;
+}
+//曲线颜色列表
+const color_chart=["red","blue","black","green","yellow","gray"];
+
 /*跳转指定页*/
 function move_page(ocr_pdf, page_apointed){
     var xhr = new XMLHttpRequest();
@@ -203,6 +210,121 @@ function rotate_degree_reset(image_id){
                 location.reload();
             }else{
                 location.reload();
+            }
+        }
+    }
+}
+
+
+
+//添加曲线的高层封装,data字典中包含lengend 以及数据
+function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
+    //曲线参数设置
+    var  options = {
+        chart: {
+            type: 'line',
+            zoomType: 'xy', //xy方向均可缩放
+            marginLeft: 80, // Keep all charts left aligned
+            marginRight: 80, // Keep all charts right aligned
+            animation: false,
+        },
+        boost: {
+            useGPUTranslations: true
+        },
+        title: {
+            text: title
+        },
+        exporting: {
+            enabled:false
+        },
+        xAxis: {
+            categories: indexArr.slice(start,end),
+
+            tickInterval:10
+        },
+        yAxis: {
+            tickInterval: 0.05
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            enabled: true
+        },
+    tooltip: {
+            valueDecimals: 3,  //显示精度
+            shared: true
+        },
+        plotOptions: {
+            series: {
+                marker: {
+                    enabled: false
+                },
+
+            },
+        },
+    };
+    options.series = new Array();
+    var i=0;
+    for(key in dictSeries){
+        options.series[i] = new Object();
+        options.series[i].visible = dictSeries[key]["visible"];
+        options.series[i].color = color_chart[i];
+        options.series[i].lineWidth = 1;
+        options.series[i].name = key;
+        options.series[i].data = dictSeries[key]["list"].slice(start,end);
+        i++;
+    }
+    var chart = Highcharts.chart(MyDiv,options);
+    i=0;
+    for(key in dictLine){
+        for(h in dictLine[key]){
+             chart.xAxis[0].addPlotLine({           //在x轴上增加
+                value:dictLine[key][h]-start,                           //在值为2的地方
+                width:1, //标示线的宽度为2px
+                color: color_chart[i]//标示线的颜色
+            });
+        }
+        i++;
+    }
+    chart.xAxis[0].addPlotLine({           //在x轴上增加
+        value:currentPos-start,                           //在值为2的地方
+        width:2, //标示线的宽度为2px
+        color: "green"//标示线的颜色
+    });
+
+}
+
+/*labeling roughly*/
+function rough_labeling(image_id, rotate_points){
+    let xhr = new XMLHttpRequest();
+    rotate_points_str = JSON.stringify(rotate_points);
+    console.log(rotate_points)
+    xhr.open('GET', 'rough_labeling/?'+"image_id="+image_id+"&rotate_points_str="+rotate_points_str, true);
+    xhr.send(null)
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            if(context == "err"){
+                alert("粗标注错误");
+            }else{
+                let rough_labeling_info = JSON.parse(context);
+                var projectionChartDictSeries={
+                    "projection":{"list":rough_labeling_info.projection,"visible":true},
+                    "entropy":{"list":rough_labeling_info.entropy,"visible":true}
+                };
+                projectionChartDictLine=[];
+                addChart(
+                    "",
+                    projectionChartDictSeries,
+                    projectionChartDictLine,
+                    0,
+                    "projection",
+                    0,
+                    projectionChartDictSeries["projection"].length
+                );
+
+                console.log(rough_labeling_info);
             }
         }
     }

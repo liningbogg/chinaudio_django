@@ -97,6 +97,9 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
+    overflow-y:auto;
+    overflow-x:auto;
+
 }
 
 .page_image_tool_a
@@ -105,7 +108,7 @@ body,div
     float:left;
     width:99.5%;
     top:0%;
-    height:50%;
+    height:36%;
     font-size:1rem;
     border-color:red;
     border-width:0.05rem;
@@ -146,6 +149,19 @@ body,div
     width:99.5%;
     top:0%;
     height:10%;
+    font-size:1rem;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.projection
+{
+    position:relative;
+    float:left;
+    width:99.5%;
+    top:0%;
+    height:45%;
     font-size:1rem;
     border-color:blue;
     border-width:0.05rem;

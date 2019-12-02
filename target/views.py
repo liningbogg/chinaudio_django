@@ -61,6 +61,7 @@ import fitz
 import io
 from target.np_encoder import NpEncoder
 from PIL import Image
+import math
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -1649,6 +1650,12 @@ class TargetView(View):
             else:
                 image_rotated = pil_image
             image_resized = image_rotated.resize((tar_width, tar_height), Image.ANTIALIAS)
+            '''
+            gray_image = image_resized.convert('L')
+            array_image = 255-np.asarray(gray_image)
+            map_row = array_image.sum(axis=0)/255.0/tar_height
+            print(map_row)
+            '''
             trans_width,trans_height=image_resized.size
             new_imageIO = BytesIO() 
             image_resized.save(new_imageIO,"JPEG")
@@ -1658,6 +1665,68 @@ class TargetView(View):
         except Exception as e:
             print(e)
             return None
+
+    @staticmethod
+    def rotate_points(points, rotate_degree, w, h):
+        for point in points:
+            x = point['x']
+            y = point['y']
+            x_shift = x - w/2.0
+            y_shift = y - h/2.0
+            rotate_rad = rotate_degree/180.0*math.pi
+            nx = x_shift*math.cos(rotate_rad)+y_shift*math.sin(rotate_rad)+w/2.0
+            ny = -x_shift*math.sin(rotate_rad)+y_shift*math.cos(rotate_rad)+h/2.0
+            point['x']=nx
+            point['y']=ny
+
+
+    @method_decorator(login_required)
+    def rough_labeling(self, request):
+        try:
+            points_rotate_str = request.GET.get("rotate_points_str")
+            points_rotate = json.loads(points_rotate_str)
+            rect = TargetView.get_rect_info(points_rotate[0],points_rotate[2])
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)
+            w = image.width
+            h = image.height
+            conf = image.imageuserconf_set.get(create_user_id=str(request.user))
+            TargetView.rotate_points(points_rotate, conf.rotate_degree, w, h)
+            data_stream=io.BytesIO(image.data_byte)
+            pil_image = Image.open(data_stream)
+            gray_image = pil_image.convert('F')
+            if abs(conf.rotate_degree)>0.0001:
+                image_rotated = gray_image.rotate(conf.rotate_degree)
+            else:
+                image_rotated = gray_image
+            box = (rect['x'],rect['y'],rect['x_'],rect['y_'])
+            region_select = image_rotated.crop(box)
+            array_image = 1-np.asarray(region_select)/255.0
+
+            # get projection
+            projection = array_image.sum(axis=1)/rect['w']
+            projection = projection*2
+            # get entropy
+            gray_mean = (1-np.asarray(gray_image)/255.0).mean()
+            background_modification = max(0,0.16-gray_mean)
+            print(gray_mean)
+            array_image = array_image + background_modification  # Background entropy solidification 
+            probability = array_image/array_image.sum(axis=1, keepdims=True)
+            entropy_src = -probability*np.log(probability)
+            entropy = entropy_src.sum(axis=1)
+            entropy = maxminnormalization(entropy,0,1)
+
+            rough_labeling_info = {
+                "projection":projection.tolist(),
+                "entropy":entropy.tolist(),
+                "gray_mean":float(gray_mean), 
+                "array_image":array_image.tolist(),
+            }
+            return HttpResponse(json.dumps(rough_labeling_info))
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
 
     @method_decorator(login_required)
     def ocr_move_page(self, request):

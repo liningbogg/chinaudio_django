@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <title>Data：{{title}}</title>
         <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
         <script src="http://www.chinaudio.tech/static/js/ocr_labeling.js"></script> 
         <script src="../static/js/gDBox.pkg.min.js"></script>
         <link href="http://www.chinaudio.tech/static/css/ocr_labeling.css" rel="stylesheet" type="text/css" />
@@ -39,7 +40,7 @@
                                     <td>
                                         <label style="font-size:2rem">
                                             <input type="radio" name="labeling_mode" value="recommend_select"  onchange="labeling_mode=this.value"/>
-                                            标注推荐
+                                            自动标注
                                         </label>
                                     </td>
                                 </tr>
@@ -66,6 +67,9 @@
                             <option value="vertical">竖直</option>
                             <option value="horizontal">水平</option>
                         </select>
+                    </div>
+                    <div class="projection" id="projection">
+
                     </div>
                 </div>
             </div>
@@ -159,8 +163,19 @@
                 var div_width = div_img.offsetWidth;
                 var div_height = div_img.offsetHeight;
                 tar_size = cal_size(div_width,div_height,{{ori_width}},{{ori_height}});
-                tar_width = tar_size["width"];
-                tar_height = tar_size["height"];
+                
+
+                let tar_width = tar_size["width"];
+                let tar_height = tar_size["height"];
+                // 修改div
+                if(Math.abs(tar_width-div_width)>5){
+                    let div_page = document.getElementById("page_image");
+                    let page_width = div_page.offsetWidth;
+                    div_img.style.width  = ((tar_width+5.0)/page_width*100) + "%";
+                    let div_tool = document.getElementById("page_image_tool");
+                    div_tool.style.width = ((page_width-tar_width-10.0)/page_width*100) + "%";
+                }
+
                 tar_room = Math.max(tar_width,tar_height);
                 // 显示尺度信息
                 document.getElementById("image_info").innerHTML
@@ -205,16 +220,16 @@
                 }
                 gMap.events.on('geometryDrawDone', function (type, points) {
                     let select_points = gdbox2img_map(points, tar_width, tar_height,{{ori_width}},{{ori_height}});
-                    select_points = rotate_polygon(select_points, -1*{{current_rotate}}, {{ori_width}}, {{ori_height}});
+                    rotate_points = rotate_polygon(select_points, -1*{{current_rotate}}, {{ori_width}}, {{ori_height}});
                     switch(labeling_mode){
                         case "manual_select":
-                            let polygon_id = add_labeling_polygon({{image_id}}, select_points, points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"));
+                            let polygon_id = add_labeling_polygon({{image_id}}, rotate_points, points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"));
                             break;
                         case "recommend_select":
-                            console.log(labeling_mode);
+                            let polygon_update = rough_labeling({{image_id}}, rotate_points); 
                             break;
                         case "clear_select":
-                            let labeling_delete = delete_region({{image_id}}, select_points, gdboxConfigure.get_layer("{{request.user}}"));
+                            let labeling_delete = delete_region({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"));
                             break;
                         case "default":
                             alser("labeling_mode err!");
