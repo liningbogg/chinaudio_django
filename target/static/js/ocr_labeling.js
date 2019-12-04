@@ -217,8 +217,13 @@ function rotate_degree_reset(image_id){
 
 
 
+
 //添加曲线的高层封装,data字典中包含lengend 以及数据
-function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
+function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end, slope, bias){
+    let xAxis_c = indexArr.slice(start,end)
+    for (key in xAxis_c){
+        xAxis_c[key]=xAxis_c[key]*slope+bias;
+    }
     //曲线参数设置
     var  options = {
         chart: {
@@ -238,9 +243,9 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end){
             enabled:false
         },
         xAxis: {
-            categories: indexArr.slice(start,end),
+            categories: xAxis_c,
 
-            tickInterval:10
+            tickInterval:10*slope
         },
         yAxis: {
             tickInterval: 0.05
@@ -321,10 +326,51 @@ function rough_labeling(image_id, rotate_points){
                     0,
                     "projection",
                     0,
-                    projectionChartDictSeries["projection"].length
+                    projectionChartDictSeries["projection"]["list"].length,
+                    1.0,
+                    0
                 );
 
                 console.log(rough_labeling_info);
+            }
+        }
+    }
+}
+
+/*rotate degree evaluation*/
+function rotate_degree_evaluate(image_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', 'rotate_degree_evaluate/?'+"image_id="+image_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            if(context == "err"){
+                alert("倾斜角度评估错误");
+            }else{
+                let evaluate_info = JSON.parse(context);
+                let projection_entropy = evaluate_info["projection_entropy"];
+                let slope = evaluate_info["slope"];
+                let bias = evaluate_info["bias"];
+                console.log(slope);
+                console.log( bias);
+                //draw chart
+                var projectionEntropyChartDictSeries={
+                    "projection_entropy":{"list":projection_entropy,"visible":true},
+                };
+                projectionEntropyChartDictLine=[];
+                addChart(
+                    "",
+                    projectionEntropyChartDictSeries,
+                    projectionEntropyChartDictLine,
+                    0,
+                    "projection",
+                    0,
+                    projectionEntropyChartDictSeries["projection_entropy"]["list"].length,
+                    slope,
+                    bias
+                );
+
             }
         }
     }

@@ -1685,13 +1685,13 @@ class TargetView(View):
         try:
             points_rotate_str = request.GET.get("rotate_points_str")
             points_rotate = json.loads(points_rotate_str)
-            rect = TargetView.get_rect_info(points_rotate[0],points_rotate[2])
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)
             w = image.width
             h = image.height
             conf = image.imageuserconf_set.get(create_user_id=str(request.user))
             TargetView.rotate_points(points_rotate, conf.rotate_degree, w, h)
+            rect = TargetView.get_rect_info(points_rotate[0],points_rotate[2])
             data_stream=io.BytesIO(image.data_byte)
             pil_image = Image.open(data_stream)
             gray_image = pil_image.convert('F')
@@ -1709,7 +1709,6 @@ class TargetView(View):
             # get entropy
             gray_mean = (1-np.asarray(gray_image)/255.0).mean()
             background_modification = max(0,0.16-gray_mean)
-            print(gray_mean)
             array_image = array_image + background_modification  # Background entropy solidification 
             probability = array_image/array_image.sum(axis=1, keepdims=True)
             entropy_src = -probability*np.log(probability)
@@ -1846,6 +1845,47 @@ class TargetView(View):
                 image_user_conf.rotate_degree=rotate_degree
                 image_user_conf.save()
             return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+    
+    @method_decorator(login_required)
+    def rotate_degree_evaluate(self, request):
+        try:
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)  # 被标注的图片
+            data_stream=io.BytesIO(image.data_byte)
+            pil_image = Image.open(data_stream)
+            gray_image = pil_image.convert('F')
+            width, height = gray_image.size
+            gray_mean = (1-np.asarray(gray_image)/255.0).mean()
+            background_modification = max(0,0.16-gray_mean)
+
+            project_entropy_list = list()
+            for rotate_degree in range(-50,50,5):
+                rotate_degree_true = rotate_degree/10.0
+                image_rotated = gray_image.rotate(rotate_degree_true)
+                rotate_rad = rotate_degree_true/180.0*math.pi
+                d_w = 0.5*height*abs(math.tan(rotate_rad))
+                d_h = 0.5*width*abs(math.tan(rotate_rad))
+                box = (d_w, d_h, width-d_w, height-d_h)
+                region_select = image_rotated.crop(box)
+                width_crop, height_crop = region_select.size
+                array_image = 1-np.asarray(region_select)/255.0 + background_modification
+                # get projection
+                projection = array_image.sum(axis=0)
+                # get entropy
+                probability = projection/projection.sum()
+                entropy_src = -probability*np.log(probability)
+                entropy = entropy_src.sum()
+                project_entropy_list.append(entropy)
+            evaluate_info={
+                "projection_entropy":project_entropy_list,
+                "slope":0.5,
+                "bias":-5.0,
+            }
+            return HttpResponse(json.dumps(evaluate_info, cls=NpEncoder))
         except Exception as e:
             print(e)
             return HttpResponse("err")

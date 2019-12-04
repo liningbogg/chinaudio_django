@@ -62,7 +62,8 @@
                     </div>
                     <div class="page_image_rotate" id="page_image_rotate">
                         <input type="number" id="rotate_degree" min="-5" max="5" value={{current_rotate}} step="0.5" style="height:89%;font-size:1.5rem;width:15%"/>
-                        <input type="button" id="rotate__degree_reset" onclick="rotate_degree_reset({{image_id}})" value="重设旋转角度" style="height:99%;font-size:1.5rem;width:38%"/>
+                        <input type="button" id="rotate_degree_reset" onclick="rotate_degree_reset({{image_id}})" value="重设旋转角度" style="height:99%;font-size:1.5rem;width:18%"/>
+                        <input type="button" id="rotate_degree_evaluate" onclick="rotate_degree_evaluate({{image_id}})" value="倾斜评估" style="height:99%;font-size:1.5rem;width:19%"/>
                         <select id="document_direction" value="vertical" style="width:43%;height:99%;font-size:1.5rem">
                             <option value="vertical">竖直</option>
                             <option value="horizontal">水平</option>
