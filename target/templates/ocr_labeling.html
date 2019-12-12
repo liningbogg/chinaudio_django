@@ -31,7 +31,7 @@
                                 <tr>
                                     <td>
                                         <label style="font-size:2rem">
-                                            <input type="radio" name="labeling_mode" value="manual_select" checked="true" onchange="labeling_mode=this.value"/>
+                                            <input type="radio" name="labeling_mode" value="manual_select"  onchange="labeling_mode=this.value"/>
                                             手动标注
                                         </label>
                                     </td>
@@ -39,7 +39,7 @@
                                 <tr>
                                     <td>
                                         <label style="font-size:2rem">
-                                            <input type="radio" name="labeling_mode" value="recommend_select"  onchange="labeling_mode=this.value"/>
+                                            <input type="radio" name="labeling_mode" value="recommend_select" checked=true  onchange="labeling_mode=this.value"/>
                                             自动标注
                                         </label>
                                     </td>
@@ -95,7 +95,7 @@
             </div>
         </div>
         <script>
-            var labeling_mode="manual_select";
+            var labeling_mode="recommend_select";
             var dict_polygon_feature = new Array();
             class GdboxConfigure {
                 constructor(current_user, gMap){
@@ -227,7 +227,7 @@
                             let polygon_id = add_labeling_polygon({{image_id}}, rotate_points, points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"));
                             break;
                         case "recommend_select":
-                            let polygon_update = rough_labeling({{image_id}}, rotate_points); 
+                            let polygon_update = rough_labeling({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
                             break;
                         case "clear_select":
                             let labeling_delete = delete_region({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"));

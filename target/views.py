@@ -1687,6 +1687,18 @@ class TargetView(View):
             points_rotate = json.loads(points_rotate_str)
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)
+            delete_info = []
+            user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
+            rect_region = TargetView.get_rect_info(points_rotate[0], points_rotate[2])
+            for polygon in user_polygon_set:
+                points = json.loads(polygon.polygon)
+                rect_candidate = TargetView.get_rect_info(points[0], points[2])
+                intersection = TargetView.cal_intersection_ratio(rect_region, rect_candidate)
+                intersection_ratio = intersection['ratio_b']
+                if intersection_ratio > 0.75:
+                    delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
+                    polygon.delete()
+
             w = image.width
             h = image.height
             conf = image.imageuserconf_set.get(create_user_id=str(request.user))
@@ -1714,14 +1726,90 @@ class TargetView(View):
             entropy_src = -probability*np.log(probability)
             entropy = entropy_src.sum(axis=1)
             entropy = maxminnormalization(entropy,0,1)
+            entropy_diff = list(np.diff(entropy))
+            entropy_diff.insert(0,0)
+            has_head = False
+            entropy_thr = 0.9  # 熵阈
+            text_interval = []
+            start_pos = []
+            stop_pos = []
+            interval_head_tmp = -1
+            for i,val in enumerate(entropy):
+                if has_head == False:
+                    if val < entropy_thr:
+                        has_head = True
+                        start_pos.append(i)
+                        interval_head_tmp = i
+                else:
+                    if val > entropy_thr:
+                        has_head = False
+                        stop_pos.append(i)
+                        text_interval.append({"start":interval_head_tmp,"end":i})
+            if has_head is True:
+                text_interval.append({"start":interval_head_tmp,"end":len(entropy)-1})
+                stop_pos.append(len(entropy)-1)
+            # 文字融合暂缺
+            text_rect = []
+            # 文字第二维定位
+            for item in text_interval:
+                start_dim1 = item["start"]
+                end_dim1 = item["end"]
+                text_slice = array_image[start_dim1:end_dim1, :]
+                height, width = text_slice.shape
+                projection_dim2 = text_slice.sum(axis=0)/(end_dim1*1.0-start_dim1)
+                probability_dim2 =  text_slice/text_slice.sum(axis=0, keepdims=True)
+                entropy_src_dim2 = -probability_dim2*np.log(probability_dim2)
+                entropy_dim2 = entropy_src_dim2.sum(axis=0)
+                entropy_dim2 = maxminnormalization(entropy_dim2,0,1)
+                # left
+                start_dim2=0
+                entropy_thr_dim2 = 0.9
+                projection_thr_dim2 = 0.35
+                for i in range(width):
+                    if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
+                        start_dim2 = i
+                        break
+
+                # right
+                end_dim2=width-1
+                for i in range(width-1,-1,-1):
+                    if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
+                        end_dim2 = i
+                        break
+                end_dim2 = end_dim2+1
+                text_rect.append([
+                    {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']},
+                    {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']},
+                    {'x':end_dim2+points_rotate[0]['x'],'y':end_dim1+points_rotate[0]['y']},
+                    {'x':start_dim2+points_rotate[0]['x'], 'y':end_dim1+points_rotate[0]['y']}
+                ])
+            # add rect
+            polygon_add = []
+            for rect in text_rect:
+                TargetView.rotate_points(rect, -conf.rotate_degree, w, h)
+                polygon = OcrLabelingPolygon(pdfImage=image, polygon=json.dumps(rect).encode("utf-8"), create_user_id=str(request.user))
+                polygon.save()
+                polygon_add.append({
+                    "image_id":image_id,
+                    "create_user_id":str(request.user),
+                    "polygon_id":polygon.id,
+                    "points":str(polygon.polygon,"utf-8")
+                })
+
 
             rough_labeling_info = {
                 "projection":projection.tolist(),
                 "entropy":entropy.tolist(),
+                "entropy_diff":entropy_diff, 
                 "gray_mean":float(gray_mean), 
                 "array_image":array_image.tolist(),
+                "text_interval":text_interval,
+                "start_pos":start_pos,
+                "stop_pos":stop_pos,
+                "delete_info":delete_info,
+                "polygon_add":polygon_add
             }
-            return HttpResponse(json.dumps(rough_labeling_info))
+            return HttpResponse(json.dumps(rough_labeling_info, cls=NpEncoder))
         except Exception as e:
             print(e)
             return HttpResponse("err")
@@ -1789,14 +1877,16 @@ class TargetView(View):
             intersection_ratio_b = area_intersection / (rect_b['area']*1.0)
             return {'ratio_a':intersection_ratio_a, 'ratio_b':intersection_ratio_b, 'area':area_intersection}
         except Exception as e:
-            print(e)
+            print(rect_a)
+            print(rect_b)
+            print("cal_intersection_ratio")
     
     # delete labeles relate to an apointed region
     @method_decorator(login_required)
     def delete_region(self, request):
         delete_info = []
         try:
-            select_pointsStr = request.GET.get("select_points")
+            select_pointsStr = request.GET.get("rotate_points_str")
             select_points = json.loads(select_pointsStr)  # region to be deleted
             image_id = request.GET.get("image_id")  # related picture
             image = PDFImage.objects.get(id=image_id) 
@@ -1808,7 +1898,6 @@ class TargetView(View):
                 rect_candidate = TargetView.get_rect_info(points[0], points[2])
                 intersection = TargetView.cal_intersection_ratio(rect_region, rect_candidate)
                 intersection_ratio = intersection['ratio_b']
-                print(intersection_ratio)
                 if intersection_ratio > 0.75:
                     delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
                     polygon.delete()

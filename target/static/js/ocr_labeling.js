@@ -158,7 +158,7 @@ function delete_all_polygon(image_id){
 function delete_region(image_id, select_points, gFeatureLayer){    
     var xhr = new XMLHttpRequest();
     select_points_str = JSON.stringify(select_points);
-    xhr.open('GET', 'delete_region/?'+"image_id="+image_id+"&select_points="+select_points_str, true);
+    xhr.open('GET', 'delete_region/?'+"image_id="+image_id+"&rotate_points_str="+select_points_str, true);
     xhr.send(null);
     xhr.onreadystatechange = function(){
         if(xhr.readyState == 4 && xhr.status == 200) {
@@ -301,10 +301,9 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end, slo
 }
 
 /*labeling roughly*/
-function rough_labeling(image_id, rotate_points){
+function rough_labeling(image_id, rotate_points, gFeatureLayer, gFetureStyle, current_rotate, ori_width, ori_height, tar_width, tar_height){
     let xhr = new XMLHttpRequest();
     rotate_points_str = JSON.stringify(rotate_points);
-    console.log(rotate_points)
     xhr.open('GET', 'rough_labeling/?'+"image_id="+image_id+"&rotate_points_str="+rotate_points_str, true);
     xhr.send(null)
     xhr.onreadystatechange = function(){
@@ -314,11 +313,22 @@ function rough_labeling(image_id, rotate_points){
                 alert("粗标注错误");
             }else{
                 let rough_labeling_info = JSON.parse(context);
+                let length_delete = rough_labeling_info.delete_info.length;
+                for(index=0;index<length_delete;++index){
+                    let polygon_id = rough_labeling_info.delete_info[index]['polygon_id'];
+                    //delete feature related
+                    gFeatureLayer.removeFeatureById(polygon_id);
+                }
+
                 var projectionChartDictSeries={
                     "projection":{"list":rough_labeling_info.projection,"visible":true},
-                    "entropy":{"list":rough_labeling_info.entropy,"visible":true}
+                    "entropy":{"list":rough_labeling_info.entropy,"visible":true},
+                    "entropy_diff":{"list":rough_labeling_info.entropy_diff,"visible":true}
                 };
-                projectionChartDictLine=[];
+                projectionChartDictLine={
+                    "start_pos":rough_labeling_info.start_pos,
+                    "stop_pos":rough_labeling_info.stop_pos
+                };
                 addChart(
                     "",
                     projectionChartDictSeries,
@@ -330,6 +340,20 @@ function rough_labeling(image_id, rotate_points){
                     1.0,
                     0
                 );
+
+                // 显示新加标注框
+                let polygon_add = rough_labeling_info.polygon_add;
+                for(polygon in polygon_add){
+                    let elem = polygon_add[polygon];
+                    let polygon_points = JSON.parse(elem['points']);
+                    let polygon_id = elem['polygon_id'];
+                    //rotate the label
+                    let rotate=current_rotate;
+                    polygon_rotated = rotate_polygon(polygon_points,rotate,ori_width,ori_height);
+                    //map it into feature layer
+                    polygon_map = img2gdbox_map(polygon_rotated, tar_width,tar_height, ori_width, ori_height);
+                    add_polygon_disp(gFeatureLayer, gFetureStyle, polygon_map, polygon_id, user_polygon);
+                }
 
                 console.log(rough_labeling_info);
             }
