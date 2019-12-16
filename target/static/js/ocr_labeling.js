@@ -352,7 +352,7 @@ function rough_labeling(image_id, rotate_points, gFeatureLayer, gFetureStyle, cu
                     polygon_rotated = rotate_polygon(polygon_points,rotate,ori_width,ori_height);
                     //map it into feature layer
                     polygon_map = img2gdbox_map(polygon_rotated, tar_width,tar_height, ori_width, ori_height);
-                    add_polygon_disp(gFeatureLayer, gFetureStyle, polygon_map, polygon_id, user_polygon);
+                    add_polygon_disp(gFeatureLayer, gFetureStyle, polygon_map, polygon_id, elem['create_user_id']);
                 }
 
                 console.log(rough_labeling_info);
