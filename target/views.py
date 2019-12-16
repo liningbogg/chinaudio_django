@@ -1778,6 +1778,10 @@ class TargetView(View):
                         end_dim2 = i
                         break
                 end_dim2 = end_dim2+1
+                area_thr = 64
+                area = abs(end_dim2-start_dim2) * abs(end_dim1-start_dim1)
+                if area < area_thr:
+                    continue
                 text_rect.append([
                     {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']},
                     {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']},
