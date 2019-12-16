@@ -1683,6 +1683,7 @@ class TargetView(View):
     @method_decorator(login_required)
     def rough_labeling(self, request):
         try:
+            time_start = time.time()
             points_rotate_str = request.GET.get("rotate_points_str")
             points_rotate = json.loads(points_rotate_str)
             image_id = request.GET.get("image_id")
@@ -1796,18 +1797,20 @@ class TargetView(View):
                     "points":str(polygon.polygon,"utf-8")
                 })
 
-
+            time_end = time.time()
+            duration = time_end-time_start
             rough_labeling_info = {
                 "projection":projection.tolist(),
                 "entropy":entropy.tolist(),
                 "entropy_diff":entropy_diff, 
                 "gray_mean":float(gray_mean), 
-                "array_image":array_image.tolist(),
+                # "array_image":array_image.tolist(),
                 "text_interval":text_interval,
                 "start_pos":start_pos,
                 "stop_pos":stop_pos,
                 "delete_info":delete_info,
-                "polygon_add":polygon_add
+                "polygon_add":polygon_add,
+                "duration":duration
             }
             return HttpResponse(json.dumps(rough_labeling_info, cls=NpEncoder))
         except Exception as e:
