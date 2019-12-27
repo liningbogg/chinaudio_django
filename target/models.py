@@ -5,6 +5,7 @@ class BaseModel(models.Model):
     """模型类基类"""
     create_time = models.DateTimeField(auto_now_add=True, verbose_name='添加时间', help_text='添加时间')
     create_user_id = models.CharField(max_length=255, null=False, verbose_name='创建人id', help_text='创建人id')
+    is_deleted = models.BooleanField(default=False, null=False)
 
     class Meta:
         abstract = True
@@ -206,6 +207,7 @@ class OcrPDF(BaseModel):
     file_size = models.FloatField(default=0.0)
     frame_num = models.IntegerField(default=0)
     current_frame = models.IntegerField(default=0)
+    is_vertical = models.BooleanField(default=False)  # 文字排列方向
     assist_num = models.IntegerField(default=0)
     objects = models.Manager()
 
@@ -220,6 +222,7 @@ class OcrAssist(BaseModel):
     ocrPDF = models.ForeignKey('OcrPDF', on_delete=models.CASCADE)  # 对应的OCRPDF
     current_frame = models.IntegerField(default=0)
     assist_user_name = models.CharField(max_length=255,null=True)
+    is_vertical = models.BooleanField(default=False)  # 文字排列方向
     objects = models.Manager()
     class Meta:
         unique_together = ["ocrPDF", "assist_user_name"]    
@@ -245,8 +248,7 @@ class PDFImage(BaseModel):
     data_byte = models.BinaryField(null=True)
     data_type = models.CharField(max_length=255)
     height = models.IntegerField(default=0)
-    width = models.IntegerField(default=0)
-
+    width = models.IntegerField(default=0) 
     class Meta:
         unique_together = ["ocrPDF", "frame_id"]    
 
@@ -257,6 +259,9 @@ class ImageUserConf(BaseModel):
     """
     image = models.ForeignKey('PDFImage', on_delete=models.CASCADE)
     rotate_degree = models.FloatField(default=0,null=False)
+    is_vertical = models.BooleanField(default=False)  # 文字排列方向
+    entropy_thr = models.FloatField(default=0.9,null=False)
+    projection_thr = models.FloatField(default=0.35,null=False)
 
     class Meta:
         unique_together = ["image", "create_user_id"]

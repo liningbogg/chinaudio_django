@@ -39,6 +39,7 @@ from target.models import OcrPDF
 from target.models import PDFImage
 from target.models import OcrAssistRequest
 from target.models import OcrAssist
+from target.models import ImageUserConf
 from target.models import OcrLabelingPolygon
 from .forms import RegisterForm
 from chin import Chin
@@ -265,10 +266,10 @@ class TargetView(View):
         
         """
         user_id = str(request.user)
-        ocrPDFList = OcrPDF.objects.filter(create_user_id=request.user)
+        ocrPDFList = OcrPDF.objects.filter(create_user_id=request.user, is_deleted=False)
         assist_request_in_set = OcrAssistRequest.objects.filter(owner=user_id,status="pushed")
         assist_request_out_set = OcrAssistRequest.objects.filter(create_user_id=user_id)
-        ocr_assist_set = OcrAssist.objects.filter(assist_user_name=user_id)
+        ocr_assist_set = OcrAssist.objects.filter(assist_user_name=user_id, is_deleted=False)
         context = {'ocrPDFList':ocrPDFList,"assist_request_in_set":assist_request_in_set,"assist_request_out_set":assist_request_out_set,"ocr_assist_set":ocr_assist_set}
         return render(request,'digital.html',context)
 
@@ -344,6 +345,32 @@ class TargetView(View):
         finally:
             return redirect('/digital')
     
+    @classmethod
+    @method_decorator(login_required)
+    def delete_ocr_labeling(cls, request):
+        """
+        删除pdf或者协助
+        :param request:
+        :return:
+        """
+        try:
+            user_name = str(request.user)  # 当前用户名
+            class_id = request.GET.get("id")
+            class_type = request.GET.get("class_type")
+            if class_type == "ocr_pdf":
+                ocrpdf = OcrPDF.objects.get(id=class_id)
+                ocrpdf.is_deleted = True
+                ocrpdf.save()
+            elif class_type == "ocr_assist":
+                ocrassistuser = OcrAssist.objects.get(id=class_id)
+                ocrassistuser.is_deleted = True
+                ocrassistuser.save()
+            else:
+                print(class_type)
+        except Exception as e:
+            print(e)
+        finally:
+            return redirect('/digital')
 
     @classmethod
     @method_decorator(login_required)
@@ -1596,10 +1623,14 @@ class TargetView(View):
             ocrpdf_id = request.GET.get('id')  # ocrpdf_id
             ocrpdf = OcrPDF.objects.get(id=ocrpdf_id)
             current_frame = 0
+            is_vertical_pdf = False
             if ocrpdf.create_user_id == str(request.user):
                 current_frame = ocrpdf.current_frame
+                is_vertical_pdf = ocrpdf.is_vertical
             else:
-                current_frame = ocrpdf.ocrassist_set.get(assist_user_name=str(request.user)).current_frame
+                assist = ocrpdf.ocrassist_set.get(assist_user_name=str(request.user))
+                current_frame = assist.current_frame
+                is_vertical_pdf = assist.is_vertical
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=current_frame)
             polygon_set = ocrimage.ocrlabelingpolygon_set.all()
             create_user_id_set = polygon_set.values("create_user_id").distinct()  # achieve distinct create_user_id 
@@ -1617,8 +1648,7 @@ class TargetView(View):
                         "points":str(polygon.polygon,'utf-8')
                     }
                 )
-            
-            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr":0.35})
             context={
                 "image_id":ocrimage.id,
                 "title":ocrpdf.title,
@@ -1626,9 +1656,13 @@ class TargetView(View):
                 "frame_id":ocrimage.frame_id,
                 "frame_num":ocrpdf.frame_num,
                 "ori_width":ocrimage.width,
-                "ori_height":ocrimage.height,
+                "ori_height":ocrimage.height, 
                 "polygon_dict":json.dumps(polygon_dict),
-                "current_rotate":image_user_conf.rotate_degree
+                "current_rotate":image_user_conf.rotate_degree, 
+                "is_vertical":json.dumps(image_user_conf.is_vertical), 
+                "entropy_thr":image_user_conf.entropy_thr,
+                "projection_thr":image_user_conf.projection_thr,
+                "image_user_conf_id":image_user_conf.id
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
@@ -1667,6 +1701,27 @@ class TargetView(View):
             return None
 
     @staticmethod
+    def merge_rects(rect_array):
+        x_min=10240000
+        x_max=-10240000
+        y_min=10240000
+        y_max=-10240000
+        rect_merged = []
+        for elem in rect_array:
+            rect_info = elem['rect_info']
+            x_min = min(x_min,min(rect_info['x'],rect_info['x_']))
+            x_max = max(x_max,max(rect_info['x'],rect_info['x_']))
+            y_min = min(y_min,min(rect_info['y'],rect_info['y_']))
+            y_max = max(y_max,max(rect_info['y'],rect_info['y_']))
+        rect_merged= [
+            {'x':x_min, 'y':y_min},
+            {'x':x_max, 'y':y_min},
+            {'x':x_max, 'y':y_max},
+            {'x':x_min, 'y':y_max}
+        ]
+        return rect_merged
+
+    @staticmethod
     def rotate_points(points, rotate_degree, w, h):
         for point in points:
             x = point['x']
@@ -1679,6 +1734,53 @@ class TargetView(View):
             point['x']=nx
             point['y']=ny
 
+    # 融合选定区域内的标注
+    @method_decorator(login_required)
+    def merge_labeling(self, request):
+        try:
+            delete_info = None
+            polygon_add = None
+
+            points_rotate_str = request.GET.get("rotate_points_str")
+            points_rotate = json.loads(points_rotate_str)
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)
+            conf = image.imageuserconf_set.get(create_user_id=str(request.user))
+            w = image.width
+            h = image.height
+            delete_info = []
+            user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
+            rect_region = TargetView.get_rect_info(points_rotate[0], points_rotate[2])
+            for polygon in user_polygon_set:
+                points = json.loads(polygon.polygon)
+                TargetView.rotate_points(points,conf.rotate_degree,w,h)
+                rect_candidate = TargetView.get_rect_info(points[0], points[2])
+                intersection = TargetView.cal_intersection_ratio(rect_region, rect_candidate)
+                intersection_ratio = intersection['ratio_b']
+                if intersection_ratio > 0.75:
+                    delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
+                    polygon.delete()
+            if delete_info != []:
+                rect_merged = TargetView.merge_rects(delete_info)
+                TargetView.rotate_points(rect_merged, -conf.rotate_degree, w, h)
+                polygon = OcrLabelingPolygon(pdfImage=image, polygon=json.dumps(rect_merged).encode("utf-8"), create_user_id=str(request.user))
+                polygon.save()
+                polygon_add= {
+                    "image_id":image_id,
+                    "create_user_id":str(request.user),
+                    "polygon_id":polygon.id,
+                    "points":str(polygon.polygon,"utf-8")
+                }
+            
+            merge_labeling_info = {
+                "delete_info":delete_info,
+                "polygon_add":polygon_add,
+            }
+            return HttpResponse(json.dumps(merge_labeling_info))
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+            
 
     @method_decorator(login_required)
     def rough_labeling(self, request):
@@ -1688,11 +1790,28 @@ class TargetView(View):
             points_rotate = json.loads(points_rotate_str)
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)
+            conf = image.imageuserconf_set.get(create_user_id=str(request.user))
+            w = image.width
+            h = image.height
+            # 旋转后矩形框为竖直
+            TargetView.rotate_points(points_rotate, conf.rotate_degree, w, h)
             delete_info = []
             user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
             rect_region = TargetView.get_rect_info(points_rotate[0], points_rotate[2])
+            h_w_ratio = abs(rect_region['h']*1.0/rect_region['w'])  # 高宽比
+            is_vertical = True
+            if h_w_ratio>2:
+                is_vertical = True
+            elif h_w_ratio<0.5:
+                is_vertical = False
+            elif h_w_ratio>=0.5 and h_w_ratio<=2:
+                is_vertical = conf.is_vertical
+            else:
+                pass
+            # 删除当前用户下与候选区域相交的标注
             for polygon in user_polygon_set:
                 points = json.loads(polygon.polygon)
+                TargetView.rotate_points(points,conf.rotate_degree,w,h)
                 rect_candidate = TargetView.get_rect_info(points[0], points[2])
                 intersection = TargetView.cal_intersection_ratio(rect_region, rect_candidate)
                 intersection_ratio = intersection['ratio_b']
@@ -1700,11 +1819,7 @@ class TargetView(View):
                     delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
                     polygon.delete()
 
-            w = image.width
-            h = image.height
-            conf = image.imageuserconf_set.get(create_user_id=str(request.user))
-            TargetView.rotate_points(points_rotate, conf.rotate_degree, w, h)
-            rect = TargetView.get_rect_info(points_rotate[0],points_rotate[2])
+            # rect = TargetView.get_rect_info(points_rotate[0],points_rotate[2])
             data_stream=io.BytesIO(image.data_byte)
             pil_image = Image.open(data_stream)
             gray_image = pil_image.convert('F')
@@ -1712,27 +1827,39 @@ class TargetView(View):
                 image_rotated = gray_image.rotate(conf.rotate_degree)
             else:
                 image_rotated = gray_image
-            box = (rect['x'],rect['y'],rect['x_'],rect['y_'])
+            box = (rect_region['x'],rect_region['y'],rect_region['x_'],rect_region['y_'])
             region_select = image_rotated.crop(box)
-            array_image = 1-np.asarray(region_select)/255.0
-
+            array_image = 1-np.asarray(region_select)/255.0  # 选定区域图片数组
+            
             # get projection
-            projection = array_image.sum(axis=1)/rect['w']
-            projection = projection*2
+            if is_vertical is True:
+                projection = array_image.sum(axis=1)/rect_region['w']
+                projection = projection*2
+            else:
+                projection = array_image.sum(axis=0)/rect_region['h']
+                projection = projection*2
+                
             # get entropy
-            gray_mean = (1-np.asarray(gray_image)/255.0).mean()
+            gray_mean = (1-np.asarray(gray_image)/255.0).mean()  # 区域灰度平均值
             background_modification = max(0,0.16-gray_mean)
             array_image = array_image + background_modification  # Background entropy solidification 
-            probability = array_image/array_image.sum(axis=1, keepdims=True)
+            if is_vertical is True:
+                probability = array_image/array_image.sum(axis=1, keepdims=True)
+            else:
+                probability = array_image/array_image.sum(axis=0, keepdims=True)
+                
             entropy_src = -probability*np.log(probability)
-            entropy = entropy_src.sum(axis=1)
+            if is_vertical is True:
+                entropy = entropy_src.sum(axis=1)
+            else:
+                entropy = entropy_src.sum(axis=0)
             entropy = maxminnormalization(entropy,0,1)
             entropy_diff = list(np.diff(entropy))
             entropy_diff.insert(0,0)
             has_head = False
             entropy_thr = 0.9  # 熵阈
             text_interval = []
-            start_pos = []
+            start_pos = []  
             stop_pos = []
             interval_head_tmp = -1
             for i,val in enumerate(entropy):
@@ -1755,39 +1882,73 @@ class TargetView(View):
             for item in text_interval:
                 start_dim1 = item["start"]
                 end_dim1 = item["end"]
-                text_slice = array_image[start_dim1:end_dim1, :]
+                if is_vertical is True:
+                    text_slice = array_image[start_dim1:end_dim1, :]
+                else:
+                    text_slice = array_image[:,start_dim1:end_dim1]
+                    
                 height, width = text_slice.shape
-                projection_dim2 = text_slice.sum(axis=0)/(end_dim1*1.0-start_dim1)
-                probability_dim2 =  text_slice/text_slice.sum(axis=0, keepdims=True)
-                entropy_src_dim2 = -probability_dim2*np.log(probability_dim2)
-                entropy_dim2 = entropy_src_dim2.sum(axis=0)
+                if is_vertical is True:
+                    projection_dim2 = text_slice.sum(axis=0)/(end_dim1*1.0-start_dim1)
+                    probability_dim2 =  text_slice/text_slice.sum(axis=0, keepdims=True)
+                    entropy_src_dim2 = -probability_dim2*np.log(probability_dim2)
+                    entropy_dim2 = entropy_src_dim2.sum(axis=0)
+                else:
+                    projection_dim2 = text_slice.sum(axis=1)/(end_dim1*1.0-start_dim1)
+                    probability_dim2 =  text_slice/text_slice.sum(axis=1, keepdims=True)
+                    entropy_src_dim2 = -probability_dim2*np.log(probability_dim2)
+                    entropy_dim2 = entropy_src_dim2.sum(axis=1)
                 entropy_dim2 = maxminnormalization(entropy_dim2,0,1)
-                # left
+                # left or top
                 start_dim2=0
                 entropy_thr_dim2 = 0.9
                 projection_thr_dim2 = 0.35
-                for i in range(width):
-                    if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
-                        start_dim2 = i
-                        break
+                if is_vertical is True:
+                    for i in range(width):
+                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
+                            start_dim2 = i
+                            break
+                else:
+                    for i in range(height):
+                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
+                            start_dim2 = i
+                            break
 
-                # right
-                end_dim2=width-1
-                for i in range(width-1,-1,-1):
-                    if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
-                        end_dim2 = i
-                        break
+
+                # right or bottom
+                if is_vertical is True:
+                    end_dim2=width-1
+                    for i in range(width-1,-1,-1):
+                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
+                            end_dim2 = i
+                            break
+                else:
+                    end_dim2=height-1
+                    for i in range(height-1,-1,-1):
+                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
+                            end_dim2 = i
+                            break
+                    
                 end_dim2 = end_dim2+1
-                area_thr = 64
+                area_thr = 16
                 area = abs(end_dim2-start_dim2) * abs(end_dim1-start_dim1)
-                if area < area_thr:
+                if area < area_thr or area>1000000:
                     continue
-                text_rect.append([
-                    {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']},
-                    {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']},
-                    {'x':end_dim2+points_rotate[0]['x'],'y':end_dim1+points_rotate[0]['y']},
-                    {'x':start_dim2+points_rotate[0]['x'], 'y':end_dim1+points_rotate[0]['y']}
-                ])
+                if is_vertical is True:
+                    text_rect.append([
+                        {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']},
+                        {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']},
+                        {'x':end_dim2+points_rotate[0]['x'],'y':end_dim1+points_rotate[0]['y']},
+                        {'x':start_dim2+points_rotate[0]['x'], 'y':end_dim1+points_rotate[0]['y']}
+                    ])
+                else:
+                    text_rect.append([
+                        {'x':start_dim1+points_rotate[0]['x'], 'y':start_dim2+points_rotate[0]['y']},
+                        {'x':end_dim1+points_rotate[0]['x'],'y':start_dim2+points_rotate[0]['y']},
+                        {'x':end_dim1+points_rotate[0]['x'],'y':end_dim2+points_rotate[0]['y']},
+                        {'x':start_dim1+points_rotate[0]['x'], 'y':end_dim2+points_rotate[0]['y']}
+                    ])
+
             # add rect
             polygon_add = []
             for rect in text_rect:
@@ -1845,13 +2006,26 @@ class TargetView(View):
     def add_labeling_polygon(self, request):
         try:
             pointsStr = request.GET.get("points")
+            points_rotate = json.loads(pointsStr.encode("utf-8"))
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)  # 被标注的图片
+            delete_info = []
+            user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
+            rect_region = TargetView.get_rect_info(points_rotate[0], points_rotate[2])
+            for polygon in user_polygon_set:
+                points = json.loads(polygon.polygon)
+                rect_candidate = TargetView.get_rect_info(points[0], points[2])
+                intersection = TargetView.cal_intersection_ratio(rect_region, rect_candidate)
+                intersection_ratio = intersection['ratio_b']
+                if intersection_ratio > 0.75:
+                    delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
+                    polygon.delete()
+
             polygon = OcrLabelingPolygon(pdfImage=image, polygon=pointsStr.encode("utf-8"), create_user_id=str(request.user))
             polygon.save()
             polygon_id = polygon.id
             polygon_create_user_id = polygon.create_user_id
-            context = {"polygon_id":polygon_id,"polygon_create_user_id":polygon_create_user_id}
+            context = {"polygon_id":polygon_id,"polygon_create_user_id":polygon_create_user_id, "delete_info":delete_info}
             return HttpResponse(json.dumps(context))
         except Exception as e:
             print(e)
@@ -1928,6 +2102,38 @@ class TargetView(View):
             print(e)
             return HttpResponse("err")
 
+    # 删除指定IP的多边形标注
+    @method_decorator(login_required)
+    def delete_polygon_by_id(self, request):
+        try:
+            polygon_id = request.GET.get("polygon_id")
+            item_delete = OcrLabelingPolygon.objects.get(id=polygon_id)
+            if str(request.user)!=item_delete.create_user_id:
+                return HttpResponse("ploygon不属于当前用户")
+            else:
+                item_delete.delete()
+                return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse(e)
+
+
+    # 修改指定IP的多边形标注
+    @method_decorator(login_required)
+    def alter_polygon_by_id(self, request):
+        try:
+            polygon_id = request.GET.get("polygon_id")
+            points = request.GET.get("points")
+            item_alter = OcrLabelingPolygon.objects.get(id=polygon_id)
+            if str(request.user)!=item_alter.create_user_id:
+                return HttpResponse("ploygon不属于当前用户")
+            else:
+                item_alter.polygon = points.encode("utf-8")
+                item_alter.save()
+                return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse(e)
 
     # rotate degree reset
     @method_decorator(login_required)
@@ -1945,7 +2151,65 @@ class TargetView(View):
             print(e)
             return HttpResponse("err")
 
+    # entropy threshold reset
+    @method_decorator(login_required)
+    def entropy_thr_reset(self, request):
+        try:
+            image_id = request.GET.get("image_id")
+            entropy_thr = request.GET.get("entropy_thr")
+            image = PDFImage.objects.get(id=image_id)  # 被标注的图片
+            image_user_conf, isCreate = image.imageuserconf_set.get_or_create(create_user_id=str(request.user), defaults={"entropy_thr":entropy_thr})
+            if isCreate==False:
+                image_user_conf.entropy_thr=entropy_thr
+                image_user_conf.save()
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse(e)
     
+    # 设置文字方向
+    @method_decorator(login_required)
+    def direction_select(self, request):
+        try:
+            direction = request.GET.get("direction")
+            image_user_conf_id = request.GET.get("image_user_conf_id")
+            image_user_conf = ImageUserConf.objects.get(id=image_user_conf_id)  # 被标注的图片
+            if direction == "vertical":
+                image_user_conf.is_vertical = True
+            else:
+                image_user_conf.is_vertical = False
+            image_user_conf.save()
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+    # PDF设置文字方向
+    @method_decorator(login_required)
+    def direction_pdf(self, request):
+        try:
+            is_vertical = request.GET.get("is_vertical")
+            ocr_pdf_id = request.GET.get("ocr_pdf_id")
+            ocr_pdf = OcrPDF.objects.get(id=ocr_pdf_id)
+            if ocr_pdf.create_user_id != str(request.user):
+                conf = ocr_pdf.ocrassist_set.get(assist_user_name=str(request.user))
+                if is_vertical == "true":
+                    conf.is_vertical = True
+                else:
+                    conf.is_vertical = False
+                conf.save()
+            else:
+                if is_vertical == "true":
+                    ocr_pdf.is_vertical = True
+                else:
+                    ocr_pdf.is_vertical = False
+                ocr_pdf.save()
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
     @method_decorator(login_required)
     def rotate_degree_evaluate(self, request):
         try:
@@ -1957,12 +2221,13 @@ class TargetView(View):
             width, height = gray_image.size
             gray_mean = (1-np.asarray(gray_image)/255.0).mean()
             background_modification = max(0,0.16-gray_mean)
+            is_vertical = image.imageuserconf_set.get(create_user_id=str(request.user)).is_vertical
 
             project_entropy_list = list()
             for rotate_degree in range(-50,50,5):
                 rotate_degree_true = rotate_degree/10.0
                 image_rotated = gray_image.rotate(rotate_degree_true)
-                rotate_rad = rotate_degree_true/180.0*math.pi
+                rotate_rad = 5/180.0*math.pi
                 d_w = 0.5*height*abs(math.tan(rotate_rad))
                 d_h = 0.5*width*abs(math.tan(rotate_rad))
                 box = (d_w, d_h, width-d_w, height-d_h)
@@ -1970,7 +2235,10 @@ class TargetView(View):
                 width_crop, height_crop = region_select.size
                 array_image = 1-np.asarray(region_select)/255.0 + background_modification
                 # get projection
-                projection = array_image.sum(axis=0)
+                if is_vertical is True:
+                    projection = array_image.sum(axis=0)
+                else:
+                    projection = array_image.sum(axis=1)
                 # get entropy
                 probability = projection/projection.sum()
                 entropy_src = -probability*np.log(probability)

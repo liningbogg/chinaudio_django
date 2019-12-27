@@ -139,6 +139,8 @@ body,div
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
+    overflow-y:auto;
+    overflow-x:auto;
 }
 
 
@@ -161,7 +163,7 @@ body,div
     float:left;
     width:99.5%;
     top:0%;
-    height:45%;
+    height:35%;
     font-size:1rem;
     border-color:blue;
     border-width:0.05rem;

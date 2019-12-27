@@ -35,6 +35,7 @@
                         <th>当前帧</th>
                         <th>参与用户数</th>
                         <th>操作选项</th>
+                        <th>操作选项</th>
                         <th>类型备注</th>
                     </tr>
                 </thead>
@@ -54,6 +55,9 @@
                     </td>
                     <td style="color:blue;font-size:1rem;line-height:2">
                         <a href="../ocr_labeling/?id={{ocrPDF.id}}">标注</a>
+                    </td>
+                    <td style="color:blue;font-size:1rem;line-height:2">
+                        <a href="../delete_ocr_labeling/?class_type=ocr_pdf&id={{ocrPDF.id}}">删除</a>
                     </td>
                     <td>
                         自创样本
@@ -75,6 +79,9 @@
                     </td>
                     <td style="color:blue;font-size:1rem;line-height:2">
                         <a href="../ocr_labeling/?id={{ocr_assist.ocrPDF.id}}">协助标注</a>
+                    </td>
+                    <td style="color:blue;font-size:1rem;line-height:2">
+                        <a href="../delete_ocr_labeling/?class_type=ocr_assist&id={{ocr_assist.id}}">删除</a>
                     </td>
                     <td>
                         协助:{{ocr_assist.create_user_id}}
