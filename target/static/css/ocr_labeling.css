@@ -157,6 +157,18 @@ body,div
     border-style:solid;
 }
 
+.image_user_conf
+{
+    position:relative;
+    float:left;
+    width:99.5%;
+    top:0%;
+    height:5%;
+    font-size:1rem;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
+}
 .projection
 {
     position:relative;

@@ -261,7 +261,8 @@ class ImageUserConf(BaseModel):
     rotate_degree = models.FloatField(default=0,null=False)
     is_vertical = models.BooleanField(default=False)  # 文字排列方向
     entropy_thr = models.FloatField(default=0.9,null=False)
-    projection_thr = models.FloatField(default=0.35,null=False)
+    projection_thr_strict = models.FloatField(default=0.6,null=False)
+    projection_thr_easing = models.FloatField(default=0.1,null=False)
 
     class Meta:
         unique_together = ["image", "create_user_id"]

@@ -473,8 +473,8 @@ function merge_labeling(image_id, rotate_points, gFeatureLayer, gFetureStyle, cu
                 }
                 let polygon_add=merge_labeling_info.polygon_add;
                 if(polygon_add==null){
-                    let log_message="融合得到0个标注框。";
-                    add_log(log_message,"warning"); 
+                    let log_warning ="融合得到0个标注框。";
+                    add_log(log_warning,"warning"); 
                 }else{
                     // 显示新加标注框
                     let polygon_points = JSON.parse(polygon_add['points']);
@@ -485,6 +485,9 @@ function merge_labeling(image_id, rotate_points, gFeatureLayer, gFetureStyle, cu
                     //map it into feature layer
                     polygon_map = img2gdbox_map(polygon_rotated, tar_width,tar_height, ori_width, ori_height);
                     add_polygon_disp(gFeatureLayer, gFetureStyle, polygon_map, polygon_id, polygon_add['create_user_id']);
+                    let log_message = "融合ID:"+polygon_id;
+                    add_log(log_message,"message"); 
+
                 }
 
             }

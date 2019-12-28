@@ -1648,7 +1648,7 @@ class TargetView(View):
                         "points":str(polygon.polygon,'utf-8')
                     }
                 )
-            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr":0.35})
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr_strict":0.6,"projection_thr_easing":0.1})
             context={
                 "image_id":ocrimage.id,
                 "title":ocrpdf.title,
@@ -1661,7 +1661,8 @@ class TargetView(View):
                 "current_rotate":image_user_conf.rotate_degree, 
                 "is_vertical":json.dumps(image_user_conf.is_vertical), 
                 "entropy_thr":image_user_conf.entropy_thr,
-                "projection_thr":image_user_conf.projection_thr,
+                "projection_thr_strict":image_user_conf.projection_thr_strict,
+                "projection_thr_easing":image_user_conf.projection_thr_easing,
                 "image_user_conf_id":image_user_conf.id
             }
             return render(request, 'ocr_labeling.html', context)
@@ -1780,7 +1781,30 @@ class TargetView(View):
         except Exception as e:
             print(e)
             return HttpResponse("err")
-            
+
+    # calculate intervals of a line
+    @staticmethod
+    def cal_interval(entropy,entropy_thr, projection, projection_thr_strict, projection_thr_easing):
+        text_interval = []
+        has_head = False
+        start_pos = []  
+        stop_pos = []
+        interval_head_tmp = -1
+        for i,val in enumerate(entropy):
+            if has_head == False:
+                if val < entropy_thr or projection[i]>projection_thr_strict:
+                    has_head = True
+                    start_pos.append(i)
+                    interval_head_tmp = i
+            else:
+                if (val > entropy_thr and projection[i]<projection_thr_strict):
+                    has_head = False
+                    stop_pos.append(i)
+                    text_interval.append({"start":interval_head_tmp,"end":i})
+        if has_head is True:
+            text_interval.append({"start":interval_head_tmp,"end":len(entropy)-1})
+            stop_pos.append(len(entropy)-1)
+        return {"text_interval":text_interval, "start_pos":start_pos, "stop_pos":stop_pos}   
 
     @method_decorator(login_required)
     def rough_labeling(self, request):
@@ -1856,30 +1880,15 @@ class TargetView(View):
             entropy = maxminnormalization(entropy,0,1)
             entropy_diff = list(np.diff(entropy))
             entropy_diff.insert(0,0)
-            has_head = False
             entropy_thr = 0.9  # 熵阈
-            text_interval = []
-            start_pos = []  
-            stop_pos = []
-            interval_head_tmp = -1
-            for i,val in enumerate(entropy):
-                if has_head == False:
-                    if val < entropy_thr:
-                        has_head = True
-                        start_pos.append(i)
-                        interval_head_tmp = i
-                else:
-                    if val > entropy_thr:
-                        has_head = False
-                        stop_pos.append(i)
-                        text_interval.append({"start":interval_head_tmp,"end":i})
-            if has_head is True:
-                text_interval.append({"start":interval_head_tmp,"end":len(entropy)-1})
-                stop_pos.append(len(entropy)-1)
+            projection_thr_strict = 0.6 # 投影阈
+            projection_thr_easing = 0.01 # 宽松投影阈
+            # 分割第一维
+            interval_dim1 = TargetView.cal_interval(entropy, entropy_thr, projection, projection_thr_strict, projection_thr_easing)
             # 文字融合暂缺
-            text_rect = []
             # 文字第二维定位
-            for item in text_interval:
+            text_rect = []
+            for item in interval_dim1["text_interval"]:
                 start_dim1 = item["start"]
                 end_dim1 = item["end"]
                 if is_vertical is True:
@@ -1899,55 +1908,35 @@ class TargetView(View):
                     entropy_src_dim2 = -probability_dim2*np.log(probability_dim2)
                     entropy_dim2 = entropy_src_dim2.sum(axis=1)
                 entropy_dim2 = maxminnormalization(entropy_dim2,0,1)
-                # left or top
-                start_dim2=0
-                entropy_thr_dim2 = 0.9
-                projection_thr_dim2 = 0.35
-                if is_vertical is True:
-                    for i in range(width):
-                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
-                            start_dim2 = i
-                            break
-                else:
-                    for i in range(height):
-                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
-                            start_dim2 = i
-                            break
 
-
-                # right or bottom
-                if is_vertical is True:
-                    end_dim2=width-1
-                    for i in range(width-1,-1,-1):
-                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
-                            end_dim2 = i
-                            break
-                else:
-                    end_dim2=height-1
-                    for i in range(height-1,-1,-1):
-                        if(entropy_dim2[i]<entropy_thr_dim2 or projection_dim2[i]>projection_thr_dim2):
-                            end_dim2 = i
-                            break
-                    
-                end_dim2 = end_dim2+1
                 area_thr = 16
-                area = abs(end_dim2-start_dim2) * abs(end_dim1-start_dim1)
-                if area < area_thr or area>1000000:
-                    continue
+                interval_dim2 = TargetView.cal_interval(entropy_dim2, entropy_thr, projection_dim2, projection_thr_strict, projection_thr_easing)
                 if is_vertical is True:
-                    text_rect.append([
-                        {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']},
-                        {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']},
-                        {'x':end_dim2+points_rotate[0]['x'],'y':end_dim1+points_rotate[0]['y']},
-                        {'x':start_dim2+points_rotate[0]['x'], 'y':end_dim1+points_rotate[0]['y']}
-                    ])
+                    for item_dim2 in interval_dim2["text_interval"]:
+                        start_dim2 = item_dim2["start"]
+                        end_dim2 = item_dim2["end"]
+                        area = abs(end_dim2-start_dim2) * abs(end_dim1-start_dim1)
+                        if area < area_thr or area>1000000:
+                            continue
+                        text_rect.append([
+                            {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']},
+                            {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']},
+                            {'x':end_dim2+points_rotate[0]['x'],'y':end_dim1+points_rotate[0]['y']},
+                            {'x':start_dim2+points_rotate[0]['x'], 'y':end_dim1+points_rotate[0]['y']}
+                        ])
                 else:
-                    text_rect.append([
-                        {'x':start_dim1+points_rotate[0]['x'], 'y':start_dim2+points_rotate[0]['y']},
-                        {'x':end_dim1+points_rotate[0]['x'],'y':start_dim2+points_rotate[0]['y']},
-                        {'x':end_dim1+points_rotate[0]['x'],'y':end_dim2+points_rotate[0]['y']},
-                        {'x':start_dim1+points_rotate[0]['x'], 'y':end_dim2+points_rotate[0]['y']}
-                    ])
+                    for item_dim2 in interval_dim2["text_interval"]:
+                        start_dim2 = item_dim2["start"]
+                        end_dim2 = item_dim2["end"]
+                        area = abs(end_dim2-start_dim2) * abs(end_dim1-start_dim1)
+                        if area < area_thr or area>1000000:
+                            continue
+                        text_rect.append([
+                            {'x':start_dim1+points_rotate[0]['x'], 'y':start_dim2+points_rotate[0]['y']},
+                            {'x':end_dim1+points_rotate[0]['x'],'y':start_dim2+points_rotate[0]['y']},
+                            {'x':end_dim1+points_rotate[0]['x'],'y':end_dim2+points_rotate[0]['y']},
+                            {'x':start_dim1+points_rotate[0]['x'], 'y':end_dim2+points_rotate[0]['y']}
+                         ])
 
             # add rect
             polygon_add = []
@@ -1970,9 +1959,9 @@ class TargetView(View):
                 "entropy_diff":entropy_diff, 
                 "gray_mean":float(gray_mean), 
                 # "array_image":array_image.tolist(),
-                "text_interval":text_interval,
-                "start_pos":start_pos,
-                "stop_pos":stop_pos,
+                "text_interval":interval_dim1["text_interval"],
+                "start_pos":interval_dim1["start_pos"],
+                "stop_pos":interval_dim1["stop_pos"],
                 "delete_info":delete_info,
                 "polygon_add":polygon_add,
                 "duration":duration
