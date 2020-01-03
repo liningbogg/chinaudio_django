@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>古琴音频分析数据库</title>
+    <link href="/static/css/target_index.css?time='+new Date().getTime()+'" rel="stylesheet" type="text/css" />
+    <script src="/static/js/target_index.js?time='+new Date().getTime()+'"></script>
+    <link rel="icon" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
+	<link rel="bookmark" href="/static/image/favicon.ico" mce_href=”/static/image/favicon.ico” type=”image/x-icon”>
+</head>
+<body>
+
+<div class="login" id="login" style="border-width:1px; border-color:blue; font-size:18px">
+    <a href="/web/index/">Home</a>
+    {% include "login_info_base.html" %}
+</div>
+<div class="main" id="main" style="border-width:1px; border-color:red; font-size:18px">
+    <div class="copy_from_others" id="copy_from_others">
+        古琴音色分析数据库
+            <a href="../copywaves">从其他用户复制wave</a>
+    </div>
+    <div class="add_waves" id="add_waves">
+        <form enctype="multipart/form-data" action="/addwaves/" method="POST">
+            {% csrf_token %}
+           <input type="file" name="upload_wave" multiple="multiple"/>
+            {% csrf_token %}
+           <input type="submit" value="上传"/>
+        </form>
+    </div>
+    <div class="process" id="process">
+        <table border="1" >
+            <thead>
+                <tr style="font-size:24px;line-height:1">
+                    <th>曲目</th>
+                    <th>时长</th>
+                    <th>帧数</th>
+                    <th>帧长</th>
+                    <th>完成程度</th>
+                    <th>标注样本</th>
+                </tr>
+            </thead>
+            {% for wave in waves %}
+            <tr>
+                <td style="color:blue;font-size:24px;line-height:2"><a href="../wave/?title={{wave.title}}">{{wave.title}}</a></td>
+                <td style="font-size:24px;line-height:2">{{wave.duration|floatformat:"2"}}</td>
+                <td style="font-size:24px;line-height:2">{{wave.frameNum}}</td>
+                <td style="font-size:24px;line-height:2">{{wave.nfft}}</td>
+                <td style='font-size:24px;line-height:2;'>{{wave.completion}}</td>
+                <td style="color:blue;font-size:24px;line-height:2"><a href="../labeling/?title={{wave.title}}">标注</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="tune_preset" id="tune_preset" >
+        <table border="1" id="tune_table">
+            <tr>
+                <td>tune_name</td><td>a4_hz</td><td>do</td><td>note1</td><td>note2</td><td>note3</td><td>note4</td>
+                <td>note5</td><td>note6</td><td>note7</td><td>opt1</td><td>opt2</td>
+            </tr>
+            {% for tune in tunes %}
+            <tr>
+                <td style="width:12%"><input type="text" value='{{tune.tune_name}}' /></td>
+                <td><input type="number" value='{{tune.a4_hz|floatformat:"2"}}' /></td>
+                <td><input type="text" value='{{tune.do}}' /></td>
+                <td><input type="text" value='{{tune.note1}}' /></td>
+                <td><input type="text" value='{{tune.note2}}' /></td>
+                <td><input type="text" value='{{tune.note3}}' /></td>
+                <td><input type="text" value='{{tune.note4}}' /></td>
+                <td><input type="text" value='{{tune.note5}}' /></td>
+                <td><input type="text" value='{{tune.note6}}' /></td>
+                <td><input type="text" value='{{tune.note7}}' /></td>
+                <td><input type="button" value="reset" onclick="add_tune({{ forloop.counter}})"/></td>
+                <td><input type="button" value="delete" /></td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td><input type="text" /></td>
+                <td><input type="number" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="text" /></td>
+                <td><input type="button" value="add" onclick="add_tune(-1)" /></td>
+            </tr>
+        </table>
+    </div>
+</div>
+</body>
+</html>

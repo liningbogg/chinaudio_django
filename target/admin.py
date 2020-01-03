@@ -8,7 +8,7 @@ from target.models import Wave
 from target.models import Stft
 from target.models import LabelingAlgorithmsConf
 from target.models import Tune
-from target.models import TargetUser
+#from target.models import TargetUser
 from target.models import OcrPDF
 from target.models import PDFImage
 
@@ -21,7 +21,7 @@ admin.site.register(Log)
 admin.site.register(Stft)
 admin.site.register(LabelingAlgorithmsConf)
 admin.site.register(Tune)
-admin.site.register(TargetUser)
+#admin.site.register(TargetUser)
 admin.site.register(OcrPDF)
 admin.site.register(PDFImage)
 

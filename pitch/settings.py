@@ -30,18 +30,20 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'target',
     'captcha',
+    'web',
+    'target',
+    'ocr',
 ]
 
-AUTH_USER_MODEL = "target.TargetUser"
-
+AUTH_USER_MODEL = "web.PitchUser"
+LOGIN_URL = '/web/accounts/login/'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -53,12 +55,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'pitch.urls'
-ROOT_URLCONF = 'target.urls'
+# ROOT_URLCONF = 'web.urls'
+# ROOT_URLCONF = 'target.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'target/templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,12 +79,6 @@ WSGI_APPLICATION = 'pitch.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-'''DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'clip.db'),
-    }
-}'''
 DATABASES = {
     'default':{
         'ENGINE': 'django.db.backends.mysql',
@@ -140,7 +137,7 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 1024000000
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
-    '../static/',
+    '../../static',
     '/home/liningbo/waveFiles/'
 ]
 
