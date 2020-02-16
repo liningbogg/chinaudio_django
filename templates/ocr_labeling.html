@@ -16,13 +16,14 @@
     </script>
     <body >
         <div class="login" id="login" >
-            <a href="../index/">Home</a>
-            <a href="../digital/">Sub</a>
+            <a href="/ocr/index/">Home</a>
             {% include "login_info_base.html" %}
         </div>
         <div class="main" id="main" >
             <div class="title" id="title">
                 ocr标注数据库:{{title}}
+                &nbsp&nbsp
+                <a href="/ocr/content_labeling/" style="font-style:italic;color:green">文字内容标注</a>
             </div>
             <div class="image_info" id="image_info">
             </div>
@@ -265,7 +266,7 @@
                             let polygon_update = rough_labeling({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
                             break;
                         case "merge_select":
-                            let polygon_merged = merge_labeling({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
+                            let polygon_merged = merge_labeling({{image_id}}, select_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
                             break;
                         case "clear_select":
                             let labeling_delete = delete_region({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"));
@@ -330,6 +331,35 @@
                         delete_polygon_by_id(cFeature.id, gdboxConfigure.get_layer("{{request.user}}"), this.info.featureId, gMap);
                     });
                 });
+                function onDocKeydown(e) {
+                    e = e || window.event;
+                    if (e.ctrlKey && e.keyCode==70) {　　　//快捷键 ctrl +F
+                        labeling_mode = "manual_select" ;
+                        var model_ratio = document.getElementById("manual_select");
+                        model_ratio.checked=true;
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==65) {　　　//快捷键 ctrl +A
+                        labeling_mode = "recommend_select" ;
+                        var model_ratio = document.getElementById("recommend_select");
+                        model_ratio.checked=true;
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==67) {　　　//快捷键 ctrl +C
+                        labeling_mode = "merge_select" ;
+                        var model_ratio = document.getElementById("merge_select");
+                        model_ratio.checked=true;
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==68) {　　　//快捷键 ctrl +D
+                        labeling_mode = "clear_select" 
+                        var model_ratio = document.getElementById("clear_select");
+                        model_ratio.checked=true;
+                        return false;
+                    }
+                }
+                document.onkeydown = onDocKeydown;
+
                 window.onresize = function () {
                     gMap && gMap.resize();
                 };

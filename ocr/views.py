@@ -634,7 +634,7 @@ class OcrView(View):
         try:
             delete_info = None
             polygon_add = None
-
+            tip = []
             points_rotate_str = request.GET.get("rotate_points_str")
             points_rotate = json.loads(points_rotate_str)
             image_id = request.GET.get("image_id")
@@ -663,7 +663,7 @@ class OcrView(View):
                     "image_id":image_id,
                     "create_user_id":str(request.user),
                     "polygon_id":polygon.id,
-                    "points":str(polygon.polygon,"utf-8")
+                    "points":str(polygon.polygon,"utf-8"),
                 }
             
             merge_labeling_info = {

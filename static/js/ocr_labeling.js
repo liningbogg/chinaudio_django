@@ -455,9 +455,9 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end, slo
 }
 
 /*labeling merge*/
-function merge_labeling(image_id, rotate_points, gFeatureLayer, gFetureStyle, current_rotate, ori_width, ori_height, tar_width, tar_height){
+function merge_labeling(image_id, merge_region, gFeatureLayer, gFetureStyle, current_rotate, ori_width, ori_height, tar_width, tar_height){
     let xhr = new XMLHttpRequest();
-    rotate_points_str = JSON.stringify(rotate_points);/*maping then rotated*/
+    rotate_points_str = JSON.stringify(merge_region);/*maping*/
     xhr.open('GET', 'merge_labeling/?'+"image_id="+image_id+"&rotate_points_str="+rotate_points_str, true);
     xhr.send(null)
     xhr.onreadystatechange = function(){

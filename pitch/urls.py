@@ -16,11 +16,13 @@ Including another URLconf
 from django.urls import path
 from django.conf.urls import url
 from django.conf.urls import include
+from django.contrib import admin
 from web.views import WebView
 web_view = WebView()
 
 urlpatterns = [
     url('^$', web_view.index),
+    path('admin/', admin.site.urls),
     path('web/', include('web.urls')),
     path('target/', include('target.urls')),
     path('ocr/', include('ocr.urls')),

@@ -90,8 +90,13 @@ class OcrLabelingPolygon(BaseModel):
     ocr 的多边形标注数据
     pdfImage: 所属图片
     polygon: 标注多边形
+    edit_count: 修正次数
+    labeling_count: 标注文本内容的次数
+    labeling_content: 标注文本内容,是一个dict 偏旁部首+出现次数
     """
     pdfImage = models.ForeignKey('PDFImage', on_delete=models.CASCADE)  # 对应的PDF IMAGE
     polygon = models.BinaryField(null=True)  # json编码
-    is_fine = models.BooleanField(default=False)
+    edit_count = models.IntegerField(default=0,null=False)
+    labeling_count = models.IntegerField(default=0,null=False)
+    labeling_content = models.BinaryField(null=True)
 
