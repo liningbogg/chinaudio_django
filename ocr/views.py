@@ -16,6 +16,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.contrib import *
 from ocr.models import *
+import copy
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -43,7 +44,18 @@ class OcrView(View):
         assist_request_in_set = OcrAssistRequest.objects.filter(owner=user_id,status="pushed")
         assist_request_out_set = OcrAssistRequest.objects.filter(create_user_id=user_id)
         ocr_assist_set = OcrAssist.objects.filter(assist_user_name=user_id, is_deleted=False)
-        context = {'ocrPDFList':ocrPDFList,"assist_request_in_set":assist_request_in_set,"assist_request_out_set":assist_request_out_set,"ocr_assist_set":ocr_assist_set}
+        statistic = []
+        for ocrpdf in ocrPDFList:
+            count_all = 0
+            count_user = 0
+            image_set = ocrpdf.pdfimage_set.all()
+            for image in image_set:
+                count_all = count_all+ image.ocrlabelingpolygon_set.all().count()
+                count_user = count_user+  image.ocrlabelingpolygon_set.filter(create_user_id =user_id).count()
+            data = {"id":ocrpdf.id,"title":ocrpdf.title,"frame_num":ocrpdf.frame_num,"current_frame":ocrpdf.current_frame,"assist_num":ocrpdf.assist_num ,"count_all":count_all,"count_user":count_user}
+            statistic.append(data)
+
+        context = {"assist_request_in_set":assist_request_in_set,"assist_request_out_set":assist_request_out_set,"ocr_assist_set":ocr_assist_set,"statistic":statistic}
         return render(request,'ocr_index.html',context)
 
     @classmethod
@@ -59,7 +71,7 @@ class OcrView(View):
             user_id = str(request.user)
             pdfs_set = OcrPDF.objects.filter(~Q(create_user_id=user_id))
             for pdf in pdfs_set:
-                pdfs_dict[pdf.id]={"title":pdf.title,"create_user_id":pdf.create_user_id,"assist_num":pdf.assist_num}
+                pdfs_dict[pdf.id]={"title":str(pdf.title),"create_user_id":pdf.create_user_id,"assist_num":pdf.assist_num}
             assist_set = OcrAssist.objects.filter(create_user_id=user_id)
             for assist in assist_set:
                 if assist.ocrPDF in pdfs_dict:
@@ -284,7 +296,8 @@ class OcrView(View):
                 "entropy_thr":image_user_conf.entropy_thr,
                 "projection_thr_strict":image_user_conf.projection_thr_strict,
                 "projection_thr_easing":image_user_conf.projection_thr_easing,
-                "image_user_conf_id":image_user_conf.id
+                "image_user_conf_id":image_user_conf.id,
+                "filter_size":image_user_conf.filter_size
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
@@ -338,6 +351,25 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return HttpResponse("err")
+
+
+    # 设置filter_size
+    @method_decorator(login_required)
+    def set_filter_size(self, request):
+        try:
+            filter_size = int(request.GET.get("filter_size"))
+            image_user_conf_id = request.GET.get("image_user_conf_id")
+            if filter_size>0 and filter_size<10240:
+                image_user_conf = ImageUserConf.objects.get(id=image_user_conf_id)  # 被标注的图片
+                image_user_conf.filter_size = filter_size
+                image_user_conf.save()
+                return HttpResponse("ok")
+            else:
+                return HttpResponse("err")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+            
 
     @method_decorator(login_required)
     def ocr_move_page(self, request):
@@ -639,10 +671,10 @@ class OcrView(View):
             points_rotate = json.loads(points_rotate_str)
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)
+            delete_info = []
             conf = image.imageuserconf_set.get(create_user_id=str(request.user))
             w = image.width
             h = image.height
-            delete_info = []
             user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
             rect_region = OcrView.get_rect_info(points_rotate[0], points_rotate[2])
             for polygon in user_polygon_set:
@@ -652,7 +684,7 @@ class OcrView(View):
                 intersection = OcrView.cal_intersection_ratio(rect_region, rect_candidate)
                 intersection_ratio = intersection['ratio_b']
                 if intersection_ratio > 0.75:
-                    delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
+                    delete_info.append({'polygon_id':polygon.id, 'rect_info':copy.deepcopy(rect_candidate)})
                     polygon.delete()
             if delete_info != []:
                 rect_merged = OcrView.merge_rects(delete_info)
@@ -665,7 +697,6 @@ class OcrView(View):
                     "polygon_id":polygon.id,
                     "points":str(polygon.polygon,"utf-8"),
                 }
-            
             merge_labeling_info = {
                 "delete_info":delete_info,
                 "polygon_add":polygon_add,
@@ -693,6 +724,7 @@ class OcrView(View):
             rect_region = OcrView.get_rect_info(points_rotate[0], points_rotate[2])
             h_w_ratio = abs(rect_region['h']*1.0/rect_region['w'])  # 高宽比
             is_vertical = True
+            filter_size = conf.filter_size
             if h_w_ratio>2:
                 is_vertical = True
             elif h_w_ratio<0.5:
@@ -777,7 +809,7 @@ class OcrView(View):
                     entropy_dim2 = entropy_src_dim2.sum(axis=1)
                 entropy_dim2 = maxminnormalization(entropy_dim2,0,1)
 
-                area_thr = 16
+                area_thr = filter_size
                 interval_dim2 = OcrView.cal_interval(entropy_dim2, entropy_thr, projection_dim2, projection_thr_strict, projection_thr_easing)
                 if is_vertical is True:
                     for item_dim2 in interval_dim2["text_interval"]:
@@ -786,12 +818,29 @@ class OcrView(View):
                         area = abs(end_dim2-start_dim2) * abs(end_dim1-start_dim1)
                         if area < area_thr or area>1000000:
                             continue
-                        text_rect.append([
-                            {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']},
-                            {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']},
-                            {'x':end_dim2+points_rotate[0]['x'],'y':end_dim1+points_rotate[0]['y']},
-                            {'x':start_dim2+points_rotate[0]['x'], 'y':end_dim1+points_rotate[0]['y']}
-                        ])
+                        text_slice3 = array_image[start_dim1:end_dim1, start_dim2:end_dim2]
+                        height3, width3 = text_slice3.shape
+                        projection3 = text_slice3.sum(axis=1)/abs(end_dim2-start_dim2)  # 第三维投影
+                        projection3 = projection3*2
+                        probability3 =  text_slice3/text_slice3.sum(axis=1, keepdims=True)  # 投影归一化
+                        entropy_src3 = -probability3*np.log(probability3)  # 熵计算
+                        entropy3 = entropy_src3.sum(axis=1)
+                        entropy3 = maxminnormalization(entropy3,0,1)
+                        entropy3_diff = list(np.diff(entropy3))
+                        entropy3_diff.insert(0, 0)
+                        interval_dim3 = OcrView.cal_interval(entropy3, 0.9, projection3, projection_thr_strict, projection_thr_easing)
+                        for item_dim3 in interval_dim3["text_interval"]:
+                            start_dim3 = item_dim3["start"]
+                            end_dim3 = item_dim3["end"]
+                            area3 = abs(end_dim3-start_dim3)*abs(end_dim2-start_dim2)
+                            if area3 <1:
+                                continue
+                            text_rect.append([
+                                {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']+start_dim3},
+                                {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']+start_dim3},
+                                {'x':end_dim2+points_rotate[0]['x'],'y':start_dim1+points_rotate[0]['y']+end_dim3},
+                                {'x':start_dim2+points_rotate[0]['x'], 'y':start_dim1+points_rotate[0]['y']+end_dim3}
+                            ])
                 else:
                     for item_dim2 in interval_dim2["text_interval"]:
                         start_dim2 = item_dim2["start"]

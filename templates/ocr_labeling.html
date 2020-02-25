@@ -90,14 +90,18 @@
                     </div>
                     <div class="page_image_rotate" id="page_image_rotate" style="height:6.25%">
                         <input type="number" id="rotate_degree" min="-5" max="5" value={{current_rotate}} step="0.5" style="height:89%;font-size:1.25rem;width:15%"/>
-                        <input type="button" id="rotate_degree_reset" onclick="rotate_degree_reset({{image_id}})" value="重设旋转角度" style="height:99%;font-size:1.25rem;width:18%"/>
-                        <input type="button" id="rotate_degree_evaluate" onclick="rotate_degree_evaluate({{image_id}})" value="倾斜评估" style="height:99%;font-size:1.25rem;width:19%"/>
+                        <input type="button" id="rotate_degree_reset" onclick="rotate_degree_reset({{image_id}})" value="旋转" style="height:99%;font-size:1.25rem;width:18%"/>
+                        <input type="button" id="rotate_degree_evaluate" onclick="rotate_degree_evaluate({{image_id}})" value="评估" style="height:99%;font-size:1.25rem;width:19%"/>
                         <select id="document_direction" value="vertical" style="width:23%;height:99%;font-size:1.25rem"  onchange="direction_select(this.value,{{image_user_conf_id}})">
                             <option value="vertical">竖直</option>
                             <option value="horizontal">水平</option>
                         </select>
                         <input type="button" id="direction_apply_pdf" onclick="direction_pdf({{ocr_pdf_id}},{{is_vertical}})" value="全书应用" style="height:99%;font-size:1.25rem;width:19%"/>
 
+                    </div>
+                    <div class="image_user_conf" id="image_user_conf" style="height:6.25%;font-size:1.25rem">
+                        filter_size
+                        <input type="number" id="filter_size" min="1" max="10240" value={{filter_size}} step="1" onchange="set_filter_size(this.value,{{image_user_conf_id}})" style="height:89%;font-size:1.25rem;width:15%" />
                     </div>
                     <div class="projection" id="projection" >
                     </div>
@@ -216,6 +220,7 @@
                 // 显示尺度信息
                 document.getElementById("image_info").innerHTML
                     ="frame_id:"+{{frame_id}}
+                    +"&nbsp&nbsp frame_num:"+{{frame_num}}
                     +"&nbsp&nbsp image_id:"+{{image_id}}
                     +"&nbsp&nbsp ori_width:"+{{ori_width}}
                     +"&nbsp&nbsp ori_height:"+{{ori_height}}
@@ -355,6 +360,12 @@
                         labeling_mode = "clear_select" 
                         var model_ratio = document.getElementById("clear_select");
                         model_ratio.checked=true;
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==83) {　　　//快捷键 ctrl +S
+                        tip = document.getElementById("page_image_tool_tip");
+                        tip.innerHTML="<font color=\"blue\">w:"+"你错误的按下了S键"+"<br></font>"+tip.innerHTML;
+
                         return false;
                     }
                 }

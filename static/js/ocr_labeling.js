@@ -51,7 +51,10 @@ function move_page(ocr_pdf, page_apointed){
 function move2next(ocr_pdf, frame_id, frame_num){
     page_apointed = frame_id+1;
     if(page_apointed<frame_num){
-       move_page(ocr_pdf,page_apointed); 
+        move_page(ocr_pdf,page_apointed); 
+    }else{
+        let log_message="已经是最后一页";
+        add_log(log_message,"warning");
     }
 }
 
@@ -60,14 +63,22 @@ function move2prior(ocr_pdf, frame_id, frame_num){
     page_apointed = frame_id-1;
     if(page_apointed>-1){
        move_page(ocr_pdf,page_apointed); 
+    }else{
+        let log_message="已经是第一页";
+        add_log(log_message,"warning");
     }
+
 }
 
 /*跳转*/
 function jump_page(ocr_pdf,frame_num){
+    let frame_max = frame_num -1;
     page_apointed = document.getElementById("input_page_id").value;
     if(page_apointed>-1 && page_apointed<frame_num){
         move_page(ocr_pdf,page_apointed);
+    }else{
+        let log_message="合法页码范围:0~"+frame_max+"。你的输入是:"+page_apointed;
+        add_log(log_message,"warning");
     }
 }
 
@@ -354,6 +365,22 @@ function direction_select(direction, image_user_conf_id){
     }
 }
 
+/*重设过滤像素大小*/
+function set_filter_size(filter_size, image_user_conf_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', 'set_filter_size/?'+"filter_size="+filter_size+"&image_user_conf_id="+image_user_conf_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            if(context == "err"){
+                add_log("重设过滤尺寸出错","err");
+            }else{
+                add_log("重设过滤尺寸为 "+filter_size,"message");
+            }
+        }
+    }
+}
 
 /*重设文字方向_pdf*/
 function direction_pdf(ocr_pdf_id, is_vertical){

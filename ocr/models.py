@@ -78,6 +78,7 @@ class ImageUserConf(BaseModel):
     image = models.ForeignKey('PDFImage', on_delete=models.CASCADE)
     rotate_degree = models.FloatField(default=0,null=False)
     is_vertical = models.BooleanField(default=False)  # 文字排列方向
+    filter_size = models.IntegerField(default=16, null=False)
     entropy_thr = models.FloatField(default=0.9,null=False)
     projection_thr_strict = models.FloatField(default=0.6,null=False)
     projection_thr_easing = models.FloatField(default=0.1,null=False)

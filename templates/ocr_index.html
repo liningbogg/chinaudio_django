@@ -33,13 +33,15 @@
                         <th>文档</th>
                         <th>帧数</th>
                         <th>当前帧</th>
+                        <th>样本总数</th>
+                        <th>用户样本总数</th>
                         <th>参与用户数</th>
                         <th>操作选项</th>
                         <!--<th>操作选项</th>-->
                         <th>类型备注</th>
                     </tr>
                 </thead>
-                {% for ocrPDF in ocrPDFList %}
+                {% for ocrPDF in statistic %}
                 <tr>
                     <td style="color:blue;font-size:1rem;line-height:2">
                         {{ocrPDF.title}}
@@ -49,6 +51,12 @@
                     </td>
                     <td style="font-size:1rem;line-height:2">
                         {{ocrPDF.current_frame}}
+                    </td>
+                    <td style="font-size:1rem;line-height:2">
+                        {{ocrPDF.count_all}}
+                    </td>
+                    <td style="font-size:1rem;line-height:2;color:purple;">
+                        {{ocrPDF.count_user}}
                     </td>
                     <td>
                         {{ocrPDF.assist_num|add:1}}
@@ -144,6 +152,9 @@
             <a href="/ocr/ocrPDF_assist_request">协助其他用户标注</a>
         </div>
     </div>
+    <script>
+        console.log({{statistic|safe}});
+    </script>
 </body>
 <html>
 

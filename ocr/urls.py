@@ -18,6 +18,7 @@ urlpatterns = [
     path('labeling/', ocr_view.labeling),
     path('labeling/get_image/', ocr_view.ocr_get_image),
     path('labeling/direction_select/', ocr_view.direction_select),
+    path('labeling/set_filter_size/', ocr_view.set_filter_size),
     path('labeling/move_page/', ocr_view.ocr_move_page),
     path('labeling/direction_pdf/', ocr_view.direction_pdf),
     path('labeling/rotate_degree_evaluate/', ocr_view.rotate_degree_evaluate),
