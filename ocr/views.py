@@ -848,12 +848,30 @@ class OcrView(View):
                         area = abs(end_dim2-start_dim2) * abs(end_dim1-start_dim1)
                         if area < area_thr or area>1000000:
                             continue
-                        text_rect.append([
-                            {'x':start_dim1+points_rotate[0]['x'], 'y':start_dim2+points_rotate[0]['y']},
-                            {'x':end_dim1+points_rotate[0]['x'],'y':start_dim2+points_rotate[0]['y']},
-                            {'x':end_dim1+points_rotate[0]['x'],'y':end_dim2+points_rotate[0]['y']},
-                            {'x':start_dim1+points_rotate[0]['x'], 'y':end_dim2+points_rotate[0]['y']}
-                         ])
+                        text_slice3 = array_image[start_dim2:end_dim2, start_dim1:end_dim1]
+                        height3, width3 = text_slice3.shape
+                        projection3 = text_slice3.sum(axis=0)/abs(end_dim1 - start_dim1)  # 第三维投影
+                        projection3 = projection3 * 2
+                        probability3 = text_slice3/text_slice3.sum(axis=0, keepdims=True)  # 投影归一化
+                        entropy_src3 = -probability3*np.log(probability3)  # 熵计算
+                        entropy3 = entropy_src3.sum(axis=0)
+                        entropy3 = maxminnormalization(entropy3, 0, 1)
+                        entropy3_diff = list(np.diff(entropy3))
+                        entropy3_diff.insert(0, 0)
+                        interval_dim3 = OcrView.cal_interval(entropy3, 0.9, projection3, projection_thr_strict, projection_thr_easing)
+                        for item_dim3 in interval_dim3["text_interval"]:
+                            start_dim3 = item_dim3["start"]
+                            end_dim3 = item_dim3["end"]
+                            area3 = abs(end_dim3-start_dim3)*abs(end_dim2-start_dim2)
+                            if area3<area_thr:
+                                continue
+                            text_rect.append([
+                                {'x':start_dim3+start_dim1+points_rotate[0]['x'], 'y':points_rotate[0]['y']+start_dim2},
+                                {'x':end_dim3+points_rotate[0]['x']+start_dim1+1,'y':points_rotate[0]['y']+start_dim2},
+                                {'x':end_dim3+points_rotate[0]['x']+start_dim1+1,'y':end_dim2+points_rotate[0]['y']},
+                                {'x':start_dim3+start_dim1+points_rotate[0]['x'], 'y':points_rotate[0]['y']+end_dim2}
+                            ])
+
 
             # add rect
             polygon_add = []
