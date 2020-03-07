@@ -101,7 +101,9 @@
                     </div>
                     <div class="image_user_conf" id="image_user_conf" style="height:6.25%;font-size:1.25rem">
                         filter_size
-                        <input type="number" id="filter_size" min="1" max="10240" value={{filter_size}} step="1" onchange="set_filter_size(this.value,{{image_user_conf_id}})" style="height:89%;font-size:1.25rem;width:15%" />
+                        <input type="number" id="filter_size" min="0" max="10240" value={{filter_size}} step="1" onchange="set_filter_size(this.value,{{image_user_conf_id}})" style="height:89%;font-size:1.25rem;width:15%" />
+                        entropy_thr
+                        <input type="number" id="entropy_thr" min="-1000" max="1" value={{entropy_thr}} step="0.1" onchange="set_entropy_thr(this.value,{{image_user_conf_id}})" style="height:89%;font-size:1.25rem;width:15%" />
                     </div>
                     <div class="projection" id="projection" >
                     </div>
@@ -366,6 +368,10 @@
                         tip = document.getElementById("page_image_tool_tip");
                         tip.innerHTML="<font color=\"blue\">w:"+"你错误的按下了S键"+"<br></font>"+tip.innerHTML;
 
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==76) {　　　//快捷键 ctrl +L
+                        get_polygon_statistic({{image_id}});
                         return false;
                     }
                 }

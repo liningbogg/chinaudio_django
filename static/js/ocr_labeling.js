@@ -260,6 +260,7 @@ function delete_region(image_id, select_points, gFeatureLayer){
     };
 }
 
+
 /*设置gdbox模式*/
 function set_gdbox_mode(mode,gFetureStyle){
     switch(mode){
@@ -381,6 +382,46 @@ function set_filter_size(filter_size, image_user_conf_id){
         }
     }
 }
+
+/*重设entropy_thr*/
+function set_entropy_thr(entropy_thr, image_user_conf_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', 'set_entropy_thr/?'+"entropy_thr="+entropy_thr+"&image_user_conf_id="+image_user_conf_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            if(context == "err"){
+                add_log("重设entropy_thr出错","err");
+            }else{
+                add_log("重设entropy_thr为 "+entropy_thr,"message");
+            }
+        }
+    }
+}
+
+
+/*get polygon label number message*/
+function get_polygon_statistic(image_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', 'get_polygon_statistic/?'+"image_id="+image_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            if(xhr.response == "err"){
+                add_log("样本统计出错","err");
+            }else{
+                let context = JSON.parse(xhr.response);
+                let message = "总样本数目:"+context.count_all+" 用户样本数目:"+context.count_user;
+                add_log(message, "message");
+                message = "最近一小时用户样本量:"+context.latest_number;
+                add_log(message, "message");
+            }
+        }
+    }
+        
+}
+
 
 /*重设文字方向_pdf*/
 function direction_pdf(ocr_pdf_id, is_vertical){

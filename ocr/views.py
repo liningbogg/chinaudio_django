@@ -16,7 +16,10 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.contrib import *
 from ocr.models import *
+from django import db
+import datetime
 import copy
+import time
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -39,24 +42,60 @@ class OcrView(View):
         """
         古琴数字化数据库首页
         """
-        user_id = str(request.user)
-        ocrPDFList = OcrPDF.objects.filter(create_user_id=request.user, is_deleted=False)
-        assist_request_in_set = OcrAssistRequest.objects.filter(owner=user_id,status="pushed")
-        assist_request_out_set = OcrAssistRequest.objects.filter(create_user_id=user_id)
-        ocr_assist_set = OcrAssist.objects.filter(assist_user_name=user_id, is_deleted=False)
-        statistic = []
-        for ocrpdf in ocrPDFList:
+        try:
+            user_id = str(request.user)
+            ocrPDFList = OcrPDF.objects.filter(create_user_id=request.user, is_deleted=False)
+            assist_request_in_set = OcrAssistRequest.objects.filter(owner=user_id,status="pushed")
+            assist_request_out_set = OcrAssistRequest.objects.filter(create_user_id=user_id)
+            ocr_assist_set = OcrAssist.objects.filter(assist_user_name=user_id, is_deleted=False)
+            statistic = []
+            for ocrpdf in ocrPDFList.iterator():
+                count_all = 0
+                count_user = 0
+                image_set = PDFImage.objects.filter(ocrPDF=ocrpdf.id).values("id")
+                for image in image_set.iterator():
+                    count_all_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"]).count()
+                    count_all = count_all_inc + count_all
+                    if count_all_inc > 0:
+                        count_user_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id = user_id).count()
+                        count_user = count_user + count_user_inc
+                data = {"id":ocrpdf.id,"title":ocrpdf.title,"frame_num":ocrpdf.frame_num,"current_frame":ocrpdf.current_frame,"assist_num":ocrpdf.assist_num ,"count_all":count_all,"count_user":count_user}
+                statistic.append(data)
+
+            context = {"assist_request_in_set":assist_request_in_set,"assist_request_out_set":assist_request_out_set,"ocr_assist_set":ocr_assist_set,"statistic":statistic}
+            return render(request,'ocr_index.html',context)
+        except Exception as e:
+            print(e)
+
+    @classmethod
+    @method_decorator(login_required)
+    def get_polygon_statistic(cls, request):
+        try:
+            user_id = str(request.user)
+            image_id = request.GET.get("image_id")
+            pdfimage = PDFImage.objects.get(id=image_id)
+            pdf = pdfimage.ocrPDF
             count_all = 0
             count_user = 0
-            image_set = ocrpdf.pdfimage_set.all()
-            for image in image_set:
-                count_all = count_all+ image.ocrlabelingpolygon_set.all().count()
-                count_user = count_user+  image.ocrlabelingpolygon_set.filter(create_user_id =user_id).count()
-            data = {"id":ocrpdf.id,"title":ocrpdf.title,"frame_num":ocrpdf.frame_num,"current_frame":ocrpdf.current_frame,"assist_num":ocrpdf.assist_num ,"count_all":count_all,"count_user":count_user}
-            statistic.append(data)
-
-        context = {"assist_request_in_set":assist_request_in_set,"assist_request_out_set":assist_request_out_set,"ocr_assist_set":ocr_assist_set,"statistic":statistic}
-        return render(request,'ocr_index.html',context)
+            latest_number = 0
+            now_time = datetime.datetime.now()
+            datetime_from = now_time-datetime.timedelta(hours=1)
+            image_set = PDFImage.objects.filter(ocrPDF=pdf).values("id")
+            for image in image_set.iterator():
+                count_all_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"]).count()
+                count_all = count_all + count_all_inc
+                if count_all_inc > 0:
+                    count_user_inc =  OcrLabelingPolygon.objects.filter(pdfImage=image["id"],create_user_id = user_id).count()
+                    count_user = count_user + count_user_inc
+                    if count_user_inc > 0:
+                        # 标注速率统计
+                        latest_number = latest_number + OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id=user_id, create_time__range=(datetime_from, now_time)).count()
+            context = {"count_all":count_all,"count_user":count_user, "latest_number":latest_number}
+            return HttpResponse(json.dumps(context))
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+            
 
     @classmethod
     @method_decorator(login_required)
@@ -359,7 +398,7 @@ class OcrView(View):
         try:
             filter_size = int(request.GET.get("filter_size"))
             image_user_conf_id = request.GET.get("image_user_conf_id")
-            if filter_size>0 and filter_size<10240:
+            if filter_size>=0 and filter_size<10240:
                 image_user_conf = ImageUserConf.objects.get(id=image_user_conf_id)  # 被标注的图片
                 image_user_conf.filter_size = filter_size
                 image_user_conf.save()
@@ -370,6 +409,24 @@ class OcrView(View):
             print(e)
             return HttpResponse("err")
             
+
+    # 设置entropy_thr
+    @method_decorator(login_required)
+    def set_entropy_thr(self, request):
+        try:
+            entropy_thr = float(request.GET.get("entropy_thr"))
+            image_user_conf_id = request.GET.get("image_user_conf_id")
+            if entropy_thr<1:
+                image_user_conf = ImageUserConf.objects.get(id=image_user_conf_id)  # 被标注的图片
+                image_user_conf.entropy_thr = entropy_thr
+                image_user_conf.save()
+                return HttpResponse("ok")
+            else:
+                return HttpResponse("err")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
 
     @method_decorator(login_required)
     def ocr_move_page(self, request):
@@ -548,6 +605,7 @@ class OcrView(View):
             print(rect_a)
             print(rect_b)
             print("cal_intersection_ratio")
+            return {'ratio_a':0, 'ratio_b':0, 'area':0}
 
     
     # 删除当前当前用户进行的制定页面的标注
@@ -715,28 +773,31 @@ class OcrView(View):
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)
             conf = image.imageuserconf_set.get(create_user_id=str(request.user))
+            conf_is_vertical = conf.is_vertical
+            rotate_degree = conf.rotate_degree
+            filter_size = conf.filter_size
+            conf_entropy_thr = conf.entropy_thr
             w = image.width
             h = image.height
             # 旋转后矩形框为竖直
-            OcrView.rotate_points(points_rotate, conf.rotate_degree, w, h)
+            OcrView.rotate_points(points_rotate, rotate_degree, w, h)
             delete_info = []
             user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
             rect_region = OcrView.get_rect_info(points_rotate[0], points_rotate[2])
             h_w_ratio = abs(rect_region['h']*1.0/rect_region['w'])  # 高宽比
             is_vertical = True
-            filter_size = conf.filter_size
             if h_w_ratio>2:
                 is_vertical = True
             elif h_w_ratio<0.5:
                 is_vertical = False
             elif h_w_ratio>=0.5 and h_w_ratio<=2:
-                is_vertical = conf.is_vertical
+                is_vertical = conf_is_vertical
             else:
                 pass
             # 删除当前用户下与候选区域相交的标注
-            for polygon in user_polygon_set:
+            for polygon in user_polygon_set.iterator():
                 points = json.loads(polygon.polygon)
-                OcrView.rotate_points(points,conf.rotate_degree,w,h)
+                OcrView.rotate_points(points,rotate_degree,w,h)
                 rect_candidate = OcrView.get_rect_info(points[0], points[2])
                 intersection = OcrView.cal_intersection_ratio(rect_region, rect_candidate)
                 intersection_ratio = intersection['ratio_b']
@@ -748,8 +809,8 @@ class OcrView(View):
             data_stream=io.BytesIO(image.data_byte)
             pil_image = Image.open(data_stream)
             gray_image = pil_image.convert('F')
-            if abs(conf.rotate_degree)>0.0001:
-                image_rotated = gray_image.rotate(conf.rotate_degree)
+            if abs(rotate_degree)>0.0001:
+                image_rotated = gray_image.rotate(rotate_degree)
             else:
                 image_rotated = gray_image
             box = (rect_region['x'],rect_region['y'],rect_region['x_'],rect_region['y_'])
@@ -780,7 +841,7 @@ class OcrView(View):
             entropy = maxminnormalization(entropy,0,1)
             entropy_diff = list(np.diff(entropy))
             entropy_diff.insert(0,0)
-            entropy_thr = 0.9  # 熵阈
+            entropy_thr = conf_entropy_thr  # 熵阈
             projection_thr_strict = 0.6 # 投影阈
             projection_thr_easing = 0.01 # 宽松投影阈
             # 分割第一维
@@ -790,7 +851,7 @@ class OcrView(View):
             text_rect = []
             for item in interval_dim1["text_interval"]:
                 start_dim1 = item["start"]
-                end_dim1 = item["end"]
+                end_dim1 = item["end"]+1
                 if is_vertical is True:
                     text_slice = array_image[start_dim1:end_dim1, :]
                 else:
@@ -810,7 +871,7 @@ class OcrView(View):
                 entropy_dim2 = maxminnormalization(entropy_dim2,0,1)
 
                 area_thr = filter_size
-                interval_dim2 = OcrView.cal_interval(entropy_dim2, entropy_thr, projection_dim2, projection_thr_strict, projection_thr_easing)
+                interval_dim2 = OcrView.cal_interval(entropy_dim2, 0.9, projection_dim2, projection_thr_strict, projection_thr_easing)
                 if is_vertical is True:
                     for item_dim2 in interval_dim2["text_interval"]:
                         start_dim2 = item_dim2["start"]
@@ -850,7 +911,7 @@ class OcrView(View):
                             continue
                         text_slice3 = array_image[start_dim2:end_dim2, start_dim1:end_dim1]
                         height3, width3 = text_slice3.shape
-                        projection3 = text_slice3.sum(axis=0)/abs(end_dim1 - start_dim1)  # 第三维投影
+                        projection3 = text_slice3.sum(axis=0)/abs(end_dim2 - start_dim2)  # 第三维投影
                         projection3 = projection3 * 2
                         probability3 = text_slice3/text_slice3.sum(axis=0, keepdims=True)  # 投影归一化
                         entropy_src3 = -probability3*np.log(probability3)  # 熵计算
@@ -876,7 +937,7 @@ class OcrView(View):
             # add rect
             polygon_add = []
             for rect in text_rect:
-                OcrView.rotate_points(rect, -conf.rotate_degree, w, h)
+                OcrView.rotate_points(rect, -rotate_degree, w, h)
                 polygon = OcrLabelingPolygon(pdfImage=image, polygon=json.dumps(rect).encode("utf-8"), create_user_id=str(request.user))
                 polygon.save()
                 polygon_add.append({
