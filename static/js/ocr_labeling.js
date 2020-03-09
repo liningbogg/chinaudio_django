@@ -35,7 +35,7 @@ function move_page(ocr_pdf, page_apointed){
             var context = xhr.response;
             try{
                 if(context=="ok"){
-                    location.reload();
+                    location.reload(true);
                 }else{
                     alert(context);
                 }

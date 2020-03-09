@@ -52,7 +52,7 @@ class OcrView(View):
             for ocrpdf in ocrPDFList.iterator():
                 count_all = 0
                 count_user = 0
-                image_set = PDFImage.objects.filter(ocrPDF=ocrpdf.id).values("id")
+                image_set = PDFImage.objects.filter(ocrPDF=ocrpdf).values("id")
                 for image in image_set.iterator():
                     count_all_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"]).count()
                     count_all = count_all_inc + count_all
@@ -296,6 +296,7 @@ class OcrView(View):
             ocrpdf = OcrPDF.objects.get(id=ocrpdf_id)
             current_frame = 0
             is_vertical_pdf = False
+
             if ocrpdf.create_user_id == str(request.user):
                 current_frame = ocrpdf.current_frame
                 is_vertical_pdf = ocrpdf.is_vertical
@@ -303,6 +304,7 @@ class OcrView(View):
                 assist = ocrpdf.ocrassist_set.get(assist_user_name=str(request.user))
                 current_frame = assist.current_frame
                 is_vertical_pdf = assist.is_vertical
+
             ocrimage = ocrpdf.pdfimage_set.get(frame_id=current_frame)
             polygon_set = ocrimage.ocrlabelingpolygon_set.all()
             create_user_id_set = polygon_set.values("create_user_id").distinct()  # achieve distinct create_user_id
@@ -358,12 +360,6 @@ class OcrView(View):
             else:
                 image_rotated = pil_image
             image_resized = image_rotated.resize((tar_width, tar_height), Image.ANTIALIAS)
-            '''
-            gray_image = image_resized.convert('L')
-            array_image = 255-np.asarray(gray_image)
-            map_row = array_image.sum(axis=0)/255.0/tar_height
-            print(map_row)
-            '''
             trans_width,trans_height=image_resized.size
             new_imageIO = BytesIO()
             image_resized.save(new_imageIO,"JPEG")
@@ -783,6 +779,7 @@ class OcrView(View):
             OcrView.rotate_points(points_rotate, rotate_degree, w, h)
             delete_info = []
             user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
+
             rect_region = OcrView.get_rect_info(points_rotate[0], points_rotate[2])
             h_w_ratio = abs(rect_region['h']*1.0/rect_region['w'])  # 高宽比
             is_vertical = True
@@ -794,8 +791,9 @@ class OcrView(View):
                 is_vertical = conf_is_vertical
             else:
                 pass
+
             # 删除当前用户下与候选区域相交的标注
-            for polygon in user_polygon_set.iterator():
+            for polygon in user_polygon_set:
                 points = json.loads(polygon.polygon)
                 OcrView.rotate_points(points,rotate_degree,w,h)
                 rect_candidate = OcrView.get_rect_info(points[0], points[2])
