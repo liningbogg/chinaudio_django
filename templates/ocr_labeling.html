@@ -23,7 +23,7 @@
             <div class="title" id="title">
                 ocr标注数据库:{{title}}
                 &nbsp&nbsp
-                <a href="/ocr/content_labeling/" style="font-style:italic;color:green">文字内容标注</a>
+                <a href="/ocr/content_labeling/?image_id={{image_id}}" target="_blank" style="font-style:italic;color:green">文字内容标注</a>
             </div>
             <div class="image_info" id="image_info">
             </div>
@@ -137,7 +137,9 @@
                     this.current_user=current_user;
                     this.gMap=gMap;
                     this.lineWeight=1;
-                    this.current_user_color="#0000ff"; new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true})  // color assing to current_user (blue)
+                    this.current_user_color_noncontent="#0000ff"; 
+                    this.current_user_color_hascontent="#00ff00"; 
+                    //new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true})  // color assing to current_user (blue)
                     this.nonactive_current_index=0;  // color index assign to non-active user
                     this.nonactive_color_list=[
                         {"color_name":"red","color_value":"#ff0000"},
@@ -146,7 +148,8 @@
                     // user_name feature_style map
                     this.feature_style_set={
                     };  
-                    this.feature_style_set[this.current_user] = new gDBox.Style({strokeColor: this.current_user_color, lineWeight: this.lineWeight});
+                    this.feature_style_set["current_user_noncontent"] = new gDBox.Style({strokeColor: this.current_user_color_noncontent, lineWeight: this.lineWeight});
+                    this.feature_style_set["current_user_hascontent"] = new gDBox.Style({strokeColor: this.current_user_color_hascontent, lineWeight: this.lineWeight});
                     // user_name layer map
                     this.layer_set={
                     };
@@ -154,14 +157,13 @@
                     this.gMap.addLayer(this.layer_set[current_user]);
 
                 }
-                get_style(user_name){
+                get_style(user_name, has_content){
                     if(user_name!=this.current_user){
                         //non-activate user
                         if(this.feature_style_set.hasOwnProperty(user_name)){
                             return this.feature_style_set[user_name];
                         }else{
-                            this.feature_style_set[user_name]
-                                =new gDBox.Style(
+                            this.feature_style_set[user_name] =new gDBox.Style(
                                 {
                                     strokeColor: this.nonactive_color_list[this.nonactive_current_index]["color_value"],
                                     lineWeight: this.lineWeight
@@ -172,7 +174,11 @@
                         }
                     }else{
                         //current user
-                        return this.feature_style_set[user_name];
+                        if(has_content){
+                            return this.feature_style_set["current_user_hascontent"];
+                        }else{
+                            return this.feature_style_set["current_user_noncontent"];
+                        }
                     }
                 }
                 get_layer(user_name){
@@ -232,15 +238,20 @@
                     +"&nbsp&nbsp div_height:"+div_height;
                 // 常用样式声明
                 // 容器对象声明
-                gMap = new gDBox.Map('page_image_disp', {w:tar_width, zoom: tar_width, cx: 0, cy: tar_height/2-div_height/2, zoomMax: tar_width* 10, zoomMin: tar_width / 10});
+                let center_x = {{center_x}};
+                let center_y = {{center_y}};
+                let zoom_scale = {{zoom_scale}};
+                gMap = new gDBox.Map('page_image_disp', {w:tar_width, zoom: zoom_scale*tar_width, cx: center_x*tar_width, cy: center_y*tar_height,  zoomMax: tar_width* 10, zoomMin: tar_width / 10});
                 // 设置当前操作模式为‘drawRect’
                 gMap.setMode('drawRect', gFetureStyle);
                 //gMap.setMode('pan', gFetureStyle);
                 // 图片层实例\添加
                 let gImageLayer = new gDBox.Layer.Image('img', "/ocr/labeling/get_image/?frame_id={{image_id}}&tar_width="+tar_width+"&tar_height="+tar_height, {w:tar_width, h: tar_height}, {zIndex: 1});
                 gMap.addLayer(gImageLayer);
+                console.log(gMap);
+                console.log(gImageLayer);
                 // 矢量层实例\添加
-                //let gFeatureLayer = new gDBox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true});
+                //let gFeatureLayer = new gDBuser_polygonox.Layer.Feature('featureLayer', {zIndex: 2, transparent: true});
                 //gMap.addLayer(gFeatureLayer);
                 let gdboxConfigure = new GdboxConfigure("{{request.user}}", gMap);
 
@@ -249,11 +260,12 @@
                 let user_polygon_dict = {{polygon_dict|safe}};
                 for(user_polygon in user_polygon_dict){
                     let layer = gdboxConfigure.get_layer(user_polygon);
-                    let style = gdboxConfigure.get_style(user_polygon);
                     for(polygon in user_polygon_dict[user_polygon]){
                         let elem = user_polygon_dict[user_polygon][polygon];
                         let polygon_points = JSON.parse(elem['points']);
                         let polygon_id = elem['polygon_id'];
+                        let has_content = elem['labeling_content'];
+                        let style = gdboxConfigure.get_style(user_polygon, has_content);
                         //rotate the label 
                         let rotate={{current_rotate}};
                         polygon_rotated = rotate_polygon(polygon_points,rotate,{{ori_width}},{{ori_height}});
@@ -267,13 +279,13 @@
                     rotate_points = rotate_polygon(select_points, -1*{{current_rotate}}, {{ori_width}}, {{ori_height}});
                     switch(labeling_mode){
                         case "manual_select":
-                            let polygon_id = add_labeling_polygon({{image_id}}, rotate_points, points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"));
+                            let polygon_id = add_labeling_polygon({{image_id}}, rotate_points, points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}", false));
                             break;
                         case "recommend_select":
-                            let polygon_update = rough_labeling({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
+                            let polygon_update = rough_labeling({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}", false), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
                             break;
                         case "merge_select":
-                            let polygon_merged = merge_labeling({{image_id}}, select_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}"), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
+                            let polygon_merged = merge_labeling({{image_id}}, select_points, gdboxConfigure.get_layer("{{request.user}}"), gdboxConfigure.get_style("{{request.user}}", false), {{current_rotate}}, {{ori_width}}, {{ori_height}}, tar_width, tar_height); 
                             break;
                         case "clear_select":
                             let labeling_delete = delete_region({{image_id}}, rotate_points, gdboxConfigure.get_layer("{{request.user}}"));
@@ -380,6 +392,13 @@
                 window.onresize = function () {
                     gMap && gMap.resize();
                 };
+                window.onbeforeunload=function(e){     
+                    center_x = gMap.cx/tar_width;
+                    center_y = gMap.cy/tar_height;
+                    zoom_scale = gMap.zoom/tar_width;
+
+                    save_anchor({{image_user_conf_id}}, center_x, center_y, zoom_scale);
+                } 
             });
         </script>
     </body>

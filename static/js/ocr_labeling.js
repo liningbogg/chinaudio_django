@@ -401,26 +401,6 @@ function set_entropy_thr(entropy_thr, image_user_conf_id){
 }
 
 
-/*get polygon label number message*/
-function get_polygon_statistic(image_id){
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', 'get_polygon_statistic/?'+"image_id="+image_id, true);
-    xhr.send(null);
-    xhr.onreadystatechange = function(){
-        if(xhr.readyState == 4 && xhr.status == 200) {
-            if(xhr.response == "err"){
-                add_log("样本统计出错","err");
-            }else{
-                let context = JSON.parse(xhr.response);
-                let message = "总样本数目:"+context.count_all+" 用户样本数目:"+context.count_user;
-                add_log(message, "message");
-                message = "最近一小时用户样本量:"+context.latest_number;
-                add_log(message, "message");
-            }
-        }
-    }
-        
-}
 
 
 /*重设文字方向_pdf*/
@@ -441,7 +421,7 @@ function direction_pdf(ocr_pdf_id, is_vertical){
     }
 }
 //添加曲线的高层封装,data字典中包含lengend 以及数据
-function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end, slope, bias){
+function addChart(type, title, dictSeries, dictLine, currentPos, MyDiv,start, end, slope, bias){
     let xAxis_c = indexArr.slice(start,end)
     for (key in xAxis_c){
         xAxis_c[key]=xAxis_c[key]*slope+bias;
@@ -449,7 +429,7 @@ function addChart(title, dictSeries, dictLine, currentPos, MyDiv,start, end, slo
     //曲线参数设置
     var  options = {
         chart: {
-            type: 'line',
+            type: type,
             zoomType: 'xy', //xy方向均可缩放
             marginLeft: 80, // Keep all charts left aligned
             marginRight: 80, // Keep all charts right aligned
@@ -600,6 +580,7 @@ function rough_labeling(image_id, rotate_points, gFeatureLayer, gFetureStyle, cu
                     "stop_pos":rough_labeling_info.stop_pos
                 };
                 addChart(
+                    "line",
                     "",
                     projectionChartDictSeries,
                     projectionChartDictLine,
@@ -655,6 +636,7 @@ function rotate_degree_evaluate(image_id){
                 };
                 projectionEntropyChartDictLine=[];
                 addChart(
+                    "line",
                     "",
                     projectionEntropyChartDictSeries,
                     projectionEntropyChartDictLine,
@@ -670,3 +652,63 @@ function rotate_degree_evaluate(image_id){
         }
     }
 }
+
+
+
+/*get polygon label number message*/
+function get_polygon_statistic(image_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', 'get_polygon_statistic/?'+"image_id="+image_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            if(xhr.response == "err"){
+                add_log("样本统计出错","err");
+            }else{
+                let context = JSON.parse(xhr.response);
+                let message = "总样本数目:"+context.count_all+" 用户样本数目:"+context.count_user;
+                latest_distribute = context["latest_distribute"]
+                add_log(message, "message");
+                message = "最近一小时用户样本量:"+context.latest_number;
+                add_log(message, "message");
+                // 近一个小时数据分布
+                var distributeChartDictSeries={
+                    "latest_distribute":{"list": latest_distribute, "visible": true},
+                };
+                distributeChartDictLine=[];
+                addChart(
+                "column",
+                    "",
+                    distributeChartDictSeries,
+                    distributeChartDictLine,
+                    0,
+                    "projection",
+                    0,
+                    distributeChartDictSeries["latest_distribute"]["list"].length,
+                    1,
+                    -59
+                );
+
+            }
+        }
+    }
+}
+
+function save_anchor(image_user_conf_id, center_x, center_y, zoom_scale){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', 'save_anchor/?'+"image_user_conf_id="+image_user_conf_id+"&center_x="+center_x+"&center_y="+center_y+"&zoom_scale="+zoom_scale, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            if(xhr.response == "err"){
+                add_log("设置锚点出错","err");
+            }else{
+                
+                add_log("设置锚点成功","err");
+            }
+        }
+    }
+}
+
+
+

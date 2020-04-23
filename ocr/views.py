@@ -11,7 +11,7 @@ import math
 from pitch.np_encoder import NpEncoder
 import json
 import redis
-from PIL import Image
+from PIL import Image, ImageOps
 from django.db.models import Q
 from django.http import HttpResponse
 from django.contrib import *
@@ -20,6 +20,9 @@ from django import db
 import datetime
 import copy
 import time
+import cv2 as cv
+from django.core.cache import cache
+import pickle
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -27,6 +30,56 @@ def maxminnormalization(x, minv, maxv):
     max_val = np.max(x)
     y = (x - min_val) / (max_val - min_val + 0.0000000001) * (maxv - minv) + minv
     return y
+
+
+def cal_rotate_angle(x0, y0, x3, y3):
+
+    """
+    calulate rotate angle from new position
+    x0, y0: position 0 rotated
+    x3, y3: position 3 rotated
+    """
+    try:
+        angle = -math.atan((x0-x3)*1.0/(y0-y3))*180/math.pi
+        return angle
+    except Exception as e:
+        return 0
+
+
+def rotate_points(points, rotate_degree, w, h):
+    for point in points:
+        x = point['x']
+        y = point['y']
+        x_shift = x - w/2.0
+        y_shift = y - h/2.0
+        rotate_rad = rotate_degree/180.0*math.pi
+        nx = x_shift*math.cos(rotate_rad)+y_shift*math.sin(rotate_rad)+w/2.0
+        ny = -x_shift*math.sin(rotate_rad)+y_shift*math.cos(rotate_rad)+h/2.0
+        point['x']=nx
+        point['y']=ny
+
+
+def bounding_points(points):
+    x_min = 10000000
+    y_min = 10000000
+    x_max = -10000000
+    y_max = -10000000
+    for point in points:
+        x = point["x"]
+        y = point["y"]
+        x_min = min(x_min, x)
+        x_max = max(x_max, x)
+        y_min = min(y_min, y)
+        y_max = max(y_max, y)
+    points[0]["x"] = x_min
+    points[0]["y"] = y_min
+    points[1]["x"] = x_max
+    points[1]["y"] = y_min
+    points[2]["x"] = x_max
+    points[2]["y"] = y_max
+    points[3]["x"] = x_min
+    points[3]["y"] = y_max
+
 
 # Create your views here.
 class OcrView(View):
@@ -81,6 +134,7 @@ class OcrView(View):
             now_time = datetime.datetime.now()
             datetime_from = now_time-datetime.timedelta(hours=1)
             image_set = PDFImage.objects.filter(ocrPDF=pdf).values("id")
+            latest_distribute = np.zeros(60)
             for image in image_set.iterator():
                 count_all_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"]).count()
                 count_all = count_all + count_all_inc
@@ -89,8 +143,14 @@ class OcrView(View):
                     count_user = count_user + count_user_inc
                     if count_user_inc > 0:
                         # 标注速率统计
-                        latest_number = latest_number + OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id=user_id, create_time__range=(datetime_from, now_time)).count()
-            context = {"count_all":count_all,"count_user":count_user, "latest_number":latest_number}
+                        # latest_number = latest_number + OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id=user_id, create_time__range=(datetime_from, now_time)).count()
+                        latest_set = OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id=user_id, create_time__range=(datetime_from, now_time)).values("create_time")
+                        latest_number += len(latest_set)
+                        for item in latest_set:
+                            latest_distribute[59 - (now_time-item["create_time"]).seconds //60] += 1
+
+                        
+            context = {"count_all":count_all,"count_user":count_user, "latest_number":latest_number, "latest_distribute": list(latest_distribute)}
             return HttpResponse(json.dumps(context))
         except Exception as e:
             print(e)
@@ -289,6 +349,69 @@ class OcrView(View):
                 self.handle_upload_file_pdf(pdf, path, user_id)
         return HttpResponse("add pdfs done")
 
+
+    @method_decorator(login_required)
+    def content_labeling(self, request):
+        try:
+            image_id = request.GET.get('image_id')  # image_id
+            tar_width = request.GET.get('tar_width')  
+            tar_height = request.GET.get('tar_height')
+            pdfimage = PDFImage.objects.get(id=image_id)
+            pdf = pdfimage.ocrPDF
+            image_width = pdfimage.width
+            padding_size = 128
+            image_height = pdfimage.height
+            non_label_set = pdfimage.ocrlabelingpolygon_set.filter(labeling_content=False, create_user_id=str(request.user))
+            if non_label_set.count() == 0:
+                return render(request, 'ocr_content_labeling.html',None)
+            else:
+                polygon_label = non_label_set[0]
+                polygon_id = polygon_label.id
+                polygon = str(polygon_label.polygon,'utf-8')
+                points = json.loads(polygon)
+                # 获取旋转角度
+                degree_to_rotate = cal_rotate_angle(points[0]['x'], points[0]['y'], points[3]['x'], points[3]['y'])
+                # 旋转
+                
+                rotate_points(points, degree_to_rotate, image_width, image_height)
+                # 外接
+                bounding_points(points)
+                for point in points:
+                    point['x'] = round(point['x']) + padding_size
+                    point['y'] = round(point['y']) + padding_size
+                # 求取偏移
+                w = abs(points[1]['x']-points[0]['x'])
+                h = abs(points[3]['y']-points[0]['y'])
+                size = max(h, w)
+                size = max(size*2, 9)
+                relative_l = (size-w) // 2
+                relative_t = (size-h) // 2
+                relative_r = int(relative_l + w)
+                relative_b = int(relative_t + h)
+                relative_box = (relative_l, relative_t, relative_r, relative_b)
+
+                context = {
+                    "title":pdf.title,
+                    "image_id":image_id,
+                    "polygon_id":polygon_id,
+                    "polygon":polygon,
+                    "relative_box":json.dumps(relative_box),
+                    "size":size,
+                    "frame_id":pdfimage.frame_id,
+                    "image_width":image_width,
+                    "degree_to_rotate":degree_to_rotate,
+                    "image_height":image_height,
+                    "frame_num":pdf.frame_num,
+                    "x_shift":points[0]['x'] - ((size-w) // 2),
+                    "y_shift":points[0]['y'] - ((size-h) // 2)
+                }
+
+                return render(request, 'ocr_content_labeling.html', context)
+        except Exception as e:
+            print(e)
+            return render(request, 'ocr_content_labeling.html',None)
+
+
     @method_decorator(login_required)
     def labeling(self, request):
         try:
@@ -337,6 +460,9 @@ class OcrView(View):
                 "entropy_thr":image_user_conf.entropy_thr,
                 "projection_thr_strict":image_user_conf.projection_thr_strict,
                 "projection_thr_easing":image_user_conf.projection_thr_easing,
+                "center_x":image_user_conf.center_x,
+                "center_y":image_user_conf.center_y,
+                "zoom_scale":image_user_conf.zoom_scale,
                 "image_user_conf_id":image_user_conf.id,
                 "filter_size":image_user_conf.filter_size
             }
@@ -369,6 +495,315 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return None
+
+    @method_decorator(login_required)
+    def get_polygon_image(self, request):
+        try:
+            polygon_id = request.GET.get("polygon_id")
+            image_id = request.GET.get("image_id")
+            tar_width = int(request.GET.get("tar_width"))
+            tar_height = int(request.GET.get("tar_height"))
+            is_extend = str(request.GET.get("is_extend"))
+            ocrimage = PDFImage.objects.get(id=image_id)
+            polygon_item = OcrLabelingPolygon.objects.get(id=polygon_id)
+            points = json.loads(str(polygon_item.polygon, 'utf-8'))
+            padding_size = 128
+            image_width = ocrimage.width
+            image_height = ocrimage.height
+            # 需要旋转的角度
+            degree_to_rotate = cal_rotate_angle(points[0]['x'], points[0]['y'], points[3]['x'], points[3]['y'])
+            # 旋转后的points
+            rotate_points(points, degree_to_rotate, image_width, image_height)
+            # 确保旋转后是矩形的外接操作
+            bounding_points(points)
+            for point in points:
+                point['x'] = round(point['x']) + padding_size
+                point['y'] = round(point['y']) + padding_size
+            # 求取偏移
+            w = abs(points[1]['x']-points[0]['x'])
+            h = abs(points[3]['y']-points[0]['y'])
+            if is_extend == "true":
+                size = max(h, w)
+                size = max(size*2, 9)
+                relative_l = points[0]['x']-((size-w) // 2)
+                relative_t = points[0]['y']-((size-h) // 2)
+                relative_r = int(relative_l + size -1)
+                relative_b = int(relative_t + size -1)
+                # padding image中的box位置
+                relative_box = (relative_l, relative_t, relative_r, relative_b)
+            else:
+                relative_box = (points[0]['x'], points[0]['y'], points[2]['x'], points[2]['y'])
+                ratio_w = w*1.0/tar_width
+                ratio_h = h*1.0/tar_height
+                ratio = max(ratio_w, ratio_h) 
+                tar_width = int(w // ratio)
+                tar_height = int(h // ratio)
+            # 获取旋转过的padding图像
+            rotate_image_key = "%s_%s_%.2f_%d" % (str(request.user), image_id, degree_to_rotate, padding_size)
+            image_rotate_padding = cache.get(rotate_image_key)
+            if image_rotate_padding is None:
+                #读取原始图像
+                image_stream = io.BytesIO(ocrimage.data_byte)
+                pil_image = Image.open(image_stream)
+                width, height = pil_image.size
+                if abs(degree_to_rotate)>0.000001:
+                    image_rotate_padding = pil_image.rotate(degree_to_rotate)
+                else:
+                    image_rotate_padding = pil_image
+                w_l_extend = padding_size
+                w_r_extend = padding_size
+                h_t_extend = padding_size
+                h_b_extend = padding_size
+                # expend
+                image_rotate_padding = ImageOps.expand(image_rotate_padding, border=(w_l_extend, h_t_extend, w_r_extend, h_b_extend) ,fill=0)
+                cache.set(rotate_image_key, pickle.dumps(image_rotate_padding), nx=True) 
+                cache.expire(rotate_image_key, 3600)
+            else:
+                image_rotate_padding = pickle.loads(image_rotate_padding)
+            image_crop = image_rotate_padding.crop(relative_box)
+            image_map = image_crop.resize((tar_width, tar_height), Image.ANTIALIAS)
+
+            # 最终文件流
+            mapIO = BytesIO()
+            image_map.save(mapIO, "JPEG")
+            map_bytes = mapIO.getvalue()
+            return HttpResponse(map_bytes, 'image/jpeg')
+
+        except Exception as e:
+            print(e)
+            return None
+
+
+    @method_decorator(login_required)
+    def get_elem_page(self, request):
+        try:
+            size = 64
+            page_index = int(request.GET.get("page_index"))
+            row = int(request.GET.get("row"))
+            col = int(request.GET.get("col"))
+            elem_per_page = row*col
+            w = col * size
+            h = row * size
+            image = Image.new("RGB", (w, h), "#FFFFFF")
+            elem_set = ChineseElem.objects.filter(create_user_id=str(request.user))
+            elem_count = elem_set.count()
+            init_index = page_index * elem_per_page
+            elem_num_of_this_page = min(elem_count-init_index, elem_per_page)
+            clip_set = elem_set[init_index:(init_index+elem_num_of_this_page)]
+            index = 0
+            for elem in clip_set:
+                row_index = index // col
+                col_index = index % col
+                # 获取elem图片
+                elem_image_key = "elem_%d_%d_%d" % (elem.id, size, size)
+                image_elem = cache.get(elem_image_key)
+                if image_elem is None:
+                    #读取原始图像
+                    image_stream = io.BytesIO(elem.image_bytes)
+                    pil_image = Image.open(image_stream)
+                    width, height = pil_image.size
+                    ratio_w =width*1.0/size
+                    ratio_h =height*1.0/size
+                    ratio = max(ratio_w, ratio_h)
+                    tar_width = int(width/ratio)
+                    tar_height = int(height/ratio)
+                    image_elem = pil_image.resize((tar_width, tar_height), Image.ANTIALIAS)
+                    cache.set(elem_image_key, pickle.dumps(image_elem), nx=True) 
+                    cache.expire(elem_image_key, 3600)
+                else:
+                    image_elem = pickle.loads(image_elem)
+                # 粘贴
+                (w, h) = image_elem.size
+                x_init=col_index*size
+                y_init=row_index*size
+                x_shift=0
+                y_shift=0
+                if w<h:
+                    x_shift=(size-w) // 2
+                else:
+                    y_shift=(size-h) // 2
+                image.paste(image_elem, (x_init+x_shift, y_init+y_shift))
+                index += 1
+
+
+            # 最终文件流
+            mapIO = BytesIO()
+            image.save(mapIO, "JPEG")
+            map_bytes = mapIO.getvalue()
+            return HttpResponse(map_bytes, 'image/jpeg')
+        except Exception as e:
+            print(e)
+            return None
+
+
+    @method_decorator(login_required)
+    def achieve_elem_id(self, request):
+        try:
+            size = 64
+            page_index = int(request.GET.get("page_index"))
+            row = int(request.GET.get("row"))
+            col = int(request.GET.get("col"))
+            elem_per_page = row*col
+            elem_set = ChineseElem.objects.filter(create_user_id=str(request.user))
+            elem_count = elem_set.count()
+            init_index = page_index * elem_per_page
+            elem_num_of_this_page = min(elem_count-init_index, elem_per_page)
+            clip_set = elem_set[init_index:(init_index+elem_num_of_this_page)]
+            index = 0
+            id_set = []
+            for elem in clip_set:
+                row_index = index // col
+                col_index = index % col
+                id_set.append({"id": elem.id, "height":elem.height, "width":elem.width})
+                index += 1
+
+            return HttpResponse(json.dumps(id_set))
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+    @method_decorator(login_required)
+    def get_elem_image(self, request):
+        try:
+            image_id = request.GET.get("image_id")
+            ocrimage = PDFImage.objects.get(id=image_id)
+            degree_to_rotate = float(request.GET.get("degree_to_rotate"))
+            tar_width = int(request.GET.get("tar_width"))
+            tar_height = int(request.GET.get("tar_height"))
+            relative_box_str = str(request.GET.get("elem_box"))
+            relative_box = json.loads(relative_box_str)
+            relative_box = (relative_box[0], relative_box[1], relative_box[2], relative_box[3])
+            padding_size = 128
+            w = relative_box[2]-relative_box[0]
+            h = relative_box[3]-relative_box[1]
+            ratio_w = w*1.0/tar_width
+            ratio_h = h*1.0/tar_height
+            ratio = max(ratio_w, ratio_h) 
+            tar_width = int(w // ratio)
+            tar_height = int(h // ratio)
+            # 获取旋转过的padding图像
+            rotate_image_key = "%s_%s_%.2f_%d" % (str(request.user), image_id, degree_to_rotate, padding_size)
+            image_rotate_padding = cache.get(rotate_image_key)
+            if image_rotate_padding is None:
+                #读取原始图像
+                image_stream = io.BytesIO(ocrimage.data_byte)
+                pil_image = Image.open(image_stream)
+                width, height = pil_image.size
+                if abs(degree_to_rotate)>0.000001:
+                    image_rotate_padding = pil_image.rotate(degree_to_rotate)
+                else:
+                    image_rotate_padding = pil_image
+                w_l_extend = padding_size
+                w_r_extend = padding_size
+                h_t_extend = padding_size
+                h_b_extend = padding_size
+                # expend
+                image_rotate_padding = ImageOps.expand(image_rotate_padding, border=(w_l_extend, h_t_extend, w_r_extend, h_b_extend) ,fill=0)
+                cache.set(rotate_image_key, pickle.dumps(image_rotate_padding), nx=True) 
+                cache.expire(rotate_image_key, 3600)
+            else:
+                image_rotate_padding = pickle.loads(image_rotate_padding)
+            image_crop = image_rotate_padding.crop(relative_box)
+            image_map = image_crop.resize((tar_width, tar_height), Image.ANTIALIAS)
+
+            # 最终文件流
+            mapIO = BytesIO()
+            image_map.save(mapIO, "JPEG")
+            map_bytes = mapIO.getvalue()
+            
+            return HttpResponse(map_bytes, 'image/jpeg')
+
+        except Exception as e:
+            print(e)
+            return None
+
+
+    @method_decorator(login_required)
+    def get_character_image(self, request):
+        try:
+            elem_id = request.GET.get("elem_id")
+            tar_width = int(request.GET.get("tar_width"))
+            tar_height = int(request.GET.get("tar_height"))
+            elem = ChineseElem.objects.get(id=elem_id)
+            # 获取elem图片
+            elem_image_key = "elem_%d_%d_%d" % (int(elem_id),tar_width,tar_height)
+            image_elem = cache.get(elem_image_key)
+            if image_elem is None:
+                #读取原始图像
+                image_stream = io.BytesIO(elem.image_bytes)
+                pil_image = Image.open(image_stream)
+                (w, h) = pil_image.size
+                ratio_w =w*1.0/tar_width
+                ratio_h =h*1.0/tar_height
+                ratio = max(ratio_w, ratio_h)
+                tar_width = int(w/ratio)
+                tar_height = int(h/ratio)
+                image_elem = pil_image.resize((tar_width, tar_height), Image.ANTIALIAS)
+                cache.set(elem_image_key, pickle.dumps(image_elem), nx=True) 
+                cache.expire(elem_image_key, 3600)
+            else:
+                image_elem = pickle.loads(image_elem)
+        
+            # 最终文件流
+            mapIO = BytesIO()
+            image_elem.save(mapIO, "JPEG")
+            map_bytes = mapIO.getvalue()
+            return HttpResponse(map_bytes, 'image/jpeg')
+        except Exception as e:
+            print(e)
+            return None
+
+
+    @method_decorator(login_required)
+    def add_elem(self, request):
+        try:
+            image_id = request.GET.get("image_id")
+            ocrimage = PDFImage.objects.get(id=image_id)
+            degree_to_rotate = float(request.GET.get("degree_to_rotate"))
+            relative_box_str = str(request.GET.get("elem_box"))
+            desc = str(request.GET.get("desc"))
+            relative_box = json.loads(relative_box_str)
+            relative_box = (relative_box[0], relative_box[1], relative_box[2], relative_box[3])
+            padding_size = 128
+            w = relative_box[2]-relative_box[0]
+            h = relative_box[3]-relative_box[1]
+            # 获取旋转过的padding图像
+            rotate_image_key = "%s_%s_%.2f_%d" % (str(request.user), image_id, degree_to_rotate, padding_size)
+            image_rotate_padding = cache.get(rotate_image_key)
+            if image_rotate_padding is None:
+                #读取原始图像
+                image_stream = io.BytesIO(ocrimage.data_byte)
+                pil_image = Image.open(image_stream)
+                width, height = pil_image.size
+                if abs(degree_to_rotate)>0.000001:
+                    image_rotate_padding = pil_image.rotate(degree_to_rotate)
+                else:
+                    image_rotate_padding = pil_image
+                w_l_extend = padding_size
+                w_r_extend = padding_size
+                h_t_extend = padding_size
+                h_b_extend = padding_size
+                # expend
+                image_rotate_padding = ImageOps.expand(image_rotate_padding, border=(w_l_extend, h_t_extend, w_r_extend, h_b_extend) ,fill=0)
+                cache.set(rotate_image_key, pickle.dumps(image_rotate_padding), nx=True) 
+                cache.expire(rotate_image_key, 3600)
+            else:
+                image_rotate_padding = pickle.loads(image_rotate_padding)
+            image_crop = image_rotate_padding.crop(relative_box)
+
+            # 最终文件流
+            mapIO = BytesIO()
+            image_crop.save(mapIO, "png")
+            map_bytes = mapIO.getvalue()
+            # 创建elem
+            (w, h) = image_crop.size
+            elem = ChineseElem(image_bytes=map_bytes, width=w, height=h, desc_info=desc, create_user_id=str(request.user))
+            elem.save()
+            context = {'id':elem.id}
+            return HttpResponse(json.dumps(context))
+
+        except Exception as e:
+            return HttpResponse("err")
 
     # 设置文字方向
     @method_decorator(login_required)
@@ -419,6 +854,24 @@ class OcrView(View):
                 return HttpResponse("ok")
             else:
                 return HttpResponse("err")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
+    # 设置锚点
+    @method_decorator(login_required)
+    def save_anchor(self, request):
+        try:
+            center_x = float(request.GET.get("center_x"))
+            center_y = float(request.GET.get("center_y"))
+            zoom_scale = float(request.GET.get("zoom_scale"))
+            image_user_conf_id = request.GET.get("image_user_conf_id")
+            image_user_conf = ImageUserConf.objects.get(id=image_user_conf_id)  # 被标注的图片
+            image_user_conf.center_x = center_x
+            image_user_conf.center_y = center_y
+            image_user_conf.zoom_scale = zoom_scale
+            image_user_conf.save()
         except Exception as e:
             print(e)
             return HttpResponse("err")
@@ -652,6 +1105,7 @@ class OcrView(View):
             print(e)
             return HttpResponse(e)
 
+
     # 删除指定IP的多边形标注
     @method_decorator(login_required)
     def delete_polygon_by_id(self, request):
@@ -666,6 +1120,38 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return HttpResponse(e)
+
+
+    # 删除指定IP的偏旁部首
+    @method_decorator(login_required)
+    def delete_elem_by_id(self, request):
+        try:
+            elem_id = request.GET.get("elem_id")
+            elem_delete = ChineseElem.objects.get(id=elem_id)
+            if str(request.user)!=elem_delete.create_user_id:
+                return HttpResponse("ploygon不属于当前用户")
+            else:
+                # 删除对应的已经标注的polygon信息
+                polygonelem_set = elem_delete.polygonelem_set.all()
+                polygonelem_delete_num = polygonelem_set.count()
+                for polygonelem in polygonelem_set:
+                    polygonelem.delete()
+                # 删除对应的汉字-偏旁关系
+                characterelem_set = elem_delete.characterelem_set.all()
+                characterelem_delete_num = characterelem_set.count()
+                for characterelem in characterelem_set:
+                    characterelem.delete()
+
+                elem_delete.delete()
+                context = {
+                    "polygonelem_delete_num":polygonelem_delete_num,
+                    "characterelem_delete_num":characterelem_delete_num
+                }
+                return HttpResponse(json.dumps(context))
+        except Exception as e:
+            print(e)
+            return HttpResponse(e)
+
 
     # delete labeles relate to an apointed region
     @method_decorator(login_required)
@@ -824,7 +1310,7 @@ class OcrView(View):
 
             # get entropy
             gray_mean = (1-np.asarray(gray_image)/255.0).mean()  # 区域灰度平均值
-            background_modification = max(0,0.16-gray_mean)
+            background_modification = max(0.0000000001,0.16-gray_mean)
             array_image = array_image + background_modification  # Background entropy solidification
             if is_vertical is True:
                 probability = array_image/array_image.sum(axis=1, keepdims=True)

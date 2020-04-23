@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+        <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache">
+        <META HTTP-EQUIV="Expires" CONTENT="0"> 
+        <title>content: {{title}}</title>
+        <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+        <script src="http://www.chinaudio.tech/static/js/ocr_content_labeling.js"></script>
+        <script src="/static/js/gDBox.pkg.min.js"></script>
+        <link href="http://www.chinaudio.tech/static/css/ocr_content_labeling.css" rel="stylesheet" type="text/css" />
+        <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
+    </head>
+    <script>
+        var gMap;
+        var gMap_elem;
+        var gImageLayer_elem;
+        const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 1});
+        var labeling_mode="labeling";
+        var title_const = "ocr标注数据库:{{title}}";
+        var box;
+        var elem_box;
+        var gMap_elem_total;
+        var gImageLayer_elem_total=null;
+        var elem_fea_layer = null ;
+        var elem_fea_style = new gDBox.Style(
+        {
+            strokeColor: "#00ff00",
+            lineWeight: 1
+        });
+        var gMap_character;
+        var gImageLayer_character;
+        var current_character_elem_id;//当前汉字偏旁关系添加中的偏旁id
+
+
+
+    </script>
+    <body>
+        <div class="login" id="login" >
+            <a href="/ocr/index/">Home</a>
+            {% include "login_info_base.html" %}
+        </div>
+        <div class="main" id="main" >
+            <div class="title" id="title">
+                ocr标注数据库:{{title}}(样本标注模式)
+                &nbsp&nbsp
+                <!-- <a href="/ocr/content_labeling/?image_id={{image_id}}" style="font-style:italic;color:green">文字内容标注</a> -->
+            </div>
+            <div class="image_info" id="image_info">
+            </div>
+            <div class="major" id="major">
+                <div class="page_image" id="page_image">
+                    <div class="image_disp" id="image_disp">
+                    </div>
+                    <div class="polygon_info" id="polygon_info">
+                    </div>
+                </div>
+                <div class="chinese_character" id="chinese_character">
+                    <div class="elem_total" id="elem_total">
+                    </div>
+                    <div class="elem_next" id="elem_next">
+                    翻页
+                    </div>
+                    <div class="add_elem" id="add_elem">
+                        <div class="add_elem_image" id="add_elem_image">   
+                        </div>
+                        <div class="add_elem_desc" id="add_elem_desc">   
+
+                            <textarea name="elem_desc" id="elem_desc" placeholder="描述信息" style="height:123px;width:99%;font-size:1.25rem"  value="请输入描述.." onfocus="if (value =='请输入描述..'){value =''}" onblur="if (value ==''){value='请输入描述..'}" >请输入描述..</textarea>
+                        </div>
+                        <div class="add_elem_submit" id="add_elem_submit">
+                            <input type="button" id="add_elem_button" value="添加" onclick="add_elem({{image_id}}, {{degree_to_rotate}}, fea_elem.points, {{size}}, {{x_shift}}, {{y_shift}})" style="width:100%;height:100%;font-size:1.25rem"/>
+                        </div>
+                    </div>
+                    <div class="add_character_elem" id="add_character_elem">
+                        <div class="add_character_image" id="add_character_image">   
+                        </div>
+                    </div>
+                </div>
+                <div class="labeling_div" id="labeling_div">
+                    <div class="log" id="log">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+    <script>
+        $(document).ready(function() {
+            while(typeof gDBox == "undefined"){
+
+            }
+            // 调整div
+            let div_elem = document.getElementById("elem_total");
+            let div_elem_next = document.getElementById("elem_next");
+            let elem_next_height = div_elem_next.offsetHeight;
+            let div_add_elem = document.getElementById("add_elem");
+            let add_elem_height = div_add_elem.offsetHeight;
+            let div_add_character_elem = document.getElementById("add_character_elem");
+            let elem_add_character_height = div_add_character_elem.offsetHeight;
+            let div_chinese_character = document.getElementById("chinese_character");
+            let chinese_character_height = div_chinese_character.offsetHeight;
+            div_elem.style.height  = (chinese_character_height - add_elem_height - elem_add_character_height -elem_next_height -3)  + "px";
+
+            var image_size ={{size}};
+            var polygon = JSON.parse('{{polygon|safe}}');
+            for (item in polygon)
+            {
+                polygon[item].x = Math.round(polygon[item].x)
+                polygon[item].y = Math.round(polygon[item].y)
+            }
+
+            // 显示尺度信息
+            document.getElementById("image_info").innerHTML
+                ="frame_id:"+{{frame_id}}
+                +"&nbsp&nbsp frame_num:"+{{frame_num}}
+                +"&nbsp&nbsp image_id:"+{{image_id}}
+                +"&nbsp&nbsp width:"+{{image_width}}
+                +"&nbsp&nbsp height:"+{{image_height}};
+
+            document.getElementById("polygon_info").innerHTML
+                ="("+polygon[0].x+","+polygon[0].y+")  "
+                +"("+polygon[1].x+","+polygon[1].y+")<br>"
+                +"("+polygon[3].x+","+polygon[3].y+")  "
+                +"("+polygon[2].x+","+polygon[2].y+")  ";
+            
+
+            gMap = new gDBox.Map('image_disp', {w:512, zoom: 512, cx: 0, cy: 0,  zoomMax: 5120, zoomMin: 48});
+            // 设置当前操作模式为‘drawRect’
+            gMap.setMode('drawRect', gFetureStyle);
+            // 图片层实例\添加
+            let gImageLayer = new gDBox.Layer.Image('img', "/ocr/labeling/get_polygon_image/?image_id="+{{image_id}}+"&polygon_id="+{{polygon_id}}+"&tar_width=512&tar_height=512&is_extend=true", {w:512, h: 512}, {zIndex: 1});
+            gMap.addLayer(gImageLayer);
+            var relative_box = JSON.parse("{{relative_box}}");
+            var relative_points = [{'x':relative_box[0], 'y':relative_box[1]}, {'x':relative_box[2], 'y':relative_box[1]}, {'x':relative_box[2],'y':relative_box[3]}, {'x':relative_box[0], 'y':relative_box[3]}];
+            polygon_map = img2gdbox_map(relative_points, 512, 512, image_size, image_size);
+            var feature_layer = new gDBox.Layer.Feature("{{title}}", {zIndex: 2, transparent: true});
+            gMap.addLayer(feature_layer);
+            var style_modify = new gDBox.Style({strokeColor: "#0000ff", lineWeight: 1});
+            var style_elem = new gDBox.Style({strokeColor: "#ff0000", lineWeight: 1});
+
+            fea_modify = add_polygon_disp(feature_layer, style_modify, polygon_map, {{polygon_id}}, "modify");
+            fea_elem = add_polygon_disp(feature_layer, style_elem, polygon_map, {{polygon_id}}, "elem");
+            fea_elem.hide();
+
+            
+            //设置偏旁部首总览图像
+            var elem_row_col = getElemPage_info(div_elem.offsetWidth, div_elem.offsetHeight, 64);
+            div_chinese_character.style.width = elem_row_col.col*64+"px";
+            var div_labeling = document.getElementById("labeling_div");
+            var div_major = document.getElementById("major");
+            div_labeling.style.width=(div_major.offsetWidth-512-elem_row_col.col*64-16)+"px";
+
+            gMap_elem_total = new gDBox.Map('elem_total', {w:elem_row_col.col*64, zoom: elem_row_col.col*64, cx: 0, cy: 0, zoomMax: elem_row_col.col*64*16, zoomMin: elem_row_col.col*64/4});
+            gMap_elem_total.setMode('drawRect', gFetureStyle);
+            gImageLayer_elem_total = new gDBox.Layer.Image('img_elem_total', "/ocr/content_labeling/get_elem_page/?page_index=0&row="+elem_row_col.row+"&col="+elem_row_col.col, {w: elem_row_col.col*64, h: elem_row_col.row*64}, {zIndex: 1});
+            gMap_elem_total.addLayer(gImageLayer_elem_total);
+            //获取elem id值
+            elem_fea_layer = new gDBox.Layer.Feature("elem_total", {zIndex: 2, transparent: true, opacity: false});
+            gMap_elem_total.addLayer(elem_fea_layer);
+            achieve_elem_id(elem_fea_layer, elem_fea_style, 0, elem_row_col.row, elem_row_col.col);
+
+            console.log(gMap_elem_total);
+            gMap_character = new gDBox.Map('add_character_image', {w:128, zoom: 128, cx: 0, cy: 0, zoomMax: 128*16, zoomMin: 128/4});
+            // feature-reset监听
+            gMap_elem_total.events.on(
+                'featureStatusReset',
+                function () {
+                    gMap_elem_total.mLayer.removeAllMarkers();
+                }
+            );
+            gMap_elem_total.events.on('featureSelected', function (feature) {
+                if(labeling_mode=="elem"){
+                    let cFeature = feature;
+                    // 删除按钮添加
+                    const featureBounds = cFeature.getBounds();
+                    const leftTopPoint = featureBounds[0]; // 边界坐上角坐标
+                    let deleteMarker = new gDBox.Marker(`marker-${cFeature.id}`,
+                        {
+                            src: '/static/image/delete.png',
+                            x: leftTopPoint.x,
+                            y: leftTopPoint.y,
+                            offset: {
+                                x: 0,
+                                y: 0
+                            },
+                            featureId: cFeature.id
+                        }
+                    );
+                    gMap_elem_total.mLayer.addMarker(deleteMarker);
+                    deleteMarker.regEvent('click', function () {
+                        // 执行选中元素删除
+                        console.log(gImageLayer_elem_total);
+                        delete_elem_by_id(cFeature.id, gMap_elem_total, elem_fea_layer,elem_fea_style, gImageLayer_elem_total, elem_row_col.row, elem_row_col.col);
+                    });
+                    gMap_character.removeLayer(gImageLayer_character);
+
+                    let tar_width=128;
+                    let tar_height=128;
+                    elem_id = cFeature.id;
+                    let size_str = cFeature.data.create_user_id;
+                    elem_size = JSON.parse(size_str);
+                    let ratio_h = elem_size.height * 1.0 /tar_height;
+                    let ratio_w = elem_size.width * 1.0 /tar_width;
+                    let ratio = Math.max(ratio_w, ratio_h);
+                    tar_width = Math.floor (elem_size.width / ratio);
+                    tar_height = Math.floor (elem_size.height / ratio);
+
+                    gImageLayer_character = new gDBox.Layer.Image('img_character', "/ocr/content_labeling/get_character_image/?elem_id="+elem_id+"&tar_width="+tar_width+"&tar_height="+tar_height, {w:tar_width, h:tar_height}, {zIndex: 1});
+                    gMap_character.addLayer(gImageLayer_character);
+                    current_character_elem_id = elem_id;
+                }else{
+                }
+            });
+
+            
+            function onDocKeydown(e) {
+                    e = e || window.event;
+                    if (e.ctrlKey && e.keyCode==65) {　　　//快捷键 ctrl +A
+                        title = document.getElementById("title");
+                        title.innerHTML = title_const + "(偏旁部首添加)";
+                        labeling_mode = "elem"
+                        fea_modify.hide();
+                        fea_elem.show();
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==83) {　　　//快捷键 ctrl +S
+                        title = document.getElementById("title");
+                        title.innerHTML = title_const + "(样本标注模式)";
+                        labeling_mode = "labeling";
+                        fea_elem.hide()
+                        fea_modify.show()
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==76) {　　　//快捷键 ctrl +L
+                        // get_polygon_statistic({{image_id}});
+                        return false;
+                    }
+                }
+            document.onkeydown = onDocKeydown;
+            
+            gMap_elem = new gDBox.Map('add_elem_image', {w:128, zoom: 128, cx: 0, cy: 0,  zoomMax: 1280, zoomMin: 32});
+            // 设置当前操作模式为‘drawRect’
+            gMap_elem.setMode('drawRect', gFetureStyle);
+            // 图片层实例\添加
+            var add_elem_info = document.getElementById("add_elem_info");
+            box = get_box_from_feature(fea_elem.points, 512, 512, {{size}}, {{size}}, {{x_shift}}, {{y_shift}});
+            elem_box = JSON.stringify(box);
+            let w = box[2] - box[0];
+            let h = box[3] - box[1];
+            ratio_w = w*1.0/128;
+            ratio_h = h*1.0/128;
+            ratio = Math.max(ratio_w, ratio_h);
+            let tar_width = Math.round(w / ratio);
+            let tar_height = Math.round(h / ratio);
+            gImageLayer_elem = new gDBox.Layer.Image('img_elem', "/ocr/labeling/get_elem_image/?image_id="+{{image_id}}+"&degree_to_rotate="+{{degree_to_rotate}}+"&tar_width=128&tar_height=128&elem_box="+elem_box, {w:tar_width, h:tar_height}, {zIndex: 1});
+            gMap_elem.addLayer(gImageLayer_elem);
+            gMap.events.on(
+                    'geometryEditDone',
+                    function (type, activeFeature, points) {
+                        if(activeFeature.data.create_user_id=="modify"){
+                            activeFeature.show();
+                        }else{
+                            activeFeature.update({points});
+                            activeFeature.show();
+                            gMap_elem.removeLayer(gImageLayer_elem);
+                            box = get_box_from_feature(points, 512, 512, {{size}}, {{size}}, {{x_shift}}, {{y_shift}});
+                            var elem_box = JSON.stringify(box);
+                            let w = box[2] - box[0];
+                            let h = box[3] - box[1];
+                            ratio_w = w*1.0/128;
+                            ratio_h = h*1.0/128;
+                            ratio = Math.max(ratio_w, ratio_h);
+                            let tar_width = Math.round(w / ratio);
+                            let tar_height = Math.round(h / ratio);
+                            gImageLayer_elem = new gDBox.Layer.Image('img_elem', "/ocr/labeling/get_elem_image/?image_id="+{{image_id}}+"&degree_to_rotate="+{{degree_to_rotate}}+"&tar_width=128&tar_height=128&elem_box="+elem_box, {w:tar_width, h:tar_height}, {zIndex: 1});
+                            gMap_elem.addLayer(gImageLayer_elem);
+
+                        }
+                    }
+                );
+        
+            window.onresize = function () {
+                gMap && gMap.resize();
+            };
+
+        });
+    </script>
+</html>

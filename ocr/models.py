@@ -82,6 +82,10 @@ class ImageUserConf(BaseModel):
     entropy_thr = models.FloatField(default=0.9,null=False)
     projection_thr_strict = models.FloatField(default=0.6,null=False)
     projection_thr_easing = models.FloatField(default=0.1,null=False)
+    center_x = models.FloatField(default=0, null=False)
+    center_y = models.FloatField(default=0.2, null=False)
+    zoom_scale = models.FloatField(default=1, null=False)
+
 
     class Meta:
         unique_together = ["image", "create_user_id"]
@@ -99,5 +103,38 @@ class OcrLabelingPolygon(BaseModel):
     polygon = models.BinaryField(null=True)  # json编码
     edit_count = models.IntegerField(default=0,null=False)
     labeling_count = models.IntegerField(default=0,null=False)
-    labeling_content = models.BinaryField(null=True)
+    labeling_content = models.BinaryField(null=False, default=False)
 
+
+class ChineseElem(BaseModel):
+    """
+    组成汉字的元素
+    image_bytes: 元素实例图像
+    desc: 相关描述
+    """
+    image_bytes = models.BinaryField(null=False)
+    height = models.IntegerField(null=False, default=128)
+    width = models.IntegerField(null=False, default=128)
+    desc_info = models.TextField(null=False, default="")
+    
+
+class CharacterElem(BaseModel):
+    """
+    character: 对应的汉字
+    elem: 对应的偏旁
+    """
+    character  =  models.CharField(max_length=16, null=True)
+    elem = models.ForeignKey('ChineseElem', on_delete=models.CASCADE) 
+    class Meta:
+        unique_together = ["character", "elem", "create_user_id"]
+
+
+class PolygonElem(BaseModel):
+    """
+    标签对应的偏旁部首
+    polygon:关系中的标注矩形
+    elem:标注对应的偏旁部首
+    """
+    polygon = models.ForeignKey('OcrLabelingPolygon', on_delete=models.CASCADE)
+    elem = models.ForeignKey('ChineseElem', on_delete=models.CASCADE)
+    desc_info = models.TextField(null=False, default="")

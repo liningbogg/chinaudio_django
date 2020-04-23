@@ -41,7 +41,20 @@ body,div
     float:left;
     width:99%;
     top:0%;
-    height:96%;
+    height:92%;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+    overflow-y:auto;
+}
+.ICP
+{
+    position:relative;
+    float:left;
+    text-align:center;
+    width:99%;
+    top:0%;
+    height:3%;
     border-color:red;
     border-width:0.05rem;
     border-style:solid;

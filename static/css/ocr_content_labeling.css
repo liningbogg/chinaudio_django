@@ -1,0 +1,251 @@
+html
+{
+    font-size: calc(100vw/1920*16);
+}
+body,div
+{
+    position:fixed;
+    margin:0;padding:0;
+    height:100%;
+    width:100%;
+}
+.login
+{
+    position:relative;
+    float:left;
+    width:99%;
+    height:3%;
+    font-size:1.25rem;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
+}
+/*主信息窗体*/
+.main
+{
+    position:relative;
+    float:left;
+    width:99%;
+    top:0%;
+    height:96%;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
+/*标题*/
+.title
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:6%;
+    display:table;
+    font-size:2rem;
+    border-color:yellow;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.image_info
+{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:3%;
+    display:table;
+    font-size:1rem;
+    border-color:yellow;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.major{
+    position:relative;
+    float:left;
+    width:100%;
+    top:0%;
+    height:90%;
+    display:table;
+    font-size:1rem;
+    border-color:yellow;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.page_image
+{
+    position:relative;
+    float:left;
+    width: 512px;
+    top:0%;
+    height:99%;
+    font-size:1rem;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.image_disp
+{
+    position:relative;
+    float:left;
+    width: 512px;
+    top:0%;
+    height:512px;
+    font-size:1rem;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+
+.polygon_info
+{
+    position:relative;
+    float:left;
+    width: 512px;
+    top:0%;
+    height:6%;
+    font-size:1rem;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
+}
+/*偏旁部首信息*/
+.chinese_character
+{
+    position:relative;
+    float:left;
+    width: 48%;
+    top:0%;
+    height:99%;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.elem_total
+{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:75%;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.elem_next
+{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:32px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.add_elem
+{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:128px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.add_elem_image
+{
+    position:relative;
+    float:left;
+    width: 128px;
+    top:0%;
+    height:128px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.add_elem_desc
+{
+    position:relative;
+    float:left;
+    width: 80%;
+    top:0%;
+    height:100%;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.add_elem_submit
+{
+    position:relative;
+    float:left;
+    width: 6%;
+    top:0%;
+    height:100%;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.add_character_elem
+{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:128px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+/*汉字偏旁关系添加所用图片*/
+.add_character_image{
+    position:relative;
+    float:left;
+    width: 128px;
+    top:0%;
+    height:128px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+/*标注区域*/
+.labeling_div
+{
+    position:relative;
+    float:left;
+    width: 24%;
+    top:0%;
+    height:99%;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.log
+{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:20%;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+    overflow-y:auto;
+}
