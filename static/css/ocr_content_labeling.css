@@ -177,9 +177,9 @@ body,div
 {
     position:relative;
     float:left;
-    width: 80%;
+    width: 72%;
     top:0%;
-    height:100%;
+    height:98%;
     font-size:1rem;
     border-color:green;
     border-width:0.05rem;
@@ -189,14 +189,15 @@ body,div
 {
     position:relative;
     float:left;
-    width: 6%;
+    width: 12%;
     top:0%;
-    height:100%;
+    height:98%;
     font-size:1rem;
     border-color:green;
     border-width:0.05rem;
     border-style:solid;
 }
+
 
 .add_character_elem
 {
@@ -222,6 +223,76 @@ body,div
     border-width:0.05rem;
     border-style:solid;
 }
+.character_operator{
+    position:relative;
+    float:left;
+    width: 80%;
+    top:0%;
+    height:128px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.character_operator_info{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:40px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+    overflow:auto;
+}
+.character_operator_delete{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:40px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.character_operator_add{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:40px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.add_character_desc
+{
+    position:relative;
+    float:left;
+    width: 89%;
+    top:0%;
+    height:99%;
+    font-size:0.75rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+
+.add_character_submit
+{
+    position:relative;
+    float:left;
+    width: 9%;
+    top:0%;
+    height:99%;
+    font-size:0.75rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
 
 /*标注区域*/
 .labeling_div
@@ -242,10 +313,58 @@ body,div
     float:left;
     width: 99%;
     top:0%;
-    height:20%;
+    height:16rem;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+    overflow:auto;
+}
+
+.elem_selected_disp
+{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:64px;
     font-size:1rem;
     border-color:green;
     border-width:0.05rem;
     border-style:solid;
     overflow-y:auto;
+}
+
+.character_assist{
+    position:relative;
+    float:left;
+    width: 99%;
+    top:0%;
+    height:64px;
+    font-size:1rem;
+    border-color:blue;
+    border-width:0rem;
+    border-style:solid;
+}
+.assist_image_disp{
+    position:relative;
+    float:left;
+    width: 80%;
+    top:0%;
+    height:64px;
+    font-size:1rem;
+    border-color:red;
+    border-width:0rem;
+    border-style:solid;
+}
+.assist_text{
+    position:relative;
+    float:left;
+    width: 18%;
+    top:0%;
+    height:60px;
+    font-size:1rem;
+    border-color:yellow;
+    border-width:0.05rem;
+    border-style:solid;
 }

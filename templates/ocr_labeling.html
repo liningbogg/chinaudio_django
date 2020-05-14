@@ -5,9 +5,11 @@
         <title>Data：{{title}}</title>
         <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
         <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
-        <script src="http://www.chinaudio.tech/static/js/ocr_labeling.js"></script> 
+        <!-- <script src="http://www.chinaudio.tech/static/js/ocr_labeling.js"></script>  -->
+        <script src="/static/js/ocr_labeling.js"></script> 
         <script src="/static/js/gDBox.pkg.min.js"></script>
-        <link href="http://www.chinaudio.tech/static/css/ocr_labeling.css" rel="stylesheet" type="text/css" />
+        <!-- <link href="http://www.chinaudio.tech/static/css/ocr_labeling.css" rel="stylesheet" type="text/css" /> -->
+        <link href="/static/css/ocr_labeling.css" rel="stylesheet" type="text/css" />
         <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
     </head>
     <script>
@@ -23,7 +25,7 @@
             <div class="title" id="title">
                 ocr标注数据库:{{title}}
                 &nbsp&nbsp
-                <a href="/ocr/content_labeling/?image_id={{image_id}}" target="_blank" style="font-style:italic;color:green">文字内容标注</a>
+                <a href="/ocr/content_labeling/?image_id={{image_id}}&polygon_id_pre=-1" target="_blank" style="font-style:italic;color:green">文字内容标注</a>
             </div>
             <div class="image_info" id="image_info">
             </div>

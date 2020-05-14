@@ -42,6 +42,12 @@ urlpatterns = [
     path('content_labeling/get_elem_page/', ocr_view.get_elem_page),
     path('content_labeling/delete_elem_by_id/', ocr_view.delete_elem_by_id),
     path('content_labeling/get_character_image/', ocr_view.get_character_image),
-
-
+    path('content_labeling/add_character/', ocr_view.add_character),
+    path('content_labeling/delete_character/', ocr_view.delete_character),
+    path('content_labeling/achieve_characters_from_elem/', ocr_view.achieve_characters_from_elem),
+    path('content_labeling/get_elem_selected/', ocr_view.get_elem_selected),
+    path('content_labeling/character_assist_check/', ocr_view.character_assist_check),
+    path('content_labeling/elem_selected_add/', ocr_view.elem_selected_add),
+    path('content_labeling/elem_selected_delete/', ocr_view.elem_selected_delete),
+    path('content_labeling/alter_polygon_by_id/', ocr_view.alter_polygon_by_id),
 ]

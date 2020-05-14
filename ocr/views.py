@@ -356,16 +356,22 @@ class OcrView(View):
             image_id = request.GET.get('image_id')  # image_id
             tar_width = request.GET.get('tar_width')  
             tar_height = request.GET.get('tar_height')
+            polygon_id_pre = request.GET.get('polygon_id_pre')
             pdfimage = PDFImage.objects.get(id=image_id)
             pdf = pdfimage.ocrPDF
             image_width = pdfimage.width
             padding_size = 128
             image_height = pdfimage.height
-            non_label_set = pdfimage.ocrlabelingpolygon_set.filter(labeling_content=False, create_user_id=str(request.user))
+            non_label_set = pdfimage.ocrlabelingpolygon_set.filter(labeling_content=False, create_user_id=str(request.user), id__gt=polygon_id_pre)
             if non_label_set.count() == 0:
                 return render(request, 'ocr_content_labeling.html',None)
             else:
+                elem_selected = []
                 polygon_label = non_label_set[0]
+                polygonElemSet = polygon_label.polygonelem_set.all()
+                for polygonElem in polygonElemSet:
+                    print(polygonElem.elem.id)
+                    elem_selected.append(polygonElem.elem.id)
                 polygon_id = polygon_label.id
                 polygon = str(polygon_label.polygon,'utf-8')
                 points = json.loads(polygon)
@@ -402,10 +408,12 @@ class OcrView(View):
                     "degree_to_rotate":degree_to_rotate,
                     "image_height":image_height,
                     "frame_num":pdf.frame_num,
-                    "x_shift":points[0]['x'] - ((size-w) // 2),
-                    "y_shift":points[0]['y'] - ((size-h) // 2)
+                    "x_shift":points[0]['x'] - ((size-w) // 2) ,
+                    "y_shift":points[0]['y'] - ((size-h) // 2) ,
+                    "x_shift_without_padding":points[0]['x'] - ((size-w) // 2) - padding_size,
+                    "y_shift_without_padding":points[0]['y'] - ((size-h) // 2) - padding_size,
+                    "elem_selected":elem_selected
                 }
-
                 return render(request, 'ocr_content_labeling.html', context)
         except Exception as e:
             print(e)
@@ -568,6 +576,61 @@ class OcrView(View):
             image_map.save(mapIO, "JPEG")
             map_bytes = mapIO.getvalue()
             return HttpResponse(map_bytes, 'image/jpeg')
+
+        except Exception as e:
+            print(e)
+            return None
+
+
+    @method_decorator(login_required)
+    def get_elem_selected(self, request):
+        try:
+            elem_selected_str=request.GET.get("elem_selected_str")
+            elem_selected=json.loads(elem_selected_str)
+            width=int(request.GET.get("width"))
+            size = 64
+            image = Image.new("RGB", (width, size), "#FFFFFF")
+
+            index = 0
+            for elem_id in elem_selected:
+                col_index = index * size
+                # 获取elem图片
+                elem_image_key = "elem_%d_%d_%d" % (elem_id, size, size)
+                image_elem = cache.get(elem_image_key)
+                if image_elem is None:
+                    #读取原始图像
+                    elem = ChineseElem.objects.get(id=elem_id)
+                    image_stream = io.BytesIO(elem.image_bytes)
+                    pil_image = Image.open(image_stream)
+                    width, height = pil_image.size
+                    ratio_w =width*1.0/size
+                    ratio_h =height*1.0/size
+                    ratio = max(ratio_w, ratio_h)
+                    tar_width = int(width/ratio)
+                    tar_height = int(height/ratio)
+                    image_elem = pil_image.resize((tar_width, tar_height), Image.ANTIALIAS)
+                    cache.set(elem_image_key, pickle.dumps(image_elem), nx=True) 
+                    cache.expire(elem_image_key, 3600)
+                else:
+                    image_elem = pickle.loads(image_elem)
+                # 粘贴
+                (w, h) = image_elem.size
+                x_init=col_index
+                y_init=0
+                x_shift=0
+                y_shift=0
+                if w<h:
+                    x_shift=(size-w) // 2
+                else:
+                    y_shift=(size-h) // 2
+                image.paste(image_elem, (x_init+x_shift, y_init+y_shift))
+                index += 1
+
+            mapIO = BytesIO()
+            image.save(mapIO, "JPEG")
+            map_bytes = mapIO.getvalue()
+            return HttpResponse(map_bytes, 'image/jpeg')
+
 
         except Exception as e:
             print(e)
@@ -752,6 +815,111 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return None
+
+    @method_decorator(login_required)
+    def add_character(self, request):
+        try:
+            elem_id = request.GET.get("elem_id")
+            desc = request.GET.get("desc")
+            elem = ChineseElem.objects.get(id=elem_id)
+            character_add = ""
+            for character in desc:
+                if character!= " ":
+                    try:
+                        CharacterElem(elem=elem, character=character, create_user_id=str(request.user)).save()
+                        character_add+=character
+                    except Exception as e:
+                        pass
+            return HttpResponse(character_add)
+            
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+    @method_decorator(login_required)
+    def character_assist_check(self, request):
+        try:
+            characters = request.GET.get("character")
+            elem_list = []
+            for character in characters:
+                if character!= " ":
+                    try:
+                        characterelem_set = CharacterElem.objects.filter(create_user_id = str(request.user), character=character)
+                        if characterelem_set.count() >0:
+                            for characterelem in characterelem_set:
+                                elem_list.append(characterelem.elem.id)
+                    except Exception as e:
+                        pass
+
+            return HttpResponse(json.dumps(elem_list))
+
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
+    @method_decorator(login_required)
+    def delete_character(self, request):
+        try:
+            elem_id = request.GET.get("elem_id")
+            desc = request.GET.get("desc")
+            elem = ChineseElem.objects.get(id=elem_id)
+            character_add = ""
+
+            for character in desc:
+                if character!= " ":
+                    try:
+                        elem.characterelem_set.get(character=character).delete()
+                        character_add+=character
+                    except Exception as e:
+                        return HttpResponse("err")
+            return HttpResponse(character_add)
+            
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
+    @method_decorator(login_required)
+    def achieve_characters_from_elem(self, request):
+        try:
+            character_str = ""
+            elem_id = request.GET.get("elem_id")
+            elem = ChineseElem.objects.get(id=elem_id)
+            characterset = elem.characterelem_set.all()
+            for character_elem in characterset:
+                character_str += character_elem.character
+            return HttpResponse(character_str)
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
+    @method_decorator(login_required)
+    def elem_selected_add(self, request):
+        try:
+            elem_id = request.GET.get("elem_id")
+            polygon_id = request.GET.get("polygon_id")
+            polygon = OcrLabelingPolygon.objects.get(id=polygon_id)
+            elem = ChineseElem.objects.get(id=elem_id)
+            PolygonElem(polygon=polygon, elem=elem, create_user_id=str(request.user), desc_info="created_auto").save()
+            return HttpResponse("ok")
+        except Exception as e:
+            return HttpResponse(str(e))
+
+
+    @method_decorator(login_required)
+    def elem_selected_delete(self, request):
+        try:
+            elem_id = request.GET.get("elem_id")
+            polygon_id = request.GET.get("polygon_id")
+            polygon = OcrLabelingPolygon.objects.get(id=polygon_id)
+            elem = ChineseElem.objects.get(id=elem_id)
+            PolygonElem.objects.get(polygon=polygon,elem=elem).delete()
+
+            return HttpResponse("ok")
+        except Exception as e:
+            return HttpResponse(str(e))
 
 
     @method_decorator(login_required)

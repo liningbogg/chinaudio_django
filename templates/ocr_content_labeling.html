@@ -8,9 +8,11 @@
         <title>content: {{title}}</title>
         <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
         <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
-        <script src="http://www.chinaudio.tech/static/js/ocr_content_labeling.js"></script>
+        <!-- <script src="http://www.chinaudio.tech/static/js/ocr_content_labeling.js"></script> -->
+        <script src="/static/js/ocr_content_labeling.js"></script>
         <script src="/static/js/gDBox.pkg.min.js"></script>
-        <link href="http://www.chinaudio.tech/static/css/ocr_content_labeling.css" rel="stylesheet" type="text/css" />
+        <!-- <link href="http://www.chinaudio.tech/static/css/ocr_content_labeling.css" rel="stylesheet" type="text/css" /> -->
+        <link href="/static/css/ocr_content_labeling.css" rel="stylesheet" type="text/css" />
         <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
     </head>
     <script>
@@ -30,12 +32,44 @@
             strokeColor: "#00ff00",
             lineWeight: 1
         });
+        var elem_fea_style_selected = new gDBox.Style(
+        {
+            strokeColor: "#0000ff",
+            lineWeight: 1
+        });
         var gMap_character;
         var gImageLayer_character;
         var current_character_elem_id;//当前汉字偏旁关系添加中的偏旁id
 
-
-
+        var elem_selected = new Set({{elem_selected|safe}});//已经选择的偏旁部首
+        // 已经选择的偏旁显示和编辑
+        var gMap_elem_selected;
+        var gImageLayer_elem_selected=null;
+        var elem_selected_fea_layer = null ;
+        var elem_selected_fea_style = new gDBox.Style(
+        {
+            strokeColor: "#00ff00",
+            lineWeight: 1
+        });
+        var elem_selected_fea_style_selected = new gDBox.Style(
+        {
+            strokeColor: "#0000ff",
+            lineWeight: 1
+        });
+        // 偏旁协助
+        var gMap_elem_assist;
+        var gImageLayer_elem_assist=null;
+        var elem_assist_fea_layer = null ;
+        var elem_assist_fea_style = new gDBox.Style(
+        {
+            strokeColor: "#00ff00",
+            lineWeight: 1
+        });
+        var elem_assist_fea_style_selected = new gDBox.Style(
+        {
+            strokeColor: "#0000ff",
+            lineWeight: 1
+        });
     </script>
     <body>
         <div class="login" id="login" >
@@ -67,20 +101,49 @@
                         <div class="add_elem_image" id="add_elem_image">   
                         </div>
                         <div class="add_elem_desc" id="add_elem_desc">   
-
-                            <textarea name="elem_desc" id="elem_desc" placeholder="描述信息" style="height:123px;width:99%;font-size:1.25rem"  value="请输入描述.." onfocus="if (value =='请输入描述..'){value =''}" onblur="if (value ==''){value='请输入描述..'}" >请输入描述..</textarea>
+                            <input type="text" name="elem_desc" id="elem_desc" placeholder="描述信息" style="height:123px;width:99%;font-size:1.25rem"  value="请输入描述.." onfocus="if (value =='请输入描述..'){value =''}" onblur="if (value ==''){value='请输入描述..'}" />
                         </div>
                         <div class="add_elem_submit" id="add_elem_submit">
-                            <input type="button" id="add_elem_button" value="添加" onclick="add_elem({{image_id}}, {{degree_to_rotate}}, fea_elem.points, {{size}}, {{x_shift}}, {{y_shift}})" style="width:100%;height:100%;font-size:1.25rem"/>
+                            <input type="button" id="add_elem_button" value="添加" onclick="add_elem({{image_id}}, {{degree_to_rotate}}, fea_elem.points, {{size}}, {{x_shift}}, {{y_shift}}, gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected)" style="width:95%;height:95%;font-size:1.25rem"/>
                         </div>
                     </div>
                     <div class="add_character_elem" id="add_character_elem">
                         <div class="add_character_image" id="add_character_image">   
                         </div>
+                        <div class="character_operator" id="character_operator">
+                            <div class="character_operator_info" id="character_operator_info">
+                            </div>
+                            <div class="character_operator_delete" id="character_operator_delete">
+                                <div class="add_character_desc" id="delete_character_desc">   
+                                    <input type="text" name="character_delete" id="character_delete" placeholder="输入汉字" style="height:35px;width:99%;font-size:1rem"  value="输入汉字" onfocus="if (value =='输入汉字'){value =''}" onblur="if (value ==''){value='输入汉字'}" />
+                                </div>
+                                <div class="add_character_submit" id="delete_character_submit">
+                                    <input type="button" id="delete_character_button" value="删除" onclick="delete_character(current_character_elem_id)" style="width:100%;height:100%;font-size:0.75rem"/>
+                                </div>
+                            </div>
+                            <div class="character_operator_add" id="character_operator_add">
+                                <div class="add_character_desc" id="add_character_desc">   
+                                    <input type="text" name="character_desc" id="character_desc" placeholder="输入汉字" style="height:35px;width:99%;font-size:1rem"  value="输入汉字" onfocus="if (value =='输入汉字'){value =''}" onblur="if (value ==''){value='输入汉字'}" />
+                                </div>
+                                <div class="add_character_submit" id="add_character_submit">
+                                    <input type="button" id="add_character_button" value="添加" onclick="add_character(current_character_elem_id)" style="width:100%;height:100%;font-size:0.75rem"/>
+                                </div>
+                            </div>
+                            
+                        </div>
                     </div>
                 </div>
                 <div class="labeling_div" id="labeling_div">
                     <div class="log" id="log">
+                    </div>
+                    <div class="elem_selected_disp" id="elem_selected_disp">
+                    </div>
+                    <div class="character_assist" id="character_assist">
+                        <div class="assist_image_disp" id="assist_image_disp">
+                        </div>
+                        <div class="assist_text" id="assist_text">
+                            <input type="text" id="assist_text_input" placeholder="偏旁提示" style="height:58px;width:96%;font-size:1rem" value="偏旁提示" onfocus="if(value=='偏旁提示'){value=''}" onblur="if(value==''){value='偏旁提示'}" oninput="character_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_assist_fea_style, elem_assist_fea_style_selected, elem_selected)"/>
+             
                     </div>
                 </div>
             </div>
@@ -101,6 +164,7 @@
             let div_add_character_elem = document.getElementById("add_character_elem");
             let elem_add_character_height = div_add_character_elem.offsetHeight;
             let div_chinese_character = document.getElementById("chinese_character");
+            var div_elem_selected_disp = document.getElementById("elem_selected_disp");
             let chinese_character_height = div_chinese_character.offsetHeight;
             div_elem.style.height  = (chinese_character_height - add_elem_height - elem_add_character_height -elem_next_height -3)  + "px";
 
@@ -111,6 +175,9 @@
                 polygon[item].x = Math.round(polygon[item].x)
                 polygon[item].y = Math.round(polygon[item].y)
             }
+
+            document.getElementById("assist_text_input").focus()
+
 
             // 显示尺度信息
             document.getElementById("image_info").innerHTML
@@ -134,24 +201,32 @@
             let gImageLayer = new gDBox.Layer.Image('img', "/ocr/labeling/get_polygon_image/?image_id="+{{image_id}}+"&polygon_id="+{{polygon_id}}+"&tar_width=512&tar_height=512&is_extend=true", {w:512, h: 512}, {zIndex: 1});
             gMap.addLayer(gImageLayer);
             var relative_box = JSON.parse("{{relative_box}}");
-            var relative_points = [{'x':relative_box[0], 'y':relative_box[1]}, {'x':relative_box[2], 'y':relative_box[1]}, {'x':relative_box[2],'y':relative_box[3]}, {'x':relative_box[0], 'y':relative_box[3]}];
+            var relative_points = [
+                {'x':relative_box[0], 'y':relative_box[1]},
+                {'x':relative_box[2], 'y':relative_box[1]},
+                {'x':relative_box[2], 'y':relative_box[3]},
+                {'x':relative_box[0], 'y':relative_box[3]}
+                ];
             polygon_map = img2gdbox_map(relative_points, 512, 512, image_size, image_size);
             var feature_layer = new gDBox.Layer.Feature("{{title}}", {zIndex: 2, transparent: true});
             gMap.addLayer(feature_layer);
             var style_modify = new gDBox.Style({strokeColor: "#0000ff", lineWeight: 1});
             var style_elem = new gDBox.Style({strokeColor: "#ff0000", lineWeight: 1});
-
             fea_modify = add_polygon_disp(feature_layer, style_modify, polygon_map, {{polygon_id}}, "modify");
             fea_elem = add_polygon_disp(feature_layer, style_elem, polygon_map, {{polygon_id}}, "elem");
             fea_elem.hide();
 
-            
             //设置偏旁部首总览图像
             var elem_row_col = getElemPage_info(div_elem.offsetWidth, div_elem.offsetHeight, 64);
             div_chinese_character.style.width = elem_row_col.col*64+"px";
             var div_labeling = document.getElementById("labeling_div");
             var div_major = document.getElementById("major");
             div_labeling.style.width=(div_major.offsetWidth-512-elem_row_col.col*64-16)+"px";
+            //设置已经选择偏旁部首图像
+            div_elem_selected_disp.style.width = Math.floor(div_elem_selected_disp.offsetWidth/64)*64;
+            //设置已经选择偏旁部首图像
+            let div_elem_assist_disp = document.getElementById("assist_image_disp");
+            div_elem_assist_disp.style.width = Math.floor(div_elem_assist_disp.offsetWidth/64)*64;
 
             gMap_elem_total = new gDBox.Map('elem_total', {w:elem_row_col.col*64, zoom: elem_row_col.col*64, cx: 0, cy: 0, zoomMax: elem_row_col.col*64*16, zoomMin: elem_row_col.col*64/4});
             gMap_elem_total.setMode('drawRect', gFetureStyle);
@@ -160,7 +235,7 @@
             //获取elem id值
             elem_fea_layer = new gDBox.Layer.Feature("elem_total", {zIndex: 2, transparent: true, opacity: false});
             gMap_elem_total.addLayer(elem_fea_layer);
-            achieve_elem_id(elem_fea_layer, elem_fea_style, 0, elem_row_col.row, elem_row_col.col);
+            achieve_elem_id(elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected, 0, elem_row_col.row, elem_row_col.col);
 
             console.log(gMap_elem_total);
             gMap_character = new gDBox.Map('add_character_image', {w:128, zoom: 128, cx: 0, cy: 0, zoomMax: 128*16, zoomMin: 128/4});
@@ -192,11 +267,10 @@
                     gMap_elem_total.mLayer.addMarker(deleteMarker);
                     deleteMarker.regEvent('click', function () {
                         // 执行选中元素删除
-                        console.log(gImageLayer_elem_total);
-                        delete_elem_by_id(cFeature.id, gMap_elem_total, elem_fea_layer,elem_fea_style, gImageLayer_elem_total, elem_row_col.row, elem_row_col.col);
+                        delete_elem_by_id(cFeature.id, gMap_elem_total, elem_fea_layer,elem_fea_style, elem_fea_style_selected, elem_selected, gImageLayer_elem_total, elem_row_col.row, elem_row_col.col);
+                        //feature.style.strokeColor="#00ff00";
                     });
                     gMap_character.removeLayer(gImageLayer_character);
-
                     let tar_width=128;
                     let tar_height=128;
                     elem_id = cFeature.id;
@@ -210,12 +284,107 @@
 
                     gImageLayer_character = new gDBox.Layer.Image('img_character', "/ocr/content_labeling/get_character_image/?elem_id="+elem_id+"&tar_width="+tar_width+"&tar_height="+tar_height, {w:tar_width, h:tar_height}, {zIndex: 1});
                     gMap_character.addLayer(gImageLayer_character);
+                    
+                    //获取指定偏旁部首对应的汉字列表
+                    getCharacterListFromElem(elem_id);
                     current_character_elem_id = elem_id;
                 }else{
+                    let elem_id = feature.id;
+                    if(elem_selected.has(elem_id)==true){
+                        elem_selected.delete(elem_id);
+                        elem_selected_delete(elem_id, {{polygon_id}});
+                        feature.style.strokeColor="#00ff00";
+                    }else{
+                        elem_selected.add(elem_id);
+                        elem_selected_add(elem_id, {{polygon_id}});
+                        feature.style.strokeColor="#0000ff";
+                    }
+                    elem_selected_array = Array.from(elem_selected);
+                    achieveElemSelected(elem_selected_array, gMap_elem_selected, elem_selected_fea_layer, gFetureStyle, div_elem_selected_disp.offsetWidth);
+                    character_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_assist_fea_style, elem_assist_fea_style_selected, elem_selected)
                 }
             });
 
-            
+            gMap_elem_total.events.on(
+                    'geometryEditDone',
+                    function (type, activeFeature, points) {
+                            activeFeature.show();
+                    }
+                );
+
+            //显示已经选择的偏旁部首
+            gMap_elem_selected = new gDBox.Map('elem_selected_disp', { zoom: div_elem_selected_disp.offsetWidth, cx: 0, cy: 0, zoomMax: div_elem_selected_disp*16, zoomMin: div_elem_selected_disp/4});
+            gMap_elem_selected.setMode('drawRect', gFetureStyle);
+
+            elem_selected_fea_layer = new gDBox.Layer.Feature("elem_selected", {zIndex: 2, transparent: true, opacity: false});
+            gMap_elem_selected.addLayer(elem_selected_fea_layer);
+            elem_selected_array = Array.from(elem_selected);
+            achieveElemSelected(elem_selected_array, gMap_elem_selected, elem_selected_fea_layer, gFetureStyle, div_elem_selected_disp.offsetWidth);
+
+            gMap_elem_selected.events.on(
+                    'geometryEditDone',
+                    function (type, activeFeature, points) {
+                            activeFeature.show();
+                    }
+                );
+            gMap_elem_selected.events.on('featureSelected', function (feature) {
+                    let cFeature = feature;
+                    // 删除按钮添加
+                    const featureBounds = cFeature.getBounds();
+                    const leftTopPoint = featureBounds[0]; // 边界坐上角坐标
+                    let deleteMarker = new gDBox.Marker(`marker-${cFeature.id}`,
+                        {
+                            src: '/static/image/delete.png',
+                            x: leftTopPoint.x,
+                            y: leftTopPoint.y,
+                            offset: {
+                                x: 0,
+                                y: 0
+                            },
+                            featureId: cFeature.id
+                        }
+                    );
+                    gMap_elem_selected.mLayer.addMarker(deleteMarker);
+                    deleteMarker.regEvent('click', function () {
+                        // 执行选中元素去除
+                        let elem_id = feature.id;
+                        elem_selected.delete(elem_id);
+                        elem_selected_delete(elem_id, {{polygon_id}});
+                        polygon = elem_fea_layer.getFeatureById(cFeature.id);
+                        polygon.style.strokeColor="#00ff00";
+                        elem_fea_layer.renew();
+                        elem_selected_array = Array.from(elem_selected);
+                        achieveElemSelected(elem_selected_array, gMap_elem_selected, elem_selected_fea_layer, gFetureStyle, div_elem_selected_disp.offsetWidth);
+                        character_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_assist_fea_style, elem_assist_fea_style_selected, elem_selected)
+
+                    });
+            });
+            //显示辅助内容
+            gMap_elem_assist = new gDBox.Map('assist_image_disp', { zoom: div_elem_assist_disp.offsetWidth, cx: 0, cy: 0, zoomMax: div_elem_assist_disp*16, zoomMin: div_elem_assist_disp/4});
+            gMap_elem_assist.setMode('drawRect', gFetureStyle);
+
+            elem_assist_fea_layer = new gDBox.Layer.Feature("elem_assist", {zIndex: 2, transparent: true, opacity: false});
+            gMap_elem_assist.addLayer(elem_assist_fea_layer);
+
+            gMap_elem_assist.events.on(
+                    'geometryEditDone',
+                    function (type, activeFeature, points) {
+                            activeFeature.show();
+                    }
+                );
+            gMap_elem_assist.events.on('featureSelected', function (feature) {
+                let elem_id=feature.id;
+                if(elem_selected.has(elem_id)==false){
+                    elem_selected.add(elem_id);
+                    elem_selected_add(elem_id, {{polygon_id}});
+                    feature.style.strokeColor="#0000ff";
+                    polygon = elem_fea_layer.getFeatureById(feature.id);
+                    polygon.style.strokeColor="#0000ff";
+                    elem_fea_layer.renew();
+                    elem_selected_array = Array.from(elem_selected);
+                    achieveElemSelected(elem_selected_array, gMap_elem_selected, elem_selected_fea_layer, gFetureStyle, div_elem_selected_disp.offsetWidth);
+                }
+            });
             function onDocKeydown(e) {
                     e = e || window.event;
                     if (e.ctrlKey && e.keyCode==65) {　　　//快捷键 ctrl +A
@@ -238,6 +407,11 @@
                         // get_polygon_statistic({{image_id}});
                         return false;
                     }
+                    if (e.ctrlKey && e.keyCode==13) {　　　//快捷键 ctrl + enter
+                        e.keyCode=0;
+                        window.location.href= "/ocr/content_labeling/?image_id="+{{image_id}}+"&polygon_id_pre="+{{polygon_id}};
+                        return false;
+                    }
                 }
             document.onkeydown = onDocKeydown;
             
@@ -257,11 +431,15 @@
             let tar_height = Math.round(h / ratio);
             gImageLayer_elem = new gDBox.Layer.Image('img_elem', "/ocr/labeling/get_elem_image/?image_id="+{{image_id}}+"&degree_to_rotate="+{{degree_to_rotate}}+"&tar_width=128&tar_height=128&elem_box="+elem_box, {w:tar_width, h:tar_height}, {zIndex: 1});
             gMap_elem.addLayer(gImageLayer_elem);
+            console.log("{{polygon}}");
             gMap.events.on(
                     'geometryEditDone',
                     function (type, activeFeature, points) {
                         if(activeFeature.data.create_user_id=="modify"){
+                            activeFeature.update({points});
                             activeFeature.show();
+                            alter_polygon_by_id(activeFeature.id, points, 512, 512, {{size}}, {{size}}, {{degree_to_rotate}}, {{x_shift_without_padding}}, {{y_shift_without_padding}});
+                            
                         }else{
                             activeFeature.update({points});
                             activeFeature.show();

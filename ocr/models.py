@@ -137,4 +137,6 @@ class PolygonElem(BaseModel):
     """
     polygon = models.ForeignKey('OcrLabelingPolygon', on_delete=models.CASCADE)
     elem = models.ForeignKey('ChineseElem', on_delete=models.CASCADE)
-    desc_info = models.TextField(null=False, default="")
+    desc_info = models.TextField(null=True, default="")
+    class Meta:
+        unique_together = ["polygon", "elem", "create_user_id"]
