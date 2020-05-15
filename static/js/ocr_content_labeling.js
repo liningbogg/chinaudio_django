@@ -103,7 +103,6 @@ function getElemPage_info(div_width, div_height, size){
     var image_height = Math.floor(div_height / size) * size;
     row = Math.floor(div_height / size);
     col = Math.floor(div_width / size);
-    //xhr.open('GET', 'get_elem_page/?page_name='+page+"&row="row+"&col="+col, true);
     return {'row': row,'col': col};
 }
 
@@ -404,14 +403,128 @@ function elem_selected_delete(elem_id, polygon_id){
     
 }
 
+/*更新偏旁总览页数信息*/
+function update_elem_page_info(){
+   var xhr = new XMLHttpRequest();
+   xhr.open('GET', 'get_elem_number', true);
+   xhr.send(null);
+   xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200){
+            var context = xhr.response;
+            if(context == "err"){
+                add_log("获取用户偏旁数目失败","err");
+            }else{
+                add_log("获取用户偏旁数目:"+context, "message");
+                let elem_number = Number(context);
+                let elem_page_info_input = document.getElementById("elem_page_info");
+                let elem_div = document.getElementById("elem_total");
+                let elem_width = elem_div.offsetWidth;
+                let elem_height = elem_div.offsetHeight;
+                let elem_row_col = getElemPage_info(elem_width, elem_height, 64);
+                let elem_num_per_page = elem_row_col.row * elem_row_col.col;
+                let page_num = 1 + Math.floor((elem_number-1) / elem_num_per_page) ;
+                elem_page_info_input.value = "偏旁数目:"+elem_number+", 页数:"+page_num;
+
+            }
+        }
+   }
+}
+
+/*设置当前偏旁页*/
+function set_elem_page(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'get_elem_number', true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200){
+            var context = xhr.response;
+            if(context == "err"){
+                add_log("获取用户偏旁数目失败","err");
+            }else{
+                add_log("获取用户偏旁数目:"+context, "message");
+                let elem_number = Number(context);
+                let elem_page_info_input = document.getElementById("elem_page_info");
+                let elem_div = document.getElementById("elem_total");
+                let elem_width = elem_div.offsetWidth;
+                let elem_height = elem_div.offsetHeight;
+                let elem_row_col = getElemPage_info(elem_width, elem_height, 64);
+                let elem_num_per_page = elem_row_col.row * elem_row_col.col;
+                let page_num = 1 + Math.floor((elem_number-1) / elem_num_per_page) ;
+                elem_page_info_input.value = "偏旁数目:"+elem_number+", 页数:"+page_num;
+                let div_cur_page = document.getElementById("elem_current");
+                let page_appointed = div_cur_page.value;
+                if(page_appointed<0){
+                    page_appointed=0;
+                    div_cur_page.value = page_appointed;
+                }
+                if(page_appointed>=page_num){
+                    page_appointed = page_num -1;
+                    div_cur_page.value = page_appointed;
+                }
+
+                gMap_elem_total.mLayer.removeAllMarkers();
+                elem_fea_layer.removeAllFeatures();
+                for(gImageLayer_key in gMap_elem_total.oLayers){
+                    let gImageLayer = gMap_elem_total.oLayers[gImageLayer_key];
+                    if(gImageLayer.id=="img_elem_total"){
+                        gMap_elem_total.removeLayer(gImageLayer);
+                        break;
+                    }
+                }
+                gImageLayer_elem_total = new gDBox.Layer.Image('img_elem_total', "/ocr/content_labeling/get_elem_page/?page_index="+page_appointed+"&row="+elem_row_col.row+"&col="+elem_row_col.col+"&date="+ (new Date()), {w: col*64, h: row*64}, {zIndex: 1});
+                gMap_elem_total.addLayer(gImageLayer_elem_total);
+                achieve_elem_id(elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected, page_appointed, elem_row_col.row, elem_row_col.col);
+                
+            }
+        }
+    }
+
+}
+
+
+/*偏旁上一页*/
+function set_elem_prior(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected){
+    let div_elem_cur = document.getElementById("elem_current");
+    div_elem_cur.value=div_elem_cur.value-1;
+    set_elem_page(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected);
+}
+
+/*偏旁下一页*/
+function set_elem_next(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected){
+    let div_elem_cur = document.getElementById("elem_current");
+    div_elem_cur.value=div_elem_cur.value+1;
+    set_elem_page(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected);
+}
+
+
+function change_check_status(feature_layer, fea, polygon_id){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'change_check_status/?polygon_id='+polygon_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200){
+            var context = xhr.response;
+            if(context != "err"){
+                if (context == "false"){
+                    fea.style.strokeColor="#0000ff";
+                    feature_layer.renew();
+                }
+                if (context == "true"){
+                    fea.style.strokeColor="#00ff00";
+                    feature_layer.renew();
+                }
+                add_log("更改check:"+context,"message");
+            }else{
+                add_log("更改check出错","err");
+            }
+        }
+    }
+    
+}
 
 /*编辑特定IP的标注框*/
 function alter_polygon_by_id(polygon_id, points, tar_width, tar_height, ori_width, ori_height, current_rotate, x_shift, y_shift){
     var xhr = new XMLHttpRequest();
-    console.log(current_rotate);
-    console.log(x_shift);
-    console.log(y_shift);
-    console.log(points);
     image_points = gdbox2img_map(points, tar_width, tar_height,ori_width,ori_height);
     console.log(image_points);
     image_points[0]['x'] += x_shift;

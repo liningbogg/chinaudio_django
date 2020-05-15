@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -23,6 +22,7 @@
         var labeling_mode="labeling";
         var title_const = "ocr标注数据库:{{title}}";
         var box;
+        var page_index = 0;
         var elem_box;
         var gMap_elem_total;
         var gImageLayer_elem_total=null;
@@ -95,7 +95,10 @@
                     <div class="elem_total" id="elem_total">
                     </div>
                     <div class="elem_next" id="elem_next">
-                    翻页
+                    <input type="button" id="elem_prior" value="上一页" onclick="set_elem_prior(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected)"/>
+                    <input type="button" id="elem_next" value="下一页" onclick="set_elem_next(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected)"/>
+                    <input type="number" id="elem_current" value="0" onchange="set_elem_page(gMap_elem_total, elem_fea_layer, elem_fea_style, elem_fea_style_selected, elem_selected)" />
+                    <input type="text" id="elem_page_info" value="" readonly="" />
                     </div>
                     <div class="add_elem" id="add_elem">
                         <div class="add_elem_image" id="add_elem_image">   
@@ -211,8 +214,14 @@
             var feature_layer = new gDBox.Layer.Feature("{{title}}", {zIndex: 2, transparent: true});
             gMap.addLayer(feature_layer);
             var style_modify = new gDBox.Style({strokeColor: "#0000ff", lineWeight: 1});
+            var style_modify_select = new gDBox.Style({strokeColor: "#00ff00", lineWeight: 1});
             var style_elem = new gDBox.Style({strokeColor: "#ff0000", lineWeight: 1});
-            fea_modify = add_polygon_disp(feature_layer, style_modify, polygon_map, {{polygon_id}}, "modify");
+            var is_check = "{{is_check}}";
+            if(is_check=="False"){
+                fea_modify = add_polygon_disp(feature_layer, style_modify, polygon_map, {{polygon_id}}, "modify");
+            }else{
+                fea_modify = add_polygon_disp(feature_layer, style_modify_select, polygon_map, {{polygon_id}}, "modify");
+            }
             fea_elem = add_polygon_disp(feature_layer, style_elem, polygon_map, {{polygon_id}}, "elem");
             fea_elem.hide();
 
@@ -230,8 +239,10 @@
 
             gMap_elem_total = new gDBox.Map('elem_total', {w:elem_row_col.col*64, zoom: elem_row_col.col*64, cx: 0, cy: 0, zoomMax: elem_row_col.col*64*16, zoomMin: elem_row_col.col*64/4});
             gMap_elem_total.setMode('drawRect', gFetureStyle);
-            gImageLayer_elem_total = new gDBox.Layer.Image('img_elem_total', "/ocr/content_labeling/get_elem_page/?page_index=0&row="+elem_row_col.row+"&col="+elem_row_col.col, {w: elem_row_col.col*64, h: elem_row_col.row*64}, {zIndex: 1});
+            gImageLayer_elem_total = new gDBox.Layer.Image('img_elem_total', "/ocr/content_labeling/get_elem_page/?page_index="+page_index+"&row="+elem_row_col.row+"&col="+elem_row_col.col, {w: elem_row_col.col*64, h: elem_row_col.row*64}, {zIndex: 1});
             gMap_elem_total.addLayer(gImageLayer_elem_total);
+            //获取偏旁页面数据信息
+            update_elem_page_info();
             //获取elem id值
             elem_fea_layer = new gDBox.Layer.Feature("elem_total", {zIndex: 2, transparent: true, opacity: false});
             gMap_elem_total.addLayer(elem_fea_layer);
@@ -351,8 +362,10 @@
                         elem_selected.delete(elem_id);
                         elem_selected_delete(elem_id, {{polygon_id}});
                         polygon = elem_fea_layer.getFeatureById(cFeature.id);
-                        polygon.style.strokeColor="#00ff00";
-                        elem_fea_layer.renew();
+                        if(polygon!=null){
+                            polygon.style.strokeColor="#00ff00";
+                            elem_fea_layer.renew();
+                        }
                         elem_selected_array = Array.from(elem_selected);
                         achieveElemSelected(elem_selected_array, gMap_elem_selected, elem_selected_fea_layer, gFetureStyle, div_elem_selected_disp.offsetWidth);
                         character_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_assist_fea_style, elem_assist_fea_style_selected, elem_selected)
@@ -403,13 +416,19 @@
                         fea_modify.show()
                         return false;
                     }
-                    if (e.ctrlKey && e.keyCode==76) {　　　//快捷键 ctrl +L
-                        // get_polygon_statistic({{image_id}});
+                    if (e.ctrlKey && e.keyCode==78) {　　　//快捷键 ctrl +N 下一个
                         return false;
                     }
-                    if (e.ctrlKey && e.keyCode==13) {　　　//快捷键 ctrl + enter
+                    if (e.ctrlKey && e.keyCode==80) {　　　//快捷键 ctrl +P 上一个
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==13) {　　　//快捷键 ctrl + enter 完成标注然后下一个
                         e.keyCode=0;
-                        window.location.href= "/ocr/content_labeling/?image_id="+{{image_id}}+"&polygon_id_pre="+{{polygon_id}};
+                        change_check_status(feature_layer, fea_modify, {{polygon_id}});
+                        //window.location.href= "/ocr/content_labeling/?image_id="+{{image_id}}+"&polygon_id_pre="+{{polygon_id}};
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==67) {　　　//快捷键 ctrl +C 改变标注状态
                         return false;
                     }
                 }

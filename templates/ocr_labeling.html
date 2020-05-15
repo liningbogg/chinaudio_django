@@ -25,7 +25,7 @@
             <div class="title" id="title">
                 ocr标注数据库:{{title}}
                 &nbsp&nbsp
-                <a href="/ocr/content_labeling/?image_id={{image_id}}&polygon_id_pre=-1" target="_blank" style="font-style:italic;color:green">文字内容标注</a>
+                <a href="/ocr/content_labeling/?image_id={{image_id}}&image_user_conf_id={{image_user_conf_id}}" target="_blank" style="font-style:italic;color:green">文字内容标注</a>
             </div>
             <div class="image_info" id="image_info">
             </div>
@@ -176,7 +176,7 @@
                         }
                     }else{
                         //current user
-                        if(has_content){
+                        if(has_content==true){
                             return this.feature_style_set["current_user_hascontent"];
                         }else{
                             return this.feature_style_set["current_user_noncontent"];

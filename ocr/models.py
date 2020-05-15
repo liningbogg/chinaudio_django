@@ -74,6 +74,7 @@ class ImageUserConf(BaseModel):
     """
     image:对应的图片
     rotate_degree:image角度
+    polygon_id_thr:标记id起点，不包括边界
     """
     image = models.ForeignKey('PDFImage', on_delete=models.CASCADE)
     rotate_degree = models.FloatField(default=0,null=False)
@@ -85,6 +86,7 @@ class ImageUserConf(BaseModel):
     center_x = models.FloatField(default=0, null=False)
     center_y = models.FloatField(default=0.2, null=False)
     zoom_scale = models.FloatField(default=1, null=False)
+    polygon_id_thr = models.IntegerField(default=-1, null=False)
 
 
     class Meta:
@@ -103,7 +105,7 @@ class OcrLabelingPolygon(BaseModel):
     polygon = models.BinaryField(null=True)  # json编码
     edit_count = models.IntegerField(default=0,null=False)
     labeling_count = models.IntegerField(default=0,null=False)
-    labeling_content = models.BinaryField(null=False, default=False)
+    labeling_content = models.BooleanField(null=False, default=False)
 
 
 class ChineseElem(BaseModel):

@@ -354,15 +354,15 @@ class OcrView(View):
     def content_labeling(self, request):
         try:
             image_id = request.GET.get('image_id')  # image_id
-            tar_width = request.GET.get('tar_width')  
-            tar_height = request.GET.get('tar_height')
-            polygon_id_pre = request.GET.get('polygon_id_pre')
+            image_user_conf_id = request.GET.get('image_user_conf_id')
+            conf = ImageUserConf.objects.get(id=image_user_conf_id)
+            polygon_id_pre = conf.polygon_id_thr
             pdfimage = PDFImage.objects.get(id=image_id)
             pdf = pdfimage.ocrPDF
             image_width = pdfimage.width
             padding_size = 128
             image_height = pdfimage.height
-            non_label_set = pdfimage.ocrlabelingpolygon_set.filter(labeling_content=False, create_user_id=str(request.user), id__gt=polygon_id_pre)
+            non_label_set = pdfimage.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__gt=polygon_id_pre)
             if non_label_set.count() == 0:
                 return render(request, 'ocr_content_labeling.html',None)
             else:
@@ -412,7 +412,8 @@ class OcrView(View):
                     "y_shift":points[0]['y'] - ((size-h) // 2) ,
                     "x_shift_without_padding":points[0]['x'] - ((size-w) // 2) - padding_size,
                     "y_shift_without_padding":points[0]['y'] - ((size-h) // 2) - padding_size,
-                    "elem_selected":elem_selected
+                    "elem_selected":elem_selected,
+                    "is_check":polygon_label.labeling_content
                 }
                 return render(request, 'ocr_content_labeling.html', context)
         except Exception as e:
@@ -450,7 +451,8 @@ class OcrView(View):
                         "polygon_id":polygon.id,
                         "image_id":polygon.pdfImage.id,
                         "create_user_id":polygon.create_user_id,  # redundant data for a verification
-                        "points":str(polygon.polygon,'utf-8')
+                        "points":str(polygon.polygon,'utf-8'),
+                        "labeling_content":polygon.labeling_content
                     }
                 )
             (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr_strict":0.6,"projection_thr_easing":0.1})
@@ -896,6 +898,16 @@ class OcrView(View):
 
 
     @method_decorator(login_required)
+    def get_elem_number(self, request):
+        try:
+            elem_set = ChineseElem.objects.filter(create_user_id=str(request.user))
+            return HttpResponse(elem_set.count())
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
+    @method_decorator(login_required)
     def elem_selected_add(self, request):
         try:
             elem_id = request.GET.get("elem_id")
@@ -986,6 +998,29 @@ class OcrView(View):
                 image_user_conf.is_vertical = False
             image_user_conf.save()
             return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
+    # 更改标注偏旁完成状态
+    @method_decorator(login_required)
+    def change_check_status(self, request):
+        try:
+            polygon_id = request.GET.get("polygon_id")
+            polygon = OcrLabelingPolygon.objects.get(id=polygon_id)
+            if polygon.create_user_id == str(request.user):
+                if polygon.labeling_content is False:
+                    polygon.labeling_content = True
+                    polygon.save()
+                    return HttpResponse("true")
+
+                if polygon.labeling_content is True:
+                    polygon.labeling_content = False
+                    polygon.save()
+                    return HttpResponse("false")
+            else:
+                return HttpResponse("err")
         except Exception as e:
             print(e)
             return HttpResponse("err")

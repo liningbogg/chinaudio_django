@@ -50,4 +50,6 @@ urlpatterns = [
     path('content_labeling/elem_selected_add/', ocr_view.elem_selected_add),
     path('content_labeling/elem_selected_delete/', ocr_view.elem_selected_delete),
     path('content_labeling/alter_polygon_by_id/', ocr_view.alter_polygon_by_id),
+    path('content_labeling/change_check_status/', ocr_view.change_check_status),
+    path('content_labeling/get_elem_number/', ocr_view.get_elem_number),
 ]
