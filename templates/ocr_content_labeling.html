@@ -5,11 +5,13 @@
         <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache">
         <META HTTP-EQUIV="Expires" CONTENT="0"> 
         <title>content: {{title}}</title>
-        <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+        <!-- <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script> -->
+        <!-- <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script> -->
         <!-- <script src="http://www.chinaudio.tech/static/js/ocr_content_labeling.js"></script> -->
         <script src="/static/js/ocr_content_labeling.js"></script>
         <script src="/static/js/gDBox.pkg.min.js"></script>
+        <script src="/static/js/jquery.min.js"></script>
+        <script src="/static/js/highcharts.js"></script>
         <!-- <link href="http://www.chinaudio.tech/static/css/ocr_content_labeling.css" rel="stylesheet" type="text/css" /> -->
         <link href="/static/css/ocr_content_labeling.css" rel="stylesheet" type="text/css" />
         <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
@@ -35,7 +37,7 @@
         var elem_fea_style_selected = new gDBox.Style(
         {
             strokeColor: "#0000ff",
-            lineWeight: 1
+            lineWeight: 3
         });
         var gMap_character;
         var gImageLayer_character;
@@ -54,7 +56,7 @@
         var elem_selected_fea_style_selected = new gDBox.Style(
         {
             strokeColor: "#0000ff",
-            lineWeight: 1
+            lineWeight: 3
         });
         // 偏旁协助
         var gMap_elem_assist;
@@ -158,6 +160,7 @@
             while(typeof gDBox == "undefined"){
 
             }
+            console.log('{{ai_ocr|safe}}');
             // 调整div
             let div_elem = document.getElementById("elem_total");
             let div_elem_next = document.getElementById("elem_next");
@@ -392,8 +395,12 @@
                     elem_selected_add(elem_id, {{polygon_id}});
                     feature.style.strokeColor="#0000ff";
                     polygon = elem_fea_layer.getFeatureById(feature.id);
-                    polygon.style.strokeColor="#0000ff";
-                    elem_fea_layer.renew();
+                    
+                    if(polygon!=null){
+                        polygon.style.strokeColor="#0000ff";
+                        polygon.style.lineWeight=3;
+                        elem_fea_layer.renew();
+                    }
                     elem_selected_array = Array.from(elem_selected);
                     achieveElemSelected(elem_selected_array, gMap_elem_selected, elem_selected_fea_layer, gFetureStyle, div_elem_selected_disp.offsetWidth);
                 }
@@ -416,19 +423,26 @@
                         fea_modify.show()
                         return false;
                     }
-                    if (e.ctrlKey && e.keyCode==78) {　　　//快捷键 ctrl +N 下一个
+                    if (e.ctrlKey && e.keyCode==39) {　　　//快捷键 ctrl + right 下一个
+                        update_polygon_id_thr_next({{image_user_conf_id}}, {{polygon_id}}, {{image_id}});
                         return false;
                     }
-                    if (e.ctrlKey && e.keyCode==80) {　　　//快捷键 ctrl +P 上一个
+                    if (e.ctrlKey && e.keyCode==37) {　　　//快捷键 ctrl + left 上一个
+                        update_polygon_id_thr_prior({{image_user_conf_id}}, {{polygon_id}}, {{image_id}});
                         return false;
                     }
                     if (e.ctrlKey && e.keyCode==13) {　　　//快捷键 ctrl + enter 完成标注然后下一个
                         e.keyCode=0;
-                        change_check_status(feature_layer, fea_modify, {{polygon_id}});
-                        //window.location.href= "/ocr/content_labeling/?image_id="+{{image_id}}+"&polygon_id_pre="+{{polygon_id}};
+                        if(fea_modify.style.strokeColor=="#0000ff"){
+                            change_check_status(feature_layer, fea_modify, {{polygon_id}});
+                        }
+                        update_polygon_id_thr_next({{image_user_conf_id}}, {{polygon_id}}, {{image_id}});
                         return false;
                     }
                     if (e.ctrlKey && e.keyCode==67) {　　　//快捷键 ctrl +C 改变标注状态
+                        e.keyCode=0;
+                        change_check_status(feature_layer, fea_modify, {{polygon_id}});
+
                         return false;
                     }
                 }
@@ -457,7 +471,7 @@
                         if(activeFeature.data.create_user_id=="modify"){
                             activeFeature.update({points});
                             activeFeature.show();
-                            alter_polygon_by_id(activeFeature.id, points, 512, 512, {{size}}, {{size}}, {{degree_to_rotate}}, {{x_shift_without_padding}}, {{y_shift_without_padding}});
+                            alter_polygon_by_id(activeFeature.id, points, 512, 512, {{image_width}}, {{image_height}}, {{degree_to_rotate}}, {{x_shift_without_padding}}, {{y_shift_without_padding}}, {{size}}, {{size}});
                             
                         }else{
                             activeFeature.update({points});
@@ -478,6 +492,33 @@
                         }
                     }
                 );
+            gMap.events.on('featureSelected', function (feature) {
+                    let cFeature = feature;
+                    // 删除按钮添加
+                    const featureBounds = cFeature.getBounds();
+                    const leftTopPoint = featureBounds[0]; // 边界坐上角坐标
+                    let deleteMarker = new gDBox.Marker(`marker-${cFeature.id}`,
+                        {
+                            src: '/static/image/delete.png',
+                            x: leftTopPoint.x,
+                            y: leftTopPoint.y,
+                            offset: {
+                                x: 0,
+                                y: 0
+                            },
+                            featureId: cFeature.id
+                        }
+                    );
+                    gMap.mLayer.addMarker(deleteMarker);
+                    deleteMarker.regEvent('click', function () {
+                        // 执行选中元素去除
+                        let polygon_id = feature.id;
+                        delete_polygon_then_next(polygon_id, {{image_user_conf_id}}, {{image_id}});
+
+                    });
+            });
+
+            ai_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_assist_fea_style, elem_assist_fea_style_selected, elem_selected, "{{ai_ocr|safe}}")
         
             window.onresize = function () {
                 gMap && gMap.resize();

@@ -52,4 +52,7 @@ urlpatterns = [
     path('content_labeling/alter_polygon_by_id/', ocr_view.alter_polygon_by_id),
     path('content_labeling/change_check_status/', ocr_view.change_check_status),
     path('content_labeling/get_elem_number/', ocr_view.get_elem_number),
+    path('content_labeling/update_polygon_id_thr_prior/', ocr_view.update_polygon_id_thr_prior),
+    path('content_labeling/update_polygon_id_thr_next/', ocr_view.update_polygon_id_thr_next),
+    path('content_labeling/delete_polygon_by_id/', ocr_view.delete_polygon_by_id),
 ]

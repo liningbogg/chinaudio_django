@@ -12,6 +12,7 @@ from pitch.np_encoder import NpEncoder
 import json
 import redis
 from PIL import Image, ImageOps
+from django.db.models import Max
 from django.db.models import Q
 from django.http import HttpResponse
 from django.contrib import *
@@ -382,6 +383,57 @@ class OcrView(View):
                 rotate_points(points, degree_to_rotate, image_width, image_height)
                 # 外接
                 bounding_points(points)
+
+                rotate_image_key = "%s_%s_%.2f" % (str(request.user), image_id, degree_to_rotate)
+                image_rotate = cache.get(rotate_image_key)
+                if image_rotate is None:
+                    #读取原始图像
+                    image_stream = io.BytesIO(pdfimage.data_byte)
+                    pil_image = Image.open(image_stream)
+                    width, height = pil_image.size
+                    if abs(degree_to_rotate)>0.000001:
+                        image_rotate = pil_image.rotate(degree_to_rotate)
+                    else:
+                        image_rotate = pil_image
+                    cache.set(rotate_image_key, pickle.dumps(image_rotate), nx=True) 
+                    cache.expire(rotate_image_key, 3600)
+                else:
+                    image_rotate = pickle.loads(image_rotate)
+                
+                rect_info = OcrView.get_rect_info(points[0], points[2])
+                rect = (rect_info['x'], rect_info['y'], rect_info['x_'], rect_info['y_'])
+
+                image_crop = image_rotate.crop(rect)
+                image_crop = image_crop.convert("L")
+                width ,height = image_crop.size
+                ratio_w =width*1.0/128
+                ratio_h =height*1.0/128
+                ratio = max(ratio_w, ratio_h)
+                tar_width = min(int(width/ratio),128)
+                tar_height = min(int(height/ratio),128)
+                image_resized = image_crop.resize((tar_width, tar_height), Image.ANTIALIAS)
+                tar_width, tar_height = image_resized.size
+                w_extend = 128 - tar_width
+                h_extend = 128 - tar_height
+                w_l_extend = w_extend // 2
+                w_r_extend = w_extend -w_l_extend
+                h_t_extend = h_extend // 2
+                h_b_extend = h_extend -h_t_extend
+
+                image_padding = ImageOps.expand(image_resized, border=(w_l_extend, h_t_extend, w_r_extend, h_b_extend) ,fill=0)
+                image_flat = list(image_padding.getdata())
+
+                args={
+                    "create_user_id":str(request.user),
+                    "image_id":image_id,
+                    "polygon_id":polygon_id,
+                    "image":image_flat
+                }
+                red = redis.Redis(connection_pool=self.redis_pool)
+                red.rpush("aiocr", json.dumps(args))  # 此处不做重复性检查
+                
+
+
                 for point in points:
                     point['x'] = round(point['x']) + padding_size
                     point['y'] = round(point['y']) + padding_size
@@ -395,6 +447,19 @@ class OcrView(View):
                 relative_r = int(relative_l + w)
                 relative_b = int(relative_t + h)
                 relative_box = (relative_l, relative_t, relative_r, relative_b)
+                
+                # 循环查看redis结果，最多20*10ms
+                rs_key = "%s_%s_%s_%s" % ("rs_aiocr", str(request.user), image_id, polygon_id)
+                print(rs_key)
+                ai_ocr = []
+                for i in range(20):
+                    if red.exists(rs_key):
+                        ai_ocr = json.loads(red.get(rs_key))
+                        break
+                    else:
+                        time.sleep(0.01)
+                    
+                print(ai_ocr)
 
                 context = {
                     "title":pdf.title,
@@ -413,7 +478,9 @@ class OcrView(View):
                     "x_shift_without_padding":points[0]['x'] - ((size-w) // 2) - padding_size,
                     "y_shift_without_padding":points[0]['y'] - ((size-h) // 2) - padding_size,
                     "elem_selected":elem_selected,
-                    "is_check":polygon_label.labeling_content
+                    "is_check":polygon_label.labeling_content,
+                    "image_user_conf_id":image_user_conf_id,
+                    "ai_ocr": ai_ocr
                 }
                 return render(request, 'ocr_content_labeling.html', context)
         except Exception as e:
@@ -908,6 +975,44 @@ class OcrView(View):
 
 
     @method_decorator(login_required)
+    def update_polygon_id_thr_prior(self, request):
+        try:
+            image_user_conf_id = request.GET.get("image_user_conf_id")
+            image_user_conf = ImageUserConf.objects.get(id=image_user_conf_id)
+            polygon_id = request.GET.get("polygon_id")
+            image = image_user_conf.image
+            id_max = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__lt=polygon_id).aggregate(Max('id'))
+            print(type(id_max))
+            print(id_max)
+            if(id_max['id__max'] is None):
+                return HttpResponse("已经是最前边的标注")
+            else:
+                image_user_conf.polygon_id_thr=id_max['id__max']-1
+                image_user_conf.save()
+                return HttpResponse("ok");
+        except Exception as e:
+            print(e)
+            return HttpResponse(str(e))
+
+    @method_decorator(login_required)
+    def update_polygon_id_thr_next(self, request):
+        try:
+            image_user_conf_id = request.GET.get("image_user_conf_id")
+            polygon_id = request.GET.get("polygon_id")
+            image_user_conf = ImageUserConf.objects.get(id=image_user_conf_id)
+            image = image_user_conf.image
+            id_set_num = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__gt=polygon_id).count()
+            if id_set_num<1:
+                return HttpResponse("已经是最后一个标注")
+            else:
+                image_user_conf.polygon_id_thr=polygon_id
+                image_user_conf.save()
+                return HttpResponse("ok");
+        except Exception as e:
+            print(e)
+            return HttpResponse(str(e))
+
+    @method_decorator(login_required)
     def elem_selected_add(self, request):
         try:
             elem_id = request.GET.get("elem_id")
@@ -1131,7 +1236,7 @@ class OcrView(View):
             image = PDFImage.objects.get(id=image_id)  # 被标注的图片
             data_stream=io.BytesIO(image.data_byte)
             pil_image = Image.open(data_stream)
-            gray_image = pil_image.convert('F')
+            gray_image = pil_image.convert('L')
             width, height = gray_image.size
             gray_mean = (1-np.asarray(gray_image)/255.0).mean()
             background_modification = max(0,0.16-gray_mean)
@@ -1465,7 +1570,7 @@ class OcrView(View):
             w = image.width
             h = image.height
             # 旋转后矩形框为竖直
-            OcrView.rotate_points(points_rotate, rotate_degree, w, h)
+            OcrView.rotate_points(points_ootate, rotate_degree, w, h)
             delete_info = []
             user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
 

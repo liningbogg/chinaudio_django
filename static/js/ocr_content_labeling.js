@@ -357,7 +357,8 @@ function character_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_as
                     if(elem_selected.has(elem_id)){
                         add_polygon_disp(elem_assist_fea_layer, JSON.parse(elem_assist_fea_style_str_selected), gdbox_points, elem_id, "elem_assist");
                     }else{
-                        add_polygon_disp(elem_assist_fea_layer, JSON.parse(elem_assist_fea_style_str), gdbox_points, elem_id, "elem_assist"); }
+                        add_polygon_disp(elem_assist_fea_layer, JSON.parse(elem_assist_fea_style_str), gdbox_points, elem_id, "elem_assist"); 
+                    }
                     index++;
                 }
 
@@ -365,6 +366,38 @@ function character_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_as
                 add_log("获取偏旁部首提示关系出错","err");
             }
         }
+    }
+}
+
+
+function ai_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_assist_fea_style, elem_assist_fea_style_selected, elem_selected, ai_assist){
+    let elem_assist_fea_style_str = JSON.stringify(elem_assist_fea_style);
+    let elem_assist_fea_style_str_selected = JSON.stringify(elem_assist_fea_style_selected);
+    elem_assist = JSON.parse(ai_assist)
+    gMap_elem_assist.mLayer.removeAllMarkers();
+    elem_assist_fea_layer.removeAllFeatures();
+    for(gImageLayer_key in gMap_elem_assist.oLayers){
+        let gImageLayer = gMap_elem_assist.oLayers[gImageLayer_key];
+        if(gImageLayer.id=="img_elem_assist"){
+            gMap_elem_assist.removeLayer(gImageLayer);
+            break;
+        }
+    }
+    let elem_selected_str = ai_assist;
+    let width = document.getElementById("assist_image_disp").offsetWidth;
+    gImageLayer_elem_assist = new gDBox.Layer.Image('img_elem_assist', "/ocr/content_labeling/get_elem_selected/?elem_selected_str="+elem_selected_str+"&width="+width, {w: width, h: 64}, {zIndex: 1});
+    gMap_elem_assist.addLayer(gImageLayer_elem_assist);
+    var index=0;
+    for(elem in elem_assist){
+        let elem_id = elem_assist[elem];
+        let points=[{'x':index*64,'y':0},{'x':(index+1)*64-1,'y':0},{'x':(index+1)*64-1,'y':64-1},{'x':index*64,'y':64-1}];
+        let gdbox_points = img2gdbox_map(points, width, 64, width, 64);
+        if(elem_selected.has(elem_id)){
+            add_polygon_disp(elem_assist_fea_layer, JSON.parse(elem_assist_fea_style_str_selected), gdbox_points, elem_id, "elem_assist");
+        }else{
+            add_polygon_disp(elem_assist_fea_layer, JSON.parse(elem_assist_fea_style_str), gdbox_points, elem_id, "elem_assist"); 
+        }
+        index++;
     }
 }
 
@@ -377,6 +410,7 @@ function elem_selected_add(elem_id, polygon_id){
             var context = xhr.response;
             if(context == "ok"){
                 add_log("标注添加成功:"+elem_id,"message");
+                document.getElementById("assist_text_input").focus()
             }else{
                 add_log(context,"err");
             }
@@ -395,6 +429,7 @@ function elem_selected_delete(elem_id, polygon_id){
             var context = xhr.response;
             if(context == "ok"){
                 add_log("标注删除成功:"+elem_id,"message");
+                document.getElementById("assist_text_input").focus()
             }else{
                 add_log(context,"err");
             }
@@ -523,10 +558,13 @@ function change_check_status(feature_layer, fea, polygon_id){
 }
 
 /*编辑特定IP的标注框*/
-function alter_polygon_by_id(polygon_id, points, tar_width, tar_height, ori_width, ori_height, current_rotate, x_shift, y_shift){
+function alter_polygon_by_id(polygon_id, points, tar_width, tar_height, ori_width, ori_height, current_rotate, x_shift, y_shift, size_width, size_height){
     var xhr = new XMLHttpRequest();
-    image_points = gdbox2img_map(points, tar_width, tar_height,ori_width,ori_height);
+    image_points = gdbox2img_map(points, tar_width, tar_height,size_width,size_height);
     console.log(image_points);
+    console.log(current_rotate);
+    console.log(ori_width);
+    console.log(ori_height);
     image_points[0]['x'] += x_shift;
     image_points[0]['y'] += y_shift;
     image_points[1]['x'] += x_shift;
@@ -556,3 +594,56 @@ function alter_polygon_by_id(polygon_id, points, tar_width, tar_height, ori_widt
 
 }
 
+
+/*返回上一个polygon*/
+function update_polygon_id_thr_prior(image_user_conf_id, polygon_id, image_id){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'update_polygon_id_thr_prior/?image_user_conf_id='+image_user_conf_id+"&polygon_id="+polygon_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200){
+            var context = xhr.response;
+            if(context == "ok"){
+                window.location.href= "/ocr/content_labeling/?image_id="+image_id+"&image_user_conf_id="+image_user_conf_id;
+            }else{
+                add_log(context,"err");
+            }
+        }
+    }
+    
+}
+/*返回下一个polygon*/
+function update_polygon_id_thr_next(image_user_conf_id, polygon_id, image_id){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'update_polygon_id_thr_next/?image_user_conf_id='+image_user_conf_id+'&polygon_id='+polygon_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200){
+            var context = xhr.response;
+            if(context == "ok"){
+                window.location.href= "/ocr/content_labeling/?image_id="+image_id+"&image_user_conf_id="+image_user_conf_id;
+            }else{
+                add_log(context,"err");
+            }
+        }
+    }
+    
+}
+
+/*删除polygon 然后跳转下一页*/
+function delete_polygon_then_next(polygon_id, image_user_conf_id, image_id){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'delete_polygon_by_id/?'+"polygon_id="+polygon_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200){
+            var context = xhr.response;
+            if(context == "ok"){
+                window.location.href= "/ocr/content_labeling/?image_id="+image_id+"&image_user_conf_id="+image_user_conf_id;
+            }else{
+                add_log(context,"err");
+            }
+        }
+    }
+    
+}
