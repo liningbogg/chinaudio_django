@@ -365,7 +365,7 @@ class OcrView(View):
             image_height = pdfimage.height
             non_label_set = pdfimage.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__gt=polygon_id_pre)
             if non_label_set.count() == 0:
-                return render(request, 'ocr_content_labeling.html',None)
+                return HttpResponse("当页不存在要进行的标注")
             else:
                 elem_selected = []
                 polygon_label = non_label_set[0]
@@ -1574,7 +1574,7 @@ class OcrView(View):
             w = image.width
             h = image.height
             # 旋转后矩形框为竖直
-            OcrView.rotate_points(points_ootate, rotate_degree, w, h)
+            OcrView.rotate_points(points_rotate, rotate_degree, w, h)
             delete_info = []
             user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
 
