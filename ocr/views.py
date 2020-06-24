@@ -406,15 +406,17 @@ class OcrView(View):
                 image_crop = image_rotate.crop(rect)
                 image_crop = image_crop.convert("L")
                 width ,height = image_crop.size
-                ratio_w =width*1.0/128
-                ratio_h =height*1.0/128
+                width_ocr = 64
+                height_ocr = 64
+                ratio_w =width*1.0/width_ocr
+                ratio_h =height*1.0/height_ocr
                 ratio = max(ratio_w, ratio_h)
-                tar_width = min(int(width/ratio),128)
-                tar_height = min(int(height/ratio),128)
+                tar_width = min(int(width/ratio),width_ocr)
+                tar_height = min(int(height/ratio),height_ocr)
                 image_resized = image_crop.resize((tar_width, tar_height), Image.ANTIALIAS)
                 tar_width, tar_height = image_resized.size
-                w_extend = 128 - tar_width
-                h_extend = 128 - tar_height
+                w_extend = width_ocr - tar_width
+                h_extend = height_ocr - tar_height
                 w_l_extend = w_extend // 2
                 w_r_extend = w_extend -w_l_extend
                 h_t_extend = h_extend // 2
@@ -422,12 +424,14 @@ class OcrView(View):
 
                 image_padding = ImageOps.expand(image_resized, border=(w_l_extend, h_t_extend, w_r_extend, h_b_extend) ,fill=0)
                 image_flat = list(image_padding.getdata())
+                algorithm = ['dot_64bit', 'resnet_withoutdot']
 
                 args={
                     "create_user_id":str(request.user),
                     "image_id":image_id,
                     "polygon_id":polygon_id,
-                    "image":image_flat
+                    "image":image_flat,
+                    "algorithm":algorithm
                 }
                 red = redis.Redis(connection_pool=self.redis_pool)
                 red.rpush("aiocr", json.dumps(args))  # 此处不做重复性检查
@@ -455,11 +459,11 @@ class OcrView(View):
                 for i in range(20):
                     if red.exists(rs_key):
                         ai_ocr = json.loads(red.get(rs_key))
+                        red.delete(rs_key)
                         break
                     else:
                         time.sleep(0.01)
                     
-                print(ai_ocr)
 
                 context = {
                     "title":pdf.title,
