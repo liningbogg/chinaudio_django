@@ -121,6 +121,37 @@ class OcrView(View):
         except Exception as e:
             print(e)
 
+
+    @method_decorator(login_required)
+    def get_polygon_elem_statistic(self, request):
+        try:
+            username = str(request.user)
+            latest_number_polygon = 0  # 最近1小时的数据量
+            latest_number_elem = 0  # 最近1小时的数据量
+            count_all_polygon = 0  # polygon总数
+            count_all_elem = 0  # elem总数
+            now_time = datetime.datetime.now()
+            datetime_from = now_time - datetime.timedelta(hours=1)
+            latest_distribute_polygon = np.zeros(60)  # 最近一小时标注量分布
+            latest_distribute_elem = np.zeros(60)  # 最近一小时标注量分布
+            count_all_polygon = OcrLabelingPolygon.objects.filter(create_user_id=username, labeling_content=True).count()
+            count_all_elem = PolygonElem.objects.filter(create_user_id=username).count()
+
+            latest_set_polygon = OcrLabelingPolygon.objects.filter(create_user_id=username, labeling_content=True, update_time__range=(datetime_from, now_time)).values("update_time")
+            for item in latest_set_polygon:
+                latest_distribute_polygon[59 - (now_time-item["update_time"]).seconds //60] += 1
+            latest_set_elem = PolygonElem.objects.filter(create_user_id=username, update_time__range=(datetime_from, now_time)).values("update_time")
+            for item in latest_set_elem:
+                latest_distribute_elem[59 - (now_time-item["update_time"]).seconds //60] += 1
+            latest_number_polygon = latest_set_polygon.count()
+            latest_number_elem = latest_set_elem.count()
+            context = {"count_all_polygon":count_all_polygon, "count_all_elem":count_all_elem ,"latest_number_polygon":latest_number_polygon, "latest_number_elem":latest_number_elem, "latest_distribute_polygon": list(latest_distribute_polygon), "latest_distribute_elem": list(latest_distribute_elem)}
+            return HttpResponse(json.dumps(context))
+
+        except Exception as e:
+            print(e)
+
+
     @classmethod
     @method_decorator(login_required)
     def get_polygon_statistic(cls, request):
@@ -144,7 +175,6 @@ class OcrView(View):
                     count_user = count_user + count_user_inc
                     if count_user_inc > 0:
                         # 标注速率统计
-                        # latest_number = latest_number + OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id=user_id, create_time__range=(datetime_from, now_time)).count()
                         latest_set = OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id=user_id, create_time__range=(datetime_from, now_time)).values("create_time")
                         latest_number += len(latest_set)
                         for item in latest_set:
@@ -401,8 +431,11 @@ class OcrView(View):
                     image_rotate = pickle.loads(image_rotate)
                 
                 rect_info = OcrView.get_rect_info(points[0], points[2])
-                rect = (rect_info['x'], rect_info['y'], rect_info['x_'], rect_info['y_'])
-
+                rect = (round(rect_info['x']), round(rect_info['y']), round(rect_info['x_']), round(rect_info['y_']))
+                area = (rect_info['x_']-rect_info['x'])*(rect_info['y_']-rect_info['y'])
+                if area <= 0:
+                    polygon_label.delete()
+                    return HttpResponse("标注矩形错误，已经删除请刷新。")
                 image_crop = image_rotate.crop(rect)
                 image_crop = image_crop.convert("L")
                 width ,height = image_crop.size
@@ -413,6 +446,10 @@ class OcrView(View):
                 ratio = max(ratio_w, ratio_h)
                 tar_width = min(int(width/ratio),width_ocr)
                 tar_height = min(int(height/ratio),height_ocr)
+                if tar_width*tar_height <=0 :
+                    polygon_label.delete()
+                    return HttpResponse("标注矩形过小，已删除，请刷新。")
+
                 image_resized = image_crop.resize((tar_width, tar_height), Image.ANTIALIAS)
                 tar_width, tar_height = image_resized.size
                 w_extend = width_ocr - tar_width
@@ -424,7 +461,8 @@ class OcrView(View):
 
                 image_padding = ImageOps.expand(image_resized, border=(w_l_extend, h_t_extend, w_r_extend, h_b_extend) ,fill=0)
                 image_flat = list(image_padding.getdata())
-                algorithm = ['dot_64bit', 'resnet_withoutdot']
+                # algorithm = ['dot_64bit', 'resnet_withoutdot']
+                algorithm = ['resnet_withdot']
 
                 args={
                     "create_user_id":str(request.user),
@@ -922,7 +960,7 @@ class OcrView(View):
                             for characterelem in characterelem_set:
                                 elem_list.append(characterelem.elem.id)
                     except Exception as e:
-                        pass
+                        print(e)
 
             return HttpResponse(json.dumps(elem_list))
 
@@ -998,6 +1036,7 @@ class OcrView(View):
             print(e)
             return HttpResponse(str(e))
 
+
     @method_decorator(login_required)
     def update_polygon_id_thr_next(self, request):
         try:
@@ -1015,6 +1054,7 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return HttpResponse(str(e))
+
 
     @method_decorator(login_required)
     def elem_selected_add(self, request):

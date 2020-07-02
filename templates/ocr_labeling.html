@@ -15,6 +15,7 @@
         <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
     </head>
     <script>
+        var polygon_id_appointed = -1;
         var gMap;
         const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 1});
     </script>
@@ -341,7 +342,7 @@
                         }
                     );
                     gMap.mLayer.addMarker(deleteMarker);
-
+                    polygon_id_appointed = cFeature.id;
                     deleteMarker.regEvent('click', function () {
                         // 执行选中元素删除
                         /*
@@ -388,6 +389,12 @@
                     }
                     if (e.ctrlKey && e.keyCode==76) {　　　//快捷键 ctrl +L
                         get_polygon_statistic({{image_id}});
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==71) {　　　//快捷键 ctrl +G
+                        if(polygon_id_appointed>-1){
+                            update_polygon_id_thr_appointed({{image_user_conf_id}}, polygon_id_appointed, {{image_id}})
+                        }
                         return false;
                     }
                 }

@@ -1,14 +1,20 @@
 from django.db import models
+from datetime import datetime
 
 # Create your models here.
 class BaseModel(models.Model):
     """模型类基类"""
     create_time = models.DateTimeField(auto_now_add=True, verbose_name='添加时间', help_text='添加时间')
+    update_time = models.DateTimeField(verbose_name='更新时间', default=datetime.now, help_text='更新时间')
     create_user_id = models.CharField(max_length=255, null=False, verbose_name='创建人id', help_text='创建人id')
     is_deleted = models.BooleanField(default=False, null=False)
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        self.update_time = datetime.now()
+        return super(BaseModel,self).save(*args,**kwargs)
 
 class OcrPDF(BaseModel):
     """
@@ -99,7 +105,7 @@ class OcrLabelingPolygon(BaseModel):
     polygon: 标注多边形
     edit_count: 修正次数
     labeling_count: 标注文本内容的次数
-    labeling_content: 标注文本内容,是一个dict 偏旁部首+出现次数
+    labeling_content: 是否标注了内容
     """
     pdfImage = models.ForeignKey('PDFImage', on_delete=models.CASCADE)  # 对应的PDF IMAGE
     polygon = models.BinaryField(null=True)  # json编码

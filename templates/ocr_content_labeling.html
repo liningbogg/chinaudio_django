@@ -150,6 +150,9 @@
                             <input type="text" id="assist_text_input" placeholder="偏旁提示" style="height:58px;width:96%;font-size:1rem" value="偏旁提示" onfocus="if(value=='偏旁提示'){value=''}" onblur="if(value==''){value='偏旁提示'}" oninput="character_assist_check(gMap_elem_assist, elem_assist_fea_layer, elem_assist_fea_style, elem_assist_fea_style_selected, elem_selected)"/>
              
                     </div>
+                    <div class="statistic" id="statistic">
+
+                    </div>
                 </div>
             </div>
         </div>
@@ -160,7 +163,6 @@
             while(typeof gDBox == "undefined"){
 
             }
-            console.log('{{ai_ocr|safe}}');
             // 调整div
             let div_elem = document.getElementById("elem_total");
             let div_elem_next = document.getElementById("elem_next");
@@ -253,7 +255,7 @@
 
             console.log(gMap_elem_total);
             gMap_character = new gDBox.Map('add_character_image', {w:128, zoom: 128, cx: 0, cy: 0, zoomMax: 128*16, zoomMin: 128/4});
-            // feature-reset监听
+"character_operator_add"            // feature-reset监听
             gMap_elem_total.events.on(
                 'featureStatusReset',
                 function () {
@@ -395,7 +397,6 @@
                     elem_selected_add(elem_id, {{polygon_id}});
                     feature.style.strokeColor="#0000ff";
                     polygon = elem_fea_layer.getFeatureById(feature.id);
-                    
                     if(polygon!=null){
                         polygon.style.strokeColor="#0000ff";
                         polygon.style.lineWeight=3;
@@ -439,10 +440,47 @@
                         update_polygon_id_thr_next({{image_user_conf_id}}, {{polygon_id}}, {{image_id}});
                         return false;
                     }
+                    if (e.ctrlKey && e.keyCode==76) {　　　//快捷键 ctrl + L 改变标注状态
+                        e.keyCode=0;
+                        get_polygon_elem_statistic();
+                        return false;
+                    }
                     if (e.ctrlKey && e.keyCode==67) {　　　//快捷键 ctrl +C 改变标注状态
                         e.keyCode=0;
                         change_check_status(feature_layer, fea_modify, {{polygon_id}});
-
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==46) {　　　//快捷键 ctrl + delete 改变标注状态
+                        e.keyCode=0;
+                        let polygon_id = {{polygon_id}};
+                        delete_polygon_then_next(polygon_id, {{image_user_conf_id}}, {{image_id}});
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==38) {　　　//快捷键 ctrl + up 添加所有预测偏旁
+                        e.keyCode=0;
+                        try{
+                            console.log(elem_assist_fea_layer.oFeatures);
+                            let candidate = elem_assist_fea_layer.oFeatures;
+                            for(elem_key in candidate){
+                                let elem_id = candidate[elem_key].id
+                                console.log(elem_id);
+                                if(elem_selected.has(elem_id)){
+                                    continue;
+                                }
+                                polygon = elem_fea_layer.getFeatureById(elem_id);
+                                if(polygon!=null){
+                                    polygon.style.strokeColor="#0000ff";
+                                    polygon.style.lineWeight=3;
+                                    elem_fea_layer.renew();
+                                }
+                                elem_selected.add(elem_id);
+                                elem_selected_add(elem_id, {{polygon_id}});
+                            }
+                            elem_selected_array = Array.from(elem_selected);
+                            achieveElemSelected(elem_selected_array, gMap_elem_selected, elem_selected_fea_layer, gFetureStyle, div_elem_selected_disp.offsetWidth);
+                        }catch(err){
+                            console.log(err);
+                        }
                         return false;
                     }
                 }

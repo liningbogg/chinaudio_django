@@ -654,6 +654,25 @@ function rotate_degree_evaluate(image_id){
 }
 
 
+/*返回下一个polygon*/
+function update_polygon_id_thr_appointed(image_user_conf_id, polygon_id, image_id){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'update_polygon_id_thr_next/?image_user_conf_id='+image_user_conf_id+'&polygon_id='+polygon_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200){
+            var context = xhr.response;
+            if(context == "ok"){
+                let message = "内容标记位置跳转至:" + polygon_id;
+                add_log(message, "message")
+            }else{
+                add_log(context,"err");
+            }
+        }
+    }
+
+}
+
 
 /*get polygon label number message*/
 function get_polygon_statistic(image_id){

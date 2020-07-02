@@ -1,3 +1,93 @@
+var indexArr=new Array(100000);
+for(var i=0;i<99999;i++){
+    indexArr[i]=i;
+}
+//曲线颜色列表
+const color_chart=["red","blue","black","green","yellow","gray"];
+
+//添加曲线的高层封装,data字典中包含lengend 以及数据
+function addChart(type, title, dictSeries, dictLine, currentPos, MyDiv,start, end, slope, bias){
+    let xAxis_c = indexArr.slice(start,end)
+    for (key in xAxis_c){
+        xAxis_c[key]=xAxis_c[key]*slope+bias;
+    }
+    //曲线参数设置
+    var  options = {
+        chart: {
+            type: type,
+            zoomType: 'xy', //xy方向均可缩放
+            marginLeft: 80, // Keep all charts left aligned
+            marginRight: 80, // Keep all charts right aligned
+            animation: false,
+        },
+        boost: {
+            useGPUTranslations: true
+        },
+        title: {
+            text: title
+        },
+        exporting: {
+            enabled:false
+        },
+        xAxis: {
+            categories: xAxis_c,
+
+            tickInterval:10*slope
+        },
+        yAxis: {
+            tickInterval: 0.05
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            enabled: true
+        },
+    tooltip: {
+            valueDecimals: 3,  //显示精度
+            shared: true
+        },
+        plotOptions: {
+            series: {
+                marker: {
+                    enabled: false
+                },
+
+            },
+        },
+    };
+    options.series = new Array();
+    var i=0;
+    for(key in dictSeries){
+        options.series[i] = new Object();
+        options.series[i].visible = dictSeries[key]["visible"];
+        options.series[i].color = color_chart[i];
+        options.series[i].lineWidth = 1;
+        options.series[i].name = key;
+        options.series[i].data = dictSeries[key]["list"].slice(start,end);
+        i++;
+    }
+    var chart = Highcharts.chart(MyDiv,options);
+    i=0;
+    for(key in dictLine){
+        for(h in dictLine[key]){
+             chart.xAxis[0].addPlotLine({           //在x轴上增加
+                value:dictLine[key][h]-start,                           //在值为2的地方
+                width:1, //标示线的宽度为2px
+                color: color_chart[i]//标示线的颜色
+            });
+        }
+        i++;
+    }
+    chart.xAxis[0].addPlotLine({           //在x轴上增加
+        value:currentPos-start,                           //在值为2的地方
+        width:2, //标示线的宽度为2px
+        color: "green"//标示线的颜色
+    });
+
+}
+
+
 /*操作反馈信息*/
 function add_log(log_message, message_type){
     switch(message_type){
@@ -193,6 +283,7 @@ function delete_elem_by_id(id, gMap_elem_total, elem_fea_layer, elem_fea_style, 
     };
 
 }
+
 /*获取指定偏旁部首对应的汉字集合*/
 function getCharacterListFromElem(elem_id){
     var xhr = new XMLHttpRequest();
@@ -647,3 +738,45 @@ function delete_polygon_then_next(polygon_id, image_user_conf_id, image_id){
     }
     
 }
+
+/*get polygon label number message*/
+function get_polygon_elem_statistic(image_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', '../labeling/get_polygon_elem_statistic', true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            if(xhr.response == "err"){
+                add_log("样本统计出错","err");
+            }else{
+                let context = JSON.parse(xhr.response);
+                let message = "polygon数目:"+context.count_all_polygon+" elem数目:"+context.count_all_elem;
+                latest_distribute_elem = context["latest_distribute_elem"]
+                latest_distribute_polygon = context["latest_distribute_polygon"]
+                add_log(message, "message");
+                message = "最近一小时:polygon="+context.latest_number_polygon+" and elem="+context.latest_number_elem;
+                add_log(message, "message");
+                // 近一个小时数据分布
+                var distributeChartDictSeries={
+                    "latest_distribute_elem":{"list": latest_distribute_elem, "visible": true},
+                    "latest_distribute_polygon":{"list": latest_distribute_polygon, "visible": true},
+                };
+                distributeChartDictLine=[];
+                addChart(
+                    "column",
+                    "",
+                    distributeChartDictSeries,
+                    distributeChartDictLine,
+                    0,
+                    "statistic",
+                    0,
+                    distributeChartDictSeries["latest_distribute_polygon"]["list"].length,
+                    1,
+                    -59
+                );
+
+            }
+        }
+    }
+}
+
