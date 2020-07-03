@@ -8,6 +8,7 @@ ocr_view = OcrView()
 # admin.autodiscover()
 urlpatterns = [
     path('index/', ocr_view.index),
+    path('move/', ocr_view.moveData),
     path('ocrPDF_assist_request/',ocr_view.ocrPDF_assist_request),
     path('ocrPDF_assist_request/sub_and_execute/',ocr_view.sub_and_execute_assist_ocr),
     path('ocrPDF_assist_in_deny/',ocr_view.ocrPDF_assist_request_deny),

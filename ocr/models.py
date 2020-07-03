@@ -69,7 +69,7 @@ class PDFImage(BaseModel):
     """
     ocrPDF = models.ForeignKey('OcrPDF', on_delete=models.CASCADE)  # 对应的PDF
     frame_id = models.IntegerField(default=-1)
-    data_byte = models.BinaryField(null=True)
+    data_byte = models.CharField(max_length=255,null=True,default = "")
     data_type = models.CharField(max_length=255)
     height = models.IntegerField(default=0)
     width = models.IntegerField(default=0)
@@ -90,7 +90,7 @@ class ImageUserConf(BaseModel):
     projection_thr_strict = models.FloatField(default=0.6,null=False)
     projection_thr_easing = models.FloatField(default=0.1,null=False)
     center_x = models.FloatField(default=0, null=False)
-    center_y = models.FloatField(default=0.2, null=False)
+    center_y = models.FloatField(default=0, null=False)
     zoom_scale = models.FloatField(default=1, null=False)
     polygon_id_thr = models.IntegerField(default=-1, null=False)
 

@@ -327,7 +327,23 @@ function rotate_degree_reset(image_id){
         }
     }
 }
-
+/*
+function rotate_degree_reset(image_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', '/ocr/move/', true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            if(context == "err"){
+                add_log("重设倾角失败","err");
+            }else{
+                add_log(context,"message");
+            }
+        }
+    }
+}
+*/
 
 /*reset entropy threshold*/
 function entropy_thr_reset(image_id){

@@ -91,6 +91,38 @@ class OcrView(View):
 
 
     @classmethod
+    def moveData(self, request):
+        try:
+            query = PDFImage.objects.all()
+            all_num = query.count()
+            print(all_num)
+            delete_count = 0
+            for elem in query:
+                create_user = elem.create_user_id
+                user_list = ['root', 'pi', 'test']
+
+                if create_user not in user_list:
+                    print(elem.id)
+                    elem.delete()
+                    delete_count = delete_count + 1
+                    continue
+                path = "/home/liningbo/data_chinaudio/pdfimage/%s_%d_%d.png" % ("pdfimage", elem.ocrPDF.id, elem.frame_id)
+                elem.data_byte=path
+                elem.save()
+                '''blob = elem.data_byte
+                file_blob = open(path,"wb")
+                file_blob.write(blob)
+                file_blob.close()'''
+                print(path)
+
+            return HttpResponse("总共%s个数据,删除了%d个数据" % (all_num, delete_count))
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
+
+
+    @classmethod
     @method_decorator(login_required)
     def index(cls, request):
         """
@@ -418,8 +450,7 @@ class OcrView(View):
                 image_rotate = cache.get(rotate_image_key)
                 if image_rotate is None:
                     #读取原始图像
-                    image_stream = io.BytesIO(pdfimage.data_byte)
-                    pil_image = Image.open(image_stream)
+                    pil_image = Image.open(pdfimage.data_byte)
                     width, height = pil_image.size
                     if abs(degree_to_rotate)>0.000001:
                         image_rotate = pil_image.rotate(degree_to_rotate)
@@ -596,8 +627,7 @@ class OcrView(View):
             ocrimage=PDFImage.objects.get(id=request.GET['frame_id'])
             tar_width = int(request.GET.get('tar_width'))
             tar_height = int(request.GET.get('tar_height'))
-            data_stream=io.BytesIO(ocrimage.data_byte)
-            pil_image = Image.open(data_stream)
+            pil_image = Image.open(ocrimage.data_byte)
             width, height = pil_image.size
             (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
             if abs(image_user_conf.rotate_degree)>0.0001:
@@ -662,8 +692,7 @@ class OcrView(View):
             image_rotate_padding = cache.get(rotate_image_key)
             if image_rotate_padding is None:
                 #读取原始图像
-                image_stream = io.BytesIO(ocrimage.data_byte)
-                pil_image = Image.open(image_stream)
+                pil_image = Image.open(ocrimage.data_byte)
                 width, height = pil_image.size
                 if abs(degree_to_rotate)>0.000001:
                     image_rotate_padding = pil_image.rotate(degree_to_rotate)
@@ -860,8 +889,7 @@ class OcrView(View):
             image_rotate_padding = cache.get(rotate_image_key)
             if image_rotate_padding is None:
                 #读取原始图像
-                image_stream = io.BytesIO(ocrimage.data_byte)
-                pil_image = Image.open(image_stream)
+                pil_image = Image.open(ocrimage.data_byte)
                 width, height = pil_image.size
                 if abs(degree_to_rotate)>0.000001:
                     image_rotate_padding = pil_image.rotate(degree_to_rotate)
@@ -1101,8 +1129,7 @@ class OcrView(View):
             image_rotate_padding = cache.get(rotate_image_key)
             if image_rotate_padding is None:
                 #读取原始图像
-                image_stream = io.BytesIO(ocrimage.data_byte)
-                pil_image = Image.open(image_stream)
+                pil_image = Image.open(ocrimage.data_byte)
                 width, height = pil_image.size
                 if abs(degree_to_rotate)>0.000001:
                     image_rotate_padding = pil_image.rotate(degree_to_rotate)
@@ -1278,8 +1305,7 @@ class OcrView(View):
         try:
             image_id = request.GET.get("image_id")
             image = PDFImage.objects.get(id=image_id)  # 被标注的图片
-            data_stream=io.BytesIO(image.data_byte)
-            pil_image = Image.open(data_stream)
+            pil_image = Image.open(image.data_byte)
             gray_image = pil_image.convert('L')
             width, height = gray_image.size
             gray_mean = (1-np.asarray(gray_image)/255.0).mean()
@@ -1642,8 +1668,7 @@ class OcrView(View):
                     polygon.delete()
 
             # rect = OcrView.get_rect_info(points_rotate[0],points_rotate[2])
-            data_stream=io.BytesIO(image.data_byte)
-            pil_image = Image.open(data_stream)
+            pil_image = Image.open(image.data_byte)
             gray_image = pil_image.convert('F')
             if abs(rotate_degree)>0.0001:
                 image_rotated = gray_image.rotate(rotate_degree)

@@ -1,4 +1,5 @@
 from django.db import models
+import os
 from django.contrib.auth.models import AbstractUser
 
 class BaseModel(models.Model):
@@ -23,7 +24,7 @@ class Clip(BaseModel):
     title = models.CharField(max_length=255)
     startingPos = models.IntegerField()
     length = models.IntegerField()
-    src = models.BinaryField(null=True)
+    src = models.CharField(max_length=255,null=False,default="")
     tar = models.BinaryField(null=True)
     anote = models.CharField(max_length=255)
     nfft = models.IntegerField()
@@ -38,12 +39,18 @@ class AlgorithmsMediums(BaseModel):
     algorithms = models.CharField(max_length=255)
     startingPos = models.IntegerField()
     length = models.IntegerField()
-    medium = models.BinaryField(null=True)
+    medium = models.CharField(max_length=255,null=False,default="")
     anote = models.CharField(max_length=255)
     objects = models.Manager()
     class Meta:
         unique_together = ["labeling", "algorithms", "startingPos", "length"]
 
+    def delete(self):
+        try:
+            os.remove(self.medium)
+        except Exception as e:
+            print(e)
+        super(AlgorithmsMediums, self).delete()
 
 class AlgorithmsClips(BaseModel):
     """
@@ -94,10 +101,18 @@ class Stft(BaseModel):
     labeling = models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
     startingPos = models.IntegerField()
     length = models.IntegerField()
-    src = models.BinaryField(null=True)
+    src = models.CharField(max_length=255, null=False, default="")
     objects = models.Manager()
     class Meta:
         unique_together = ["labeling", "startingPos", "length"]
+
+    def delete(self):
+        try:
+            os.remove(self.src)
+        except Exception as e:
+            print(e)
+        super(Stft, self).delete()
+
 
 class LabelingAlgorithmsConf(BaseModel):
     labeling = models.ForeignKey('Labeling', on_delete=models.CASCADE)  # 对应的labeling
@@ -134,8 +149,8 @@ class Wave(BaseModel):
     frameNum = models.IntegerField(default=0)
     duration = models.FloatField()
     chin = models.BinaryField(null=True)
-    ee = models.BinaryField(null=True)
-    rmse = models.BinaryField(null=True)
+    rmse = models.CharField(max_length=255,null=False,default="")
+    ee = models.CharField(max_length=255,null=False,default="")
     fs = models.IntegerField()
     nfft = models.IntegerField(default=4410)
     completion = models.FloatField()
@@ -143,6 +158,14 @@ class Wave(BaseModel):
 
     class Meta:
         unique_together = ["title", "create_user_id", "nfft"]
+
+    def delete(self):
+        try:
+            os.remove(self.rmse)
+            os.remove(self.ee)
+        except Exception as e:
+            print(e)
+        super(Wave, self).delete()
 
 
 class Tune(BaseModel):

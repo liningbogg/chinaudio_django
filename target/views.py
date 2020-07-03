@@ -213,6 +213,7 @@ class TargetView(View):
         self.sender = None
         self.redis_pool=redis.ConnectionPool(host='localhost', port=6379,db=0, password='1a2a3a', encoding='utf-8')
 
+
     @classmethod
     @method_decorator(login_required)
     def index(cls, request):
@@ -427,6 +428,7 @@ class TargetView(View):
         try:
             labelinfo = Labeling.objects.get(create_user_id=user_id, title=title)
         except Exception as e:
+            print(e)
             Labeling(title=title, create_user_id=user_id, nfft=nfft, frameNum=wave.frameNum).save()
             labelinfo = Labeling.objects.get(create_user_id=user_id, title=title)
         thrart_ee = labelinfo.vad_thrart_EE
@@ -453,15 +455,25 @@ class TargetView(View):
         extend_rad = labelinfo.extend_rad
 
         try:
-            ee = pickle.loads(wave.ee)[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
+            eefile_path = wave.ee
+            eefile = open(eefile_path, "rb")
+            waveee = pickle.load(eefile)
+            eefile.close()
+            ee = waveee[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
             ee = list(ee)
         except Exception as e:
+            print(e)
             ee = list()
         try:
-            rmse = pickle.loads(wave.rmse)[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
+            rmsefile_path = wave.rmse
+            rmsefile = open(rmsefile_path, "rb")
+            wavermse = pickle.load(rmsefile)
+            rmsefile.close()
+            rmse = wavermse[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
             rmse = list(rmse)
             vadrs = targetTools.vad(ee, rmse, thrart_ee, thrart_rmse, throp)
         except Exception as e:
+            print(e)
             rmse = list()
             vadrs = { 
                 'info':None,
@@ -486,24 +498,30 @@ class TargetView(View):
         labeling_algorithms_conf = labelinfo.labelingalgorithmsconf_set.all()  # 算法支持数据配置
         start_ref = max(current_frame - extend_rad, 0)  # 起始位置
         end_ref = min(current_frame + extend_rad, end)  # 终止位置
-        for algorithmsConf in labeling_algorithms_conf:
-            reference_name = algorithmsConf.algorithms
-            local_reference_clips = labelinfo.algorithmsclips_set.filter(
-                algorithms=reference_name,
-                startingPos__range=(current_frame-extend_rad, current_frame+extend_rad-1),
-                length=1
-            )
-            primary_arr = np.zeros(end_ref-start_ref)  # 算法主数据
-            for reference_clip in local_reference_clips:
-                primary_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[0]
-            reference.update({reference_name: list(primary_arr)})
-            if algorithmsConf.is_filter is True:
-                reference_name = reference_name+"_filter"
-                filter_arr = np.zeros(end_ref - start_ref)  # 算法主数据
+        print("hahhah")
+        try:
+            for algorithmsConf in labeling_algorithms_conf:
+                reference_name = algorithmsConf.algorithms
+                local_reference_clips = labelinfo.algorithmsclips_set.filter(
+                    algorithms=reference_name,
+                    startingPos__range=(current_frame-extend_rad, current_frame+extend_rad-1),
+                    length=1
+                )
+                primary_arr = np.zeros(end_ref-start_ref)  # 算法主数据
                 for reference_clip in local_reference_clips:
-                    filter_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[1]
-                reference.update({reference_name: list(filter_arr)})
+                    primary_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[0]
+                reference.update({reference_name: list(primary_arr)})
+                if algorithmsConf.is_filter is True:
+                    reference_name = reference_name+"_filter"
+                    filter_arr = np.zeros(end_ref - start_ref)  # 算法主数据
+                    for reference_clip in local_reference_clips:
+                        filter_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[1]
+                    reference.update({reference_name: list(filter_arr)})
+        except Exception as e:
+            print(e)
+            print("544")
         target = [[0] * (end_ref-start_ref), [0] * (end_ref-start_ref), [0] * (end_ref-start_ref)]  # 存储前三个音高的二维数组
+
         try:
             clips = Clip.objects.filter(
                 title=title, create_user_id=request.user,
@@ -517,11 +535,15 @@ class TargetView(View):
                     target[index][pos-start_ref] = pitch
                     index = index+1
         except Exception as e:
+            print(e)
             pass
         # fft及中间结果
         # fft_range=list(range(extend_rad*2))
         try:
-            src_fft = pickle.loads(labelinfo.stft_set.get(startingPos=current_frame, length=1).src)
+            stftfile_path = labelinfo.stft_set.get(startingPos=current_frame, length=1).src
+            stftfile = open(stftfile_path, "rb")
+            src_fft = pickle.load(stftfile)
+            stftfile.close()
             src_fft[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
             filter_rad = labelinfo.filter_rad  # 过滤带宽半径
             current_clip = labelinfo.algorithmsclips_set.get(
@@ -542,13 +564,16 @@ class TargetView(View):
                 filter_fft = [round(i, 4) for i in filter_fft]
             else:
                 filter_fft = []
-            medium = pickle.loads(
-                labelinfo.algorithmsmediums_set.get(
-                    algorithms=labelinfo.primary_ref,
-                    startingPos=current_frame,
-                    length=1
-                ).medium
-            )
+            
+            mediumfile_path = labelinfo.algorithmsmediums_set.get(
+                algorithms=labelinfo.primary_ref,
+                startingPos=current_frame,
+                length=1
+            ).medium
+            mediumfile = open(mediumfile_path, 'rb')
+            medium = pickle.load(mediumfile)
+            mediumfile.close()
+
             # 重新采样(降低采样), 只降低中间结果
             is_resampling = labelinfo.medium_resampling
             if is_resampling is True:
@@ -566,12 +591,12 @@ class TargetView(View):
                 src_fft = [round(i, 4) for i in src_fft]
                 medium = [round(i, 4) for i in medium]
         except Exception as e:
+            print(e)
             medium = []
             src_fft = []
             filter_fft = []
             current_tar = [0]
             filter_rad = 0
-            print(e)
         # 可能的位置
         chin = None
         string_hzes = None
@@ -589,6 +614,7 @@ class TargetView(View):
                 string_do = chin.get_do()
                 pitch_scaling = chin.get_scaling()
             except Exception as e:
+                print(e)
                 pitch_scaling = 1
         else:
             # chin class 不存在
@@ -680,7 +706,11 @@ class TargetView(View):
             counter=0
             fft_range=list(range(stft_set.count()))
             for stft in stft_set:
-                stft_src=list(pickle.loads(stft.src)[0:int(4000*nfft/fs)])
+                stftfile_path = stft.src
+                stftfile = open(stftfile_path, "rb")
+                stftsrc = pickle.load(stftfile)
+                stftfile.close()
+                stft_src=list(stftsrc[0:int(4000*nfft/fs)])
                 stft_src = [round(i, 4) for i in stft_src]
                 fft_range[counter]=stft_src
                 counter=counter+1
@@ -750,7 +780,10 @@ class TargetView(View):
         fs = int(request.GET.get('fs'))
         try:
             labeling = Labeling.objects.get(id=labeling_id)
-            src_fft = pickle.loads(labeling.stft_set.get(startingPos=current_pos, length=1).src)
+            srcfile_path = labeling.stft_set.get(startingPos=current_pos, length=1).src
+            srcfile = open(srcfile_path, "rb")
+            src_fft = pickle.load(srcfile)
+            srcfile.close()
             src_fft[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
             fft_filtered = filter_by_base(src_fft, filter_frq, filter_width, nfft, fs).tolist()  # 过滤后fft
             fft_filtered_round = [round(i, 2) for i in fft_filtered]
@@ -894,7 +927,8 @@ class TargetView(View):
             clips_all.delete()
             # print("删除算法参考数据"+str(algorithms_name)+str(clips_num)+"条")
             medium_all = labeling.algorithmsmediums_set.filter(algorithms=algorithms_name)
-            medium_all.delete()
+            for medium in medium_all:
+                medium.delete()
             # print("删除算法中间结果" + str(algorithms_name) + str(clips_num) + "条")
             # 创建数据
             clips_num_oncreate = labeling.frameNum  # 需要创建数据总条目
@@ -982,7 +1016,7 @@ class TargetView(View):
             algorithms_name = request.GET.get('algorithm_name')
             labeling_id = int(request.GET.get('labeling_id'))
             labeling = Labeling.objects.get(id=labeling_id)
-            labeling_algorithms_conf = labeling.LabelingAlgorithmsConf_set.get(algorithms=algorithms_name)
+            labeling_algorithms_conf = labeling.labelingalgorithmsconf_set.get(algorithms=algorithms_name)
             labeling_algorithms_conf.delete()
         except Exception as e:
             print(e)
@@ -1028,7 +1062,12 @@ class TargetView(View):
             # 短时傅里叶谱
             list_stft = []
             for i in range(len(stft_arr)):
-                stft = Stft(startingPos=i, length=1, labeling=labeling, src=pickle.dumps(stft_arr[i]))
+                stftfile_path = "/home/liningbo/data_chinaudio/stft/%s_%d_%d_%d.pkl" % ("stft", labeling_id, i, 1)
+                stftfile = open(stftfile_path, "wb")
+                pickle.dump(stft_arr[i], stftfile)
+                stftfile.close()
+                
+                stft = Stft(startingPos=i, length=1, labeling=labeling, src=stftfile_path, create_user_id=user_id)
                 list_stft.append(stft)
             labeling.stft_set.bulk_create(list_stft)
             labeling.frameNum = len(stft_arr)
@@ -1077,7 +1116,11 @@ class TargetView(View):
             )
             spectrum_entropy = maxminnormalization(spectrum_entropy, 0, 1)
             wave = Wave.objects.get(create_user_id=user_id, title=title)
-            wave.ee = pickle.dumps(spectrum_entropy)
+            eefile_path = "/home/liningbo/data_chinaudio/wave/%s_%s_%s_%d.pkl" % ("ee", wave.title, wave.create_user_id, wave.nfft)
+            eefile = open(eefile_path, "wb")
+            pickle.dump(spectrum_entropy, eefile)
+            eefile.close()
+            wave.ee = eefile_path
             wave.save(update_fields=["ee"])
 
         except Exception as e:
@@ -1109,7 +1152,11 @@ class TargetView(View):
             )[0]
             rmse = maxminnormalization(rmse, 0, 1)
             wave = Wave.objects.get(create_user_id=user_id, title=title)
-            wave.rmse = pickle.dumps(rmse)
+            rmsefile_path = "/home/liningbo/data_chinaudio/wave/%s_%s_%s_%d.pkl" % ("rmse", wave.title, wave.create_user_id, wave.nfft)
+            rmsefile = open(rmsefile_path, "wb")
+            pickle.dump(rmse, rmsefile)
+            rmsefile.close()
+            wave.rmse = rmsefile_path
             wave.frameNum = len(rmse)
             wave.save(update_fields=["rmse", "frameNum"])
             labeling.frameNum = len(rmse)
@@ -1354,7 +1401,9 @@ class TargetView(View):
             return HttpResponse(e)
 
         cutoff = int(4200 * nfft / fs)  # src 截断位置
-        src = pickle.loads(clip.src)
+        srcfile = open(clip.src, 'rb')
+        src = pickle.load(srcfile)
+        srcfile.close()
         src = src.tolist()[0:cutoff]
         return HttpResponse(json.dumps(src))
 
