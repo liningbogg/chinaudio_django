@@ -397,6 +397,14 @@
                         }
                         return false;
                     }
+                    if (e.ctrlKey && e.keyCode==39) {　　　//快捷键 ctrl + right
+                        move2next({{ocr_pdf_id}},{{frame_id}},{{frame_num}});
+                        return false;
+                    }
+                    if (e.ctrlKey && e.keyCode==37) {　　　//快捷键 ctrl + left
+                        move2prior({{ocr_pdf_id}},{{frame_id}},{{frame_num}});
+                        return false;
+                    }
                 }
                 document.onkeydown = onDocKeydown;
 

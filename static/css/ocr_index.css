@@ -71,6 +71,7 @@ body,div
     font-size:1rem;
     border-width:0.05rem;
     border-style:solid;
+    overflow-y:auto;
 }
 .ocrPDFTable{
     width:50%;
