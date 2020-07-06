@@ -405,6 +405,14 @@
                         move2prior({{ocr_pdf_id}},{{frame_id}},{{frame_num}});
                         return false;
                     }
+                    if (e.ctrlKey && e.keyCode==38) {　　　//快捷键 ctrl + up
+                        if({{is_vertical}} == true){
+                            direction_select("horizontal", {{image_user_conf_id}});
+                        }else{
+                            direction_select("vertical", {{image_user_conf_id}});
+                        }
+                        return false;
+                    }
                 }
                 document.onkeydown = onDocKeydown;
 
