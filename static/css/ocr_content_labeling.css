@@ -177,7 +177,7 @@ body,div
 {
     position:relative;
     float:left;
-    width: 72%;
+    width: 36%;
     top:0%;
     height:98%;
     font-size:1rem;
@@ -191,7 +191,7 @@ body,div
     float:left;
     width: 12%;
     top:0%;
-    height:98%;
+    height:122px;
     font-size:1rem;
     border-color:green;
     border-width:0.05rem;

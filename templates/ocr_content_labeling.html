@@ -176,6 +176,15 @@
             let chinese_character_height = div_chinese_character.offsetHeight;
             div_elem.style.height  = (chinese_character_height - add_elem_height - elem_add_character_height -elem_next_height -3)  + "px";
 
+            let add_elem_width = div_add_elem.offsetWidth;
+            let div_add_elem_image = document.getElementById("add_elem_image");
+            let add_elem_image_width = div_add_elem_image.offsetWidth;
+            let div_add_elem_submit = document.getElementById("add_elem_submit");
+            let add_elem_image_submit_width = div_add_elem_submit.offsetWidth;
+            let div_add_elem_desc = document.getElementById("add_elem_desc");
+            div_add_elem_desc.style.width = (add_elem_width - add_elem_image_width - add_elem_image_submit_width -128) +"px";
+
+
             var image_size ={{size}};
             var polygon = JSON.parse('{{polygon|safe}}');
             for (item in polygon)
@@ -255,7 +264,9 @@
 
             console.log(gMap_elem_total);
             gMap_character = new gDBox.Map('add_character_image', {w:128, zoom: 128, cx: 0, cy: 0, zoomMax: 128*16, zoomMin: 128/4});
-"character_operator_add"            // feature-reset监听
+            //加入监听单机事件
+
+            // feature-reset监听
             gMap_elem_total.events.on(
                 'featureStatusReset',
                 function () {

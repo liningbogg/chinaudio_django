@@ -219,7 +219,199 @@ class OcrView(View):
             print(e)
             return HttpResponse("err")
             
+    def getYolov3Data(self, request):
+        try:
+            class_type = [
+                "melon",
+                "pea2",   
+                "torch",  
+                "Flower", 
+                "pea1",   
+                "cushaw", 
+                "nuts",   
+                "pumpkin",
+                "pepper", 
+                "nutl",   
+                "zombi0",
+                "sun",
+                "ball",
+                "dolly",
+                "dead0",
+                "shovel",
+                "block",
+                "head0",
+                "zombiBlock",
+                "fireBall"
+            ]
+            username = "pvz0"
+            labeling_dict = {}
+            polygon_set = OcrLabelingPolygon.objects.filter(create_user_id=username, labeling_content=True)
+            for polygon in polygon_set:
+                elem_set = polygon.polygonelem_set.all()
+                if elem_set.count() == 0:
+                    continue
+                polygonelem = elem_set[0]    
+                classtype = polygonelem.elem.desc_info
+                image = polygon.pdfImage.data_byte
+                if image not in labeling_dict:
+                    labeling_dict[image]={
+                        "polygon_list":[]
+                    }
+                else:
+                    pass
 
+                polygonarr = json.loads(polygon.polygon)
+                elem = {
+                    "class": classtype, 
+                    "box":[
+                        polygonarr[0]['x'],
+                        polygonarr[0]['y'],
+                        polygonarr[2]['x'],
+                        polygonarr[2]['y'],
+                    ]
+                }
+                labeling_dict[image]["polygon_list"].append(elem)
+            with open("/home/liningbo/yolov3/data/train.txt", "w") as file_train:
+                for labeling in labeling_dict:
+                    filename = os.path.split(labeling)[1].split(".")[0]
+                    pathname = "./data/image_split/%s.jpg" % filename
+                    file_train.write(pathname)
+                    polygon_list = labeling_dict[labeling]["polygon_list"]
+                    for polygon in polygon_list:
+                        class_index = class_type.index(polygon['class'])
+                        box = polygon['box']
+                        line = " %d,%d,%d,%d,%d" % (box[0], box[1], box[2], box[3], class_index)
+                        file_train.write(line)
+                    file_train.write("\n")
+
+                    args={
+                        "path": labeling,
+                    }
+                    red = redis.Redis(connection_pool=self.redis_pool)
+                    red.rpush("yolov3AchieveTask", json.dumps(args))  # 此处不做重复性检查
+            return HttpResponse("/home/liningbo/yolov3/data")
+        except Exception as e:
+            print(e)
+            print(e.__traceback__.tb_lineno)
+            return HttpResponse("获取yolov3数据失败.")
+    def getYolov3DataOld(self, request):
+        try:
+            class_type = [
+                "melon",
+                "pea2",   
+                "torch",  
+                "Flower", 
+                "pea1",   
+                "cushaw", 
+                "nuts",   
+                "pumpkin",
+                "pepper", 
+                "nutl",   
+                "zombi0",
+                "sun",
+                "ball",
+                "dolly",
+                "dead0",
+                "shovel",
+                "block",
+                "head0",
+                "zombiBlock",
+                "fireBall"
+            ]
+            username = "pvz0"
+            shape_size = json.loads(request.GET.get("shape_size"))
+            labeling_dict = {}
+            polygon_set = OcrLabelingPolygon.objects.filter(create_user_id=username, labeling_content=True)
+            print(polygon_set.count())
+            for polygon in polygon_set:
+                elem_set = polygon.polygonelem_set.all()
+                if elem_set.count() == 0:
+                    continue
+                polygonelem = elem_set[0]    
+                classtype = polygonelem.elem.desc_info
+                image = polygon.pdfImage.data_byte
+                if image not in labeling_dict:
+                    padding_l=0
+                    padding_r=0
+                    padding_t=0
+                    padding_b=0
+                    resize_height = 0
+                    resize_width = 0
+                    height = polygon.pdfImage.height
+                    width = polygon.pdfImage.width
+                    ratio = shape_size*1.0/max(height, width)
+                    if height > width:
+                        resize_height = shape_size
+                        resize_width = int(width*ratio)
+                        padding_w = shape_size-resize_width
+                        padding_l = padding_w //2
+                        padding_r = padding_w - padding_l
+                    else:
+                        resize_height = int(height*ratio)
+                        resize_width = shape_size
+                        padding_h = shape_size-resize_height
+                        padding_t = padding_h // 2
+                        padding_b = padding_h - padding_t
+                    labeling_dict[image]={
+                        "resize_height": resize_height,
+                        "resize_width": resize_width,
+                        "padding_l": padding_l,
+                        "padding_t": padding_t,
+                        "padding_r": padding_r,
+                        "padding_b": padding_b,
+                        "shape_size": shape_size,
+                        "ratio": ratio,
+                        "polygon_list":[]
+                    }
+                else:
+                    pass
+
+                padding_l = labeling_dict[image]["padding_l"]    
+                padding_t = labeling_dict[image]["padding_t"]    
+                ratio = labeling_dict[image]["ratio"]    
+                polygonarr = json.loads(polygon.polygon)
+                print(class_type)
+                elem = {
+                    "class": classtype, 
+                    "box":[
+                        polygonarr[0]['x']*ratio + padding_l,
+                        polygonarr[0]['y']*ratio + padding_t,
+                        polygonarr[2]['x']*ratio + padding_l,
+                        polygonarr[2]['y']*ratio + padding_t,
+                    ]
+                }
+                labeling_dict[image]["polygon_list"].append(elem)
+            with open("/home/liningbo/yolov3/data/train.txt", "w") as file_train:
+                for labeling in labeling_dict:
+                    filename = os.path.split(labeling)[1].split(".")[0]
+                    pathname = "./data/image_split/%s.jpg" % filename
+                    file_train.write(pathname)
+                    polygon_list = labeling_dict[labeling]["polygon_list"]
+                    for polygon in polygon_list:
+                        class_index = class_type.index(polygon['class'])
+                        print(class_index)
+                        box = polygon['box']
+                        line = " %d,%d,%d,%d,%d" % (box[0], box[1], box[2], box[3], class_index)
+                        file_train.write(line)
+                    file_train.write("\n")
+
+                    args={
+                        "path": labeling,
+                        "resize_height": labeling_dict[labeling]["resize_height"],
+                        "resize_width": labeling_dict[labeling]["resize_width"],
+                        "padding_l": labeling_dict[labeling]["padding_l"],
+                        "padding_t": labeling_dict[labeling]["padding_t"],
+                        "padding_r": labeling_dict[labeling]["padding_r"],
+                        "padding_b": labeling_dict[labeling]["padding_b"],
+                    }
+                    red = redis.Redis(connection_pool=self.redis_pool)
+                    red.rpush("yolov3AchieveTask", json.dumps(args))  # 此处不做重复性检查
+            return HttpResponse("/home/liningbo/yolov3/data")
+        except Exception as e:
+            print(e)
+            print(e.__traceback__.tb_lineno)
+            return HttpResponse("获取yolov3数据失败.")
+    
     @classmethod
     @method_decorator(login_required)
     def ocrPDF_assist_request(cls, request):
@@ -433,7 +625,6 @@ class OcrView(View):
                 polygon_label = non_label_set[0]
                 polygonElemSet = polygon_label.polygonelem_set.all()
                 for polygonElem in polygonElemSet:
-                    print(polygonElem.elem.id)
                     elem_selected.append(polygonElem.elem.id)
                 polygon_id = polygon_label.id
                 polygon = str(polygon_label.polygon,'utf-8')
@@ -523,7 +714,6 @@ class OcrView(View):
                 
                 # 循环查看redis结果，最多20*10ms
                 rs_key = "%s_%s_%s_%s" % ("rs_aiocr", str(request.user), image_id, polygon_id)
-                print(rs_key)
                 ai_ocr = []
                 for i in range(20):
                     if red.exists(rs_key):
@@ -1179,6 +1369,7 @@ class OcrView(View):
             return HttpResponse("err")
 
 
+
     # 更改标注偏旁完成状态
     @method_decorator(login_required)
     def change_check_status(self, request):
@@ -1623,6 +1814,77 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return HttpResponse("err")
+
+
+    @method_decorator(login_required)
+    def yolo_labeling(self, request):
+        try:
+            class_type = [
+                "melon",
+                "pea2",   
+                "torch",  
+                "Flower", 
+                "pea1",   
+                "cushaw", 
+                "nuts",   
+                "pumpkin",
+                "pepper", 
+                "nutl",   
+                "zombi0",
+                "sun",
+                "ball",
+                "dolly",
+                "dead0",
+                "shovel",
+                "block",
+                "head0",
+                "zombiBlock",
+                "fireBall"
+            ]
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)
+            pil_image = Image.open(image.data_byte)
+            args={
+                "create_user_id":str(request.user),
+                "image_id":image_id,
+                "image":pil_image,
+            }
+            red = redis.Redis(connection_pool=self.redis_pool)
+            print("kaka")
+            red.rpush("pvzocr", pickle.dumps(args))  # 此处不做重复性检查
+            pvz_ocr = []
+            rs_key = "%s_%s_%s" % ("rs_pvzocr", str(request.user), image_id)
+            time.sleep(0.5)
+            for i in range(50):
+                if red.exists(rs_key):
+                    pvz_ocr = json.loads(red.get(rs_key))
+                    for item in pvz_ocr:
+                        class_index = item['class_index']
+                        top = item['top']
+                        bottom = item['bottom']
+                        left = item['left']
+                        right = item['right']
+                        rect = [
+                            {'x':left, 'y':top},
+                            {'x':right, 'y':top},
+                            {'x':right, 'y':bottom},
+                            {'x':left, 'y':bottom},
+                        ]
+                        polygon = OcrLabelingPolygon(pdfImage=image, polygon=json.dumps(rect).encode("utf-8"), create_user_id=str(request.user))
+                        polygon.save()
+                        elem = ChineseElem.objects.get(desc_info=class_type[class_index])
+                        PolygonElem(polygon=polygon, elem=elem, create_user_id=str(request.user), desc_info="created_auto").save()
+
+                    red.delete(rs_key)
+                    break
+                else:
+                    time.sleep(0.01)
+
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            return HttpResponse("err")
+
 
 
     @method_decorator(login_required)

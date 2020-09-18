@@ -413,6 +413,12 @@
                         }
                         return false;
                     }
+                    if (e.ctrlKey && e.keyCode==89) {　　　//快捷键 ctrl + y
+                        yolo_labeling({{image_id}}); 
+                        return false;
+                    }
+
+
                 }
                 document.onkeydown = onDocKeydown;
 

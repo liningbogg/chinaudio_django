@@ -564,6 +564,23 @@ function merge_labeling(image_id, merge_region, gFeatureLayer, gFetureStyle, cur
     
 }
 
+/*yolo*/
+function yolo_labeling(image_id){
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', 'yolo_labeling/?'+"image_id="+image_id, true);
+    xhr.send(null);
+    xhr.onreadystatechange = function(){
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            let context = xhr.response;
+            console.log(context);
+            if(context == "err"){
+                add_log("yolo错误","err"); 
+            }else{
+                location.reload();
+            }
+        }
+    }
+}
 
 /*labeling roughly*/
 function rough_labeling(image_id, rotate_points, gFeatureLayer, gFetureStyle, current_rotate, ori_width, ori_height, tar_width, tar_height){

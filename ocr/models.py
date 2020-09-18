@@ -148,3 +148,4 @@ class PolygonElem(BaseModel):
     desc_info = models.TextField(null=True, default="")
     class Meta:
         unique_together = ["polygon", "elem", "create_user_id"]
+

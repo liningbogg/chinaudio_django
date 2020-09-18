@@ -74,6 +74,7 @@ body,div
     overflow-y:auto;
 }
 .ocrPDFTable{
+    overflow-y:auto;
     width:50%;
 }
 .ocrPDFTable thead{
