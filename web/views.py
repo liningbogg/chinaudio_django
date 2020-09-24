@@ -12,10 +12,9 @@ from web.models import *
 class WebView(View):
 
     @classmethod
-    @method_decorator(login_required)
     def index(cls, request):
         context = {"info":"test"}
-        return render(request, 'web_index.html', context)
+        return render(request, 'index.html', context)
 
     @classmethod
     def login(cls, request):

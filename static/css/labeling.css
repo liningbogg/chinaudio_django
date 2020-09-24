@@ -708,9 +708,12 @@ body,div
 	left:0%;
     width:99%;
     top:0%;
-    height:2%;
-    display:table;
+    height:10%;
 	overflow-y:auto;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+
 }
 .add_tone_table_div{
     position:relative;
@@ -721,6 +724,9 @@ body,div
     height:100%;
     display:table;
 	overflow-y:auto;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
 }
 .add_tone_table_div table tr td input{
     width:100%;
@@ -732,8 +738,7 @@ body,div
 .add_tone_sub
 {
     position:relative;
-	float:right;
-	left:0%;
+	float:left;
     width:12%;
     top:0%;
     height:100%;

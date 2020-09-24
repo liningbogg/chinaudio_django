@@ -218,6 +218,66 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return HttpResponse("err")
+
+    def getYolov3DataDDG(self, request):
+        try:
+            class_type = [
+                "anus",
+                "bybby",
+                "dildo",
+                "vulva",
+            ]
+            username = "DDG"
+            labeling_dict = {}
+            polygon_set = OcrLabelingPolygon.objects.filter(create_user_id=username, labeling_content=True)
+            for polygon in polygon_set:
+                elem_set = polygon.polygonelem_set.all()
+                if elem_set.count() == 0:
+                    continue
+                polygonelem = elem_set[0]    
+                classtype = polygonelem.elem.desc_info
+                image = polygon.pdfImage.data_byte
+                if image not in labeling_dict:
+                    labeling_dict[image]={
+                        "polygon_list":[]
+                    }
+                else:
+                    pass
+
+                polygonarr = json.loads(polygon.polygon)
+                elem = {
+                    "class": classtype, 
+                    "box":[
+                        polygonarr[0]['x'],
+                        polygonarr[0]['y'],
+                        polygonarr[2]['x'],
+                        polygonarr[2]['y'],
+                    ]
+                }
+                labeling_dict[image]["polygon_list"].append(elem)
+            with open("/home/liningbo/yolov3/data/train.txt", "w") as file_train:
+                for labeling in labeling_dict:
+                    filename = os.path.split(labeling)[1].split(".")[0]
+                    pathname = "./data/image_split/%s.jpg" % filename
+                    file_train.write(pathname)
+                    polygon_list = labeling_dict[labeling]["polygon_list"]
+                    for polygon in polygon_list:
+                        class_index = class_type.index(polygon['class'])
+                        box = polygon['box']
+                        line = " %d,%d,%d,%d,%d" % (box[0], box[1], box[2], box[3], class_index)
+                        file_train.write(line)
+                    file_train.write("\n")
+
+                    args={
+                        "path": labeling,
+                    }
+                    red = redis.Redis(connection_pool=self.redis_pool)
+                    red.rpush("yolov3AchieveTask", json.dumps(args))  # 此处不做重复性检查
+            return HttpResponse("/home/liningbo/yolov3/data")
+        except Exception as e:
+            print(e)
+            print(e.__traceback__.tb_lineno)
+            return HttpResponse("获取yolov3数据失败.")
             
     def getYolov3Data(self, request):
         try:
@@ -294,6 +354,7 @@ class OcrView(View):
             print(e)
             print(e.__traceback__.tb_lineno)
             return HttpResponse("获取yolov3数据失败.")
+
     def getYolov3DataOld(self, request):
         try:
             class_type = [

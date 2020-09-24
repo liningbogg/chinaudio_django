@@ -152,6 +152,7 @@ function filter_fft(srcFFT,title,currentPos,nfft,fs,labeling_id)
 function hetmap_dspl_base(xData, yData, data, max_data, min_data, div_name, series_name)
 {
     option = {
+        animation: false,
         tooltip: {
             trigger:'item',
             position: function (pos, params, el, elRect, size) {
@@ -640,6 +641,29 @@ function cal_allInput(labeling_id)
     cal_Rmse(labeling_id);
     cal_EE(labeling_id);
 
+}
+
+/*增加指法标注*/
+function addTone()
+{
+    toneTable =  document.getElementById("add_tone_table");  //指法添加表格
+    let rowsNum = toneTable.rows.length;
+    console.log(rowsNum);
+    let toneList=new Array();
+    for(let index=1;index<rowsNum;index++){
+        let elem = {
+            "start":toneTable.rows[index].cells[0].getElementsByTagName("INPUT")[0].value,
+            "length":toneTable.rows[index].cells[1].getElementsByTagName("INPUT")[0].value,    
+            "basefrq":toneTable.rows[index].cells[2].getElementsByTagName("INPUT")[0].value,    
+            "finger":toneTable.rows[index].cells[3].getElementsByTagName("INPUT")[0].value,    
+        };
+        if(elem.start=="" || elem.length=="" || elem.basefrq=="" || elem.finger==""){
+            continue;
+        }else{
+            toneList.push(elem)
+        }
+    }
+    console.log(toneList);
 }
 
 /*移动到制定位置*/

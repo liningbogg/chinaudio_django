@@ -44,6 +44,7 @@ import io
 from pitch.np_encoder import NpEncoder
 from PIL import Image
 import math
+import traceback
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -498,7 +499,6 @@ class TargetView(View):
         labeling_algorithms_conf = labelinfo.labelingalgorithmsconf_set.all()  # 算法支持数据配置
         start_ref = max(current_frame - extend_rad, 0)  # 起始位置
         end_ref = min(current_frame + extend_rad, end)  # 终止位置
-        print("hahhah")
         try:
             for algorithmsConf in labeling_algorithms_conf:
                 reference_name = algorithmsConf.algorithms
@@ -519,7 +519,8 @@ class TargetView(View):
                     reference.update({reference_name: list(filter_arr)})
         except Exception as e:
             print(e)
-            print("544")
+            traceback.print_exc()
+
         target = [[0] * (end_ref-start_ref), [0] * (end_ref-start_ref), [0] * (end_ref-start_ref)]  # 存储前三个音高的二维数组
 
         try:
@@ -703,11 +704,13 @@ class TargetView(View):
             nfft = labelinfo.nfft
             fs = labelinfo.fs
             stft_set=labelinfo.stft_set.filter(startingPos__range=(current_frame-extend_rad,current_frame+extend_rad-1),length=1)
+
             counter=0
             fft_range=list(range(stft_set.count()))
             for stft in stft_set:
                 stftfile_path = stft.src
                 stftfile = open(stftfile_path, "rb")
+                print(stftfile)
                 stftsrc = pickle.load(stftfile)
                 stftfile.close()
                 stft_src=list(stftsrc[0:int(4000*nfft/fs)])
@@ -727,7 +730,7 @@ class TargetView(View):
             }
             return HttpResponse(json.dumps(context, cls=NpEncoder))
         except Exception as e:
-            print(e)
+            traceback.print_exc()
             return None
 
     @method_decorator(login_required)

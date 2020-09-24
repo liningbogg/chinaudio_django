@@ -189,6 +189,18 @@ body,div
 {
     position:relative;
     float:left;
+    width: 8%;
+    top:0%;
+    height:122px;
+    font-size:1rem;
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+.update_elem_submit
+{
+    position:relative;
+    float:left;
     width: 12%;
     top:0%;
     height:122px;

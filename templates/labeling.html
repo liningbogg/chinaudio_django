@@ -6,8 +6,8 @@
     <script src="http://apps.bdimg.com/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
     <script src="https://cdn.bootcss.com/echarts/4.3.0-rc.2/echarts.min.js"></script>
-    <script src="http://cdn.chinaudio.tech/static/js/labeling.js"></script>
-    <link href="http://cdn.chinaudio.tech/static/css/labeling.css" rel="stylesheet" type="text/css" />
+    <script src="/static/js/labeling.js"></script>
+    <link href="/static/css/labeling.css" rel="stylesheet" type="text/css" />
     <link rel="icon" href="http://cdn.chinaudio.tech/static/image/favicon.ico" mce_href="http://cdn.chinaudio.tech/static/image/favicon.ico" type="image/x-icon">
 </head>
 <body >
@@ -317,7 +317,7 @@
 							<input type="number" style="width:100%;height:95%"/>
 						</td>
 						<td style="width:48%;">
-							<input type="number" style="width:100%;height:95%"/>
+							<input type="text" style="width:100%;height:95%"/>
 						</td>
 					</tr>
 					<tr>
@@ -331,13 +331,13 @@
 							<input type="number" style="width:100%;height:95%"/>
 						</td>
 						<td style="width:48%;">
-							<input type="number" style="width:100%;height:95%"/>
+							<input type="text" style="width:100%;height:95%"/>
 						</td>
 					</tr>
 				</table>
 			</div>
-			<div class="add_tone_sub" >
-				<input type="button" style="width:100%; height:100%; border-color:red; " value="Sub(T)"/>
+			<div class="add_tone_sub" style="height:100%" >
+				<input type="button" style="width:100%; height:100%; border-color:red; " value="Sub(T)" onclick="addTone()"/>
 			</div>
 		</div>
 		<div class="clips" id="clips" >

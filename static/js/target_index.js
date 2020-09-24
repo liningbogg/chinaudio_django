@@ -20,7 +20,7 @@ function add_tune(i)
     note7=tune_table.rows[rowsindex].cells[9].getElementsByTagName("INPUT")[0].value;
     console.log(note5);
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'addTune/?'+"tune_name="+tune_name+"&a4_hz="+a4_hz+"&do="+_do
+    xhr.open('GET', '../addTune/?'+"tune_name="+tune_name+"&a4_hz="+a4_hz+"&do="+_do
     +"&note1="+note1+"&note2="+note2+"&note3="+note3+"&note4="+note4
     +"&note5="+note5
     +"&note6="+note6
