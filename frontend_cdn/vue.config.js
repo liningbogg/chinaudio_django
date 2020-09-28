@@ -14,16 +14,18 @@ module.exports = {
         config.plugins.delete('prefetch-index')
         config.plugins.delete('preload-index')
     },
-    configureWebpack: config => {
-        return{
-             plugins: [
-                new CompressionPlugin({
-                    test:/\.js$|\.html$|.\css/, //匹配文件名
-                    threshold: 10240,//对超过10k的数据压缩
-                    deleteOriginalAssets: false //不删除源文件
-                })
-            ],
-        }
+    configureWebpack: {
+        plugins: [
+            new CompressionPlugin({
+                test:/\.js$|\.html$|.\css/, //匹配文件名
+                threshold: 10240,//对超过10k的数据压缩
+                deleteOriginalAssets: false //不删除源文件
+            })
+        ],
+        externals: {
+            'vue': 'Vue',
+            'element-ui': 'ElementUI',
+        },
     },
     // 配置 webpack-dev-server 行为。
     devServer: {
@@ -40,7 +42,6 @@ module.exports = {
             entry: 'src/main.js',
             template: 'public/index.html',
             filename: 'index.html',
-            favicon:'./public/favicon.ico',
             title: 'Index Page',
             chunks: ['chunk-vendors', 'chunk-common', 'index']
         }

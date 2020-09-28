@@ -2,22 +2,20 @@
     <div class="login-wrap">
         <div class="ms-login">
             <div class="ms-title">古琴深度学习系统</div>
-            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="0px" class="ms-content">
-                <el-form-item prop="name" label="用户名">
+            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="4rem" class="ms-content">
+                <el-form-item prop="name" label="账号">
                     <el-input v-model="ruleForm.name" placeholder="name">
                     </el-input>
                 </el-form-item>
-                <div>
                 <el-form-item prop="password" label="密码">
                     <el-input
                         type="password" placeholder="password" v-model="ruleForm.password" @keyup.enter.native="submitForm('ruleForm')"
                     >
                     </el-input>
                 </el-form-item>
-                </div>
-                <div class="login-btn">
-                    <el-button type="primary" @click="submitForm('ruleForm')">登录</el-button>
-                </div>
+                <el-form-item prop="operator" label="">
+                    <el-button type="primary" @click="submitForm('ruleForm')" style="width:100%">登录</el-button>
+                </el-form-item>
                 <p class="login-tips">Tips : 未注册用户请先注册。</p>
             </el-form>
         </div>
@@ -55,7 +53,7 @@ export default {
                         username: this.ruleForm.name,
                         password: this.ruleForm.password,
                     }
-                    this.axios.get('web/login?username='+param.username+'&password='+param.password).then(
+                    this.axios.get('web/accounts/login?username='+param.username+'&password='+param.password).then(
                         response => {
                             if(response){
                                 let status = response.data.status;
@@ -93,11 +91,10 @@ export default {
 
 <style scoped>
 .login-wrap {
-    position: absolute;
-    top:2rem;
+    position:absolute;
     left:0rem;
     width: 100%;
-    height: calc(100% - 2rem);
+    height:100%;
     background-image: url(login-bg.jpg);
     background-size: 100%;
 }
@@ -110,10 +107,10 @@ export default {
     border-bottom: 1px solid #ddd;
 }
 .ms-login {
-    position: absolute;
-    left: 45%;
+    position:absolute;
+    left: 40%;
     top: 0%;
-    width: 15rem;
+    width: 20rem;
     margin: 10rem 0 0 -5rem;
     border-radius: 0.25rem;
     background: rgba(255, 255, 255, 0.3);
@@ -121,9 +118,6 @@ export default {
 }
 .ms-content {
     padding: 1rem 1rem;
-}
-.login-btn {
-    text-align: center;
 }
 .login-tips {
     font-size: 0.5rem;

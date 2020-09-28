@@ -6,6 +6,9 @@ from django.shortcuts import redirect
 from django.contrib import *
 from .forms import *
 from web.models import *
+import traceback
+import jwt
+from django.http import JsonResponse
 
 # Create your views here.
 
@@ -16,42 +19,42 @@ class WebView(View):
         context = {"info":"test"}
         return render(request, 'index.html', context)
 
-    @classmethod
-    def login(cls, request):
-        file_next = request.GET.get('next', "")
-        if request.method == 'GET':
-            if request.user is not None and request.user.is_active:
-                return redirect("/web/index/")
-            form = UserFormWithoutCaptcha()
-            return render(request, 'login.html', {'login_form': form, })
-        else:
-            form = UserFormWithoutCaptcha(request.POST)
-            if form.is_valid():
-                username = request.POST.get('username', '')
-                password = request.POST.get('password', '')
-                user = auth.authenticate(username=username, password=password)
-                if user is not None and user.is_active:
-                    pitch_user =PitchUser.objects.filter(username=username)
-                    session_key = pitch_user.first().session_key
-                    if session_key:
-                        request.session.delete(session_key)
-                    auth.login(request, user)
-                    pitch_user.update(session_key=request.session.session_key)
-                    if file_next == "":
-                        return redirect("/web/index/")
-                    else:
-                        return redirect(file_next)
-                else:
-                    message = "用户名或者密码错误"
-                    return render(request, 'login.html', {'login_form': form, 'message': message})
+    def login(self, request):
+        try:
+            username = request.GET.get("username")
+            password = request.GET.get("password")
+            user = auth.authenticate(username=username, password=password)  # 用户认证
+            if user and user.is_active:
+                pitch_user =PitchUser.objects.filter(username=username)
+                session_key = pitch_user.first().session_key
+                if session_key:
+                    request.session.delete(session_key)
+                auth.login(request, user)
+                pitch_user.update(session_key=request.session.session_key)
+                request.session['is_login'] = True
+                encoded_jwt = jwt.encode({'username':username},'secret_key',algorithm='HS256')  # token
+                result = {"status":"success", "username":username, "tip":"用户登录成功:"+username, "token":str(encoded_jwt, encoding='utf-8')}
+                return JsonResponse(result)
             else:
-                message = "表单数据错误"
-                return render(request, 'login.html', {'login_form': form, 'message': message})
+                result = {"status":"failure", "username":username, "tip":"登录失败,用户名或密码错误"}
+                return JsonResponse(result)
 
-    @classmethod
-    def logout(cls, request):
-        auth.logout(request)
-        return redirect("/web/accounts/login/")
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure", "username":username, "tip":"登录失败,服务器内部错误"}
+            return JsonResponse(result)
+
+    # 用户退出登录
+    def logout(self, request):
+        try:
+            auth.logout(request)
+            result = {"status":"success", "username":str(request.user), "tip":"退出登录成功"}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure", "username":str(request.user), "tip":"退出登录失败,内>部错误"}
+            return JsonResponse(result)
 
     @classmethod
     def register(cls, request):

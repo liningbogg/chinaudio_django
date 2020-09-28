@@ -7,11 +7,8 @@
                 <router-link to="/register">注册</router-link>
             </span>
             <span v-else>
-                <router-link to="/target">音频</router-link>|
-                <router-link to="/ocr">图像</router-link>|
-                <span style="font-color:green">
-                用户名:{{this.$store.state.username}}(已登录)
-                </span>|
+                <img src="/static/img/userImage.jpg" style="border-radius:50%;width:2rem"/>
+                <span>用户名:{{this.$store.state.username}}(已登录)</span>|
                 <router-link to="/logout">Logout</router-link>
             </span>
         </span>
@@ -23,24 +20,6 @@
   </div>
 </template>
 
-<script>
-
-export default {
-    name: "Login",
-    data() {
-        return {
-        }
-    },
-
-    mounted() {},
-    beforeDestroy() {
-    },
-    methods: {
-    }
-
-};
-</script>
-
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
@@ -48,25 +27,13 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  height:100%;
-  left:0rem;
-  width:100%;
 }
 #nav {
-  position:absolute;
   height: 2rem;
-  top:0rem;
-  left:0rem;
-  width:100%;
-  text-align:right;
-  font-size:1.5rem;
+  float:top;
   float:right;
 }
 #main {
-  position:absolute;
-  width:100%;
-  top:2rem;
-  left:0rem;
   height: calc(100% - 2rem);
 }
 #nav a {

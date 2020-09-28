@@ -21,7 +21,7 @@ from web.views import WebView
 web_view = WebView()
 
 urlpatterns = [
-    url('^$', web_view.index),
+    path('', web_view.index),
     path('admin/', admin.site.urls),
     path('web/', include('web.urls')),
     path('target/', include('target.urls')),

@@ -1,15 +1,7 @@
-import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, FormItem, Input} from 'element-ui';
-import axios from 'axios'
-import VueAxios from 'vue-axios'
-Vue.use(Button);
-Vue.use(Form);
-Vue.use(FormItem);
-Vue.use(Input);
-Vue.use(VueAxios, axios)
+import Vue from 'vue'
 Vue.config.productionTip = false
 
 
