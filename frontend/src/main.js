@@ -2,14 +2,16 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, FormItem, Input} from 'element-ui';
+import { Button, Form, FormItem, Input, Table, TableColumn} from 'element-ui';
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 Vue.use(Button);
 Vue.use(Form);
 Vue.use(FormItem);
+Vue.use(Table);
+Vue.use(TableColumn);
 Vue.use(Input);
-Vue.use(VueAxios, axios)
+Vue.use(VueAxios, axios);
 Vue.config.productionTip = false
 
 

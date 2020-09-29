@@ -27,7 +27,7 @@ urlpatterns = [
     path('addwaves/', target_view.addwaves),
     path('copywaves/', target_view.copywaves),
     path('copywaves/sub_and_execute/', target_view.sub_and_execute_copywaves),
-    path('wave/', target_view.wave_view),
+    path('waves/', target_view.waves),
     path('wave/get_phrase/', target_view.get_phrase),
     path('labeling/get_phrase/', target_view.get_phrase),
     path('wave/post_phrase/', target_view.post_phrase),
@@ -50,6 +50,7 @@ urlpatterns = [
     path('labeling/setManualPos/', target_view.set_manual_pos),
     path('labeling/calCustomPitch/', target_view.cal_custom_pitch),
     path('addTune/', target_view.add_tune),
+    path('tunes/', target_view.tunes),
     path('labeling/tune_reset/', target_view.tune_reset),  # 此处是指根据曲调重新设置弦高的危险算操作
     path('labeling/strings_reset/', target_view.strings_reset),
     path('labeling/labeling_reset/', target_view.labeling_reset),

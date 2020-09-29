@@ -41,7 +41,7 @@ module.exports = {
             template: 'public/index.html',
             filename: 'index.html',
             favicon:'./public/favicon.ico',
-            title: 'Index Page',
+            title: '古琴深度学习',
             chunks: ['chunk-vendors', 'chunk-common', 'index']
         }
     }	

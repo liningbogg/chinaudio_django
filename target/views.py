@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.db.models import Max
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse, FileResponse
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
@@ -45,6 +45,7 @@ from pitch.np_encoder import NpEncoder
 from PIL import Image
 import math
 import traceback
+
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -214,7 +215,6 @@ class TargetView(View):
         self.sender = None
         self.redis_pool=redis.ConnectionPool(host='localhost', port=6379,db=0, password='1a2a3a', encoding='utf-8')
 
-
     @classmethod
     @method_decorator(login_required)
     def index(cls, request):
@@ -243,6 +243,57 @@ class TargetView(View):
             print(e)
         context = {'waves': waves, 'tunes': tunes}
         return render(request, 'target_index.html', context)
+
+    def tunes(self, request):
+        """
+        获取曲目列表
+        :param request:
+        :return:
+        """
+        try:
+            tunes = Tune.objects.filter(create_user_id=request.user)
+            body = []
+            for tune in tunes:
+                tuneitem = {"tunename":tune.tune_name, "tuneid":tune.id, "do":tune.do, "note1":tune.note1, "note2":tune.note2, "note3":tune.note3, "note4":tune.note4, "note5":tune.note5, "note6":tune.note6, "note7":tune.note7, "a4":tune.a4_hz}
+                body.append(tuneitem)
+            body.append({})
+            result = {"status":"success" , "username":str(request.user), "tip": "获取waves成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    def waves(self, request):
+        """
+        获取曲目列表
+        :param request:
+        :return:
+        """
+        try:
+            waves = Wave.objects.filter(create_user_id=request.user)
+            body = []
+            for wave in waves:
+                title = wave.title
+                waveid = wave.id
+                nfft = wave.nfft
+                clips = Clip.objects.filter(title=wave.title, create_user_id=request.user)
+                completion = 0
+                candidate_frame=0
+                frameLabeled = clips.count()
+                frameTotal = wave.frameNum  # 待测总帧数
+                if frameLabeled != 0:
+                    candidate_frame = clips.aggregate(Max('startingPos'))['startingPos__max']+1
+                    completion = round(candidate_frame / frameTotal * 100, 1)
+                    completion = min(100, completion)
+                waveitem = {"title":title, "waveid":waveid, "nfft":nfft, "frameLabeled":frameLabeled, "percentLabeled":completion, "frameCurrent":candidate_frame, "frameTotal":frameTotal}
+                body.append(waveitem)
+            result = {"status":"success" , "username":str(request.user), "tip": "获取waves成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
 
     @method_decorator(login_required)
