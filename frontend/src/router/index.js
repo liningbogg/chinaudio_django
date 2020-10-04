@@ -18,6 +18,18 @@ const routes = [
     component: () => import(/* webpackChunkName: "home" */ '../views/Home.vue')
   },
   {
+    path: '/Wavelabeling',
+    name: 'Wavelabeling',
+    meta: {
+        requireAuth: true
+    },
+
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "wavelabeling" */ '../views/Wavelabeling.vue')
+  },
+  {
     path: '/Target',
     name: 'Target',
     meta: {

@@ -14,6 +14,11 @@ Vue.use(Input);
 Vue.use(VueAxios, axios);
 Vue.config.productionTip = false
 
+axios.interceptors.request.use(config =>{
+  /*为请求头对象添加Token验证的Authorization对象，就不用每次都在要传送的字段上加token了*/
+    config.headers.Authorization=localStorage.getItem('token')
+    return config
+})
 
 router.beforeEach((to, from, next) => {
     if (to.meta.requireAuth) {
@@ -53,6 +58,25 @@ router.beforeEach((to, from, next) => {
     }
     return
 }),
+// http response 拦截器
+axios.interceptors.response.use(
+    response => {
+        return response;
+    },
+    error => {
+        if (error.response) {
+            switch (error.response.status) {
+                case 401:
+                alert(error.response.data)
+                router.replace({
+                    path: '/login',
+                    query: {redirect: router.currentRoute.fullPath}//登录成功后跳入浏览的当前页面
+                })
+            }
+        }
+        return Promise.reject(error.response.data)
+    }
+);
 
 new Vue({
   router,

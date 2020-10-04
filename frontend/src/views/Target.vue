@@ -44,36 +44,23 @@ export default {
     top:0rem;
     width:calc(60% -0.1rem);
     height:6rem;
-    border-color:green;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #content{
     position:absolute;
     top:6rem;
     width:calc(100% -0.1rem);
     height:calc(100% - 6.2rem);
-    border-color:blue;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #wave_table{
     position:absolute;
     left:4rem;
-    width:calc(80% - 0.2rem);
-    height:calc(60% - 0.2rem);
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
+    width:calc(60% - 4.2rem);
+    height:calc(100% - 0.2rem);
 }
 #tune_table{
     position:absolute;
-    left:calc(4rem);
-    top:calc(60% + 0.2rem);
-    width:calc(80% - 0.2rem);
-    height:calc(40% - 0.2rem);
-    border-color:yellow;
-    border-width:0.05rem;
-    border-style:solid;
+    left:calc(60% + 0.4rem);
+    width:calc(40% - 0.4rem);
+    height:calc(100% - 0.2rem);
 }
 </style>

@@ -6,11 +6,11 @@ from django.shortcuts import redirect
 from django.contrib import *
 from .forms import *
 from web.models import *
+from pitch.check_auth import check_login
 import traceback
 import jwt
 from django.http import JsonResponse
 
-# Create your views here.
 
 class WebView(View):
 
@@ -25,15 +25,19 @@ class WebView(View):
             password = request.GET.get("password")
             user = auth.authenticate(username=username, password=password)  # 用户认证
             if user and user.is_active:
-                pitch_user =PitchUser.objects.filter(username=username)
-                session_key = pitch_user.first().session_key
+                pitch_user =PitchUser.objects.get(username=username)
+                session_key = pitch_user.session_key
                 if session_key:
                     request.session.delete(session_key)
                 auth.login(request, user)
-                pitch_user.update(session_key=request.session.session_key)
+                pitch_user.session_key=request.session.session_key
+                pitch_user.save()
                 request.session['is_login'] = True
-                encoded_jwt = jwt.encode({'username':username},'secret_key',algorithm='HS256')  # token
+                encoded_jwt = jwt.encode({'username':username},'815563',algorithm='HS256')  # token
                 result = {"status":"success", "username":username, "tip":"用户登录成功:"+username, "token":str(encoded_jwt, encoding='utf-8')}
+                print(encoded_jwt)
+                print(result["token"])
+                print(pitch_user.session_key)
                 return JsonResponse(result)
             else:
                 result = {"status":"failure", "username":username, "tip":"登录失败,用户名或密码错误"}

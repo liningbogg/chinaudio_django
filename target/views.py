@@ -42,10 +42,10 @@ import redis
 import fitz
 import io
 from pitch.np_encoder import NpEncoder
+from pitch.check_auth import check_login
 from PIL import Image
 import math
 import traceback
-
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -244,9 +244,9 @@ class TargetView(View):
         context = {'waves': waves, 'tunes': tunes}
         return render(request, 'target_index.html', context)
 
+    @method_decorator(check_login)
     def tunes(self, request):
         """
-        获取曲目列表
         :param request:
         :return:
         """
@@ -254,9 +254,9 @@ class TargetView(View):
             tunes = Tune.objects.filter(create_user_id=request.user)
             body = []
             for tune in tunes:
-                tuneitem = {"tunename":tune.tune_name, "tuneid":tune.id, "do":tune.do, "note1":tune.note1, "note2":tune.note2, "note3":tune.note3, "note4":tune.note4, "note5":tune.note5, "note6":tune.note6, "note7":tune.note7, "a4":tune.a4_hz}
+                tuneitem = {"tunename":tune.tune_name, "tuneid":tune.id, "do":tune.do, "note1":tune.note1, "note2":tune.note2, "note3":tune.note3, "note4":tune.note4, "note5":tune.note5, "note6":tune.note6, "note7":tune.note7, "a4":tune.a4_hz, "status":"edit"}
                 body.append(tuneitem)
-            body.append({})
+            body.append({"status":"add"})
             result = {"status":"success" , "username":str(request.user), "tip": "获取waves成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
@@ -468,6 +468,78 @@ class TargetView(View):
                 print(e)
         return HttpResponse("copy completed")
 
+    @method_decorator(check_login)
+    def nextframe(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            if wave.create_user_id == str(request.user):
+                clips = Clip.objects.filter(create_user_id=request.user, nfft=wave.nfft, title=wave.title)
+                if clips.count()==0:
+                    body = 0
+                else:
+                    body = clips.aggregate(Max('startingPos'))['startingPos__max']
+                    body = body+1
+                    body = min(wave.frameNum-1, body)
+
+                result = {"status":"success" , "username":str(request.user), "tip": "获取帧号成功", "body":body}
+                return JsonResponse(result)
+            else:
+                result = {"status":"failure" , "username":str(request.user), "tip":"曲目不属于当前用户"}
+                return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    @method_decorator(check_login)
+    def get_labelingconfigure(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            title = wave.title
+            nfft = wave.nfft
+            if wave.create_user_id == str(request.user):
+                labelings = Labeling.objects.filter(title=title, nfft=nfft, create_user_id=request.user)
+                if labelings.count()>0:
+                    labelinfo=labelings.first()
+                else:
+                    Labeling(title=title, create_user_id=user_id, nfft=nfft, frameNum=wave.frameNum).save()
+                    labelinfo = Labeling.objects.get(create_user_id=user_id,nfft=nfft, title=title)
+                body = [{
+                    "framenum":labelinfo.frameNum,
+                    "currentframe":labelinfo.current_frame,
+                    "nfft":labelinfo.nfft,
+                    "extend_rad":labelinfo.extend_rad,
+                    "toneextend_rad":labelinfo.tone_extend_rad,
+                    "nn_op":labelinfo.vad_thrart_EE,
+                    "nn_art":labelinfo.vad_throp_EE,
+                    "rmse":labelinfo.vad_thrart_RMSE,
+                    "pri_ref":labelinfo.primary_ref,
+                    "title":title,
+                }]
+                result = {"status":"success" , "username":str(request.user), "tip": "获取帧号成功", "body":body}
+                return JsonResponse(result)
+            else:
+                result = {"status":"failure" , "username":str(request.user), "tip":"曲目不属于当前用户"}
+                return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+    
     @method_decorator(login_required)
     def labeling(self, request):
         title = request.GET.get('title')

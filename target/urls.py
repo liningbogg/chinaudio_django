@@ -51,6 +51,8 @@ urlpatterns = [
     path('labeling/calCustomPitch/', target_view.cal_custom_pitch),
     path('addTune/', target_view.add_tune),
     path('tunes/', target_view.tunes),
+    path('getLabelingconfigure/', target_view.get_labelingconfigure),
+    path('nextframe/', target_view.nextframe),
     path('labeling/tune_reset/', target_view.tune_reset),  # 此处是指根据曲调重新设置弦高的危险算操作
     path('labeling/strings_reset/', target_view.strings_reset),
     path('labeling/labeling_reset/', target_view.labeling_reset),
