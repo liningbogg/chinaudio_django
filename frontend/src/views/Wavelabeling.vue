@@ -5,6 +5,10 @@
         </div>
         <!--右侧标注,主要是wave配置以及标注-->
         <div id="labeling">
+            <!--标注参考-->
+            <div id="ref">
+                <refconfigure></refconfigure>
+            </div>
             <!--配置信息-->
             <div id="configue">
                 <waveconfigure :currentframe="current_frame"> </waveconfigure>
@@ -15,11 +19,13 @@
 
 <script>
 import Waveconfigure from '@/components/Waveconfigure.vue'
+import Refconfigure from '@/components/Refconfigure.vue'
 
 export default {
     name: 'Wavelabeling',
     components:{
         Waveconfigure,
+        Refconfigure,
     },
     data() {
         return {
@@ -78,10 +84,17 @@ export default {
     border-width:0.05rem;
     border-style:solid;
 }
+#ref{
+    position:absolute;
+    left:0.2rem;
+    width:calc(100% - 0.4rem);
+    height:2rem;
+}
 #configue{
     position:absolute;
     left:0.2rem;
     width:calc(100% - 0.4rem);
+    top:2.2rem;
     height:6.2rem;
     border-color:cyan;
     border-width:0.05rem;

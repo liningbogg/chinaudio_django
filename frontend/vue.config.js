@@ -19,10 +19,18 @@ module.exports = {
              plugins: [
                 new CompressionPlugin({
                     test:/\.js$|\.html$|.\css/, //匹配文件名
-                    threshold: 1024,//对超过1k的数据压缩
+                    threshold: 512,//对超过512b的数据压缩
                     deleteOriginalAssets: false //不删除源文件
                 })
             ],
+            performance: {
+                hints:'warning',
+                //入口起点的最大体积
+                maxEntrypointSize: 4194304,
+                //生成文件的最大体积
+                maxAssetSize: 786432,
+            }
+
         }
     },
     // 配置 webpack-dev-server 行为。

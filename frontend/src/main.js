@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, FormItem, Input, Table, TableColumn} from 'element-ui';
+import { Button, Form, FormItem, Input, Table, TableColumn, Select, Option} from 'element-ui';
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 Vue.use(Button);
@@ -11,6 +11,8 @@ Vue.use(FormItem);
 Vue.use(Table);
 Vue.use(TableColumn);
 Vue.use(Input);
+Vue.use(Select);
+Vue.use(Option);
 Vue.use(VueAxios, axios);
 Vue.config.productionTip = false
 
@@ -36,7 +38,9 @@ router.beforeEach((to, from, next) => {
                 next();
             }else{
                 let redirect = from.query.redirect;
-                if(to.path === redirect){
+                console.log(to.path);
+                console.log(redirect);
+                if(!redirect || to.path === redirect.split("?")[0]){
                     next();  //避免重复循环
                 }else{
                     next({path:redirect})  //跳转到目的路由

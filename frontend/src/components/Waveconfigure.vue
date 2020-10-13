@@ -103,7 +103,6 @@ export default {
     padding:0rem;
     padding-right:0rem;
     padding-left:0rem;
-    height:2.0rem;
 }
 /deep/ .el-table th>.cell {
     padding-right:0rem;
