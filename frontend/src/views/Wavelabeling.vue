@@ -2,6 +2,17 @@
     <div class="main">
         <!--左侧图表，主要是标记片段的信息-->
         <div id="clipinfo">
+            <div id="vad">
+                <vad :currentframe="current_frame"/>
+            </div>
+            <div id="refchart">
+                <referencepitch :currentframe="current_frame" />
+            </div>
+            <div id="pitchchart">
+            </div>
+            <div id="spectrum">
+                <framesrc :currentframe="current_frame" ref="framesrc"/>
+            </div>
         </div>
         <!--右侧标注,主要是wave配置以及标注-->
         <div id="labeling">
@@ -20,17 +31,28 @@
 <script>
 import Waveconfigure from '@/components/Waveconfigure.vue'
 import Refconfigure from '@/components/Refconfigure.vue'
+import Vad from '@/components/Vad.vue'
+import Framesrc from '@/components/Framesrc.vue'
+import Referencepitch from '@/components/Referencepitch.vue'
 
 export default {
     name: 'Wavelabeling',
     components:{
         Waveconfigure,
+        Referencepitch,
         Refconfigure,
+        Vad,
+        Framesrc,
     },
     data() {
         return {
             waveid:null,
+            playstatusCustom:"el-icon-video-play",
             current_frame:null,
+            formInline:{
+                start:null,
+                end:null,
+            },
         }
     },
     mounted(){
@@ -38,12 +60,17 @@ export default {
         this.nextframeFromBackend();
     },
     methods:{
+        onEvaluate(){
+            this.$refs.framesrc.customEvaluate(this.formInline.start, this.formInline.end);
+        },
         nextframeFromBackend(){
             this.axios.get('target/nextframe/?waveid='+this.waveid).then(
                 response => {
                     if(response){
                         if(response.data.status==="success"){
                             this.current_frame = response.data.body;
+                            this.formInline.start=this.current_frame;
+                            this.formInline.end=this.current_frame+1;
                         }else{
                             this.msg = "获取待标记帧号出错,原因:"+response.data.tip;
                             console.log(this.msg);
@@ -57,32 +84,105 @@ export default {
 
 }
 </script>
-<style scoped lang="less">
-.main{
+<style scoped >
+/deep/ .el-form--inline .el-form-item {
+    margin-right: 0;
+    height:100%;
+}
+/deep/ .el-form-item {
+    margin-bottom: 0;
+}
+/deep/ .el-form-item__label{
+    text-align: right;
+    float: left;
+    color: #606266;
+    height:100%;
+    line-height:normal;
+    width:30%;
+    padding: 0 0 0 0;
+    box-sizing: border-box;
+    font-size:1rem;
+}
+/deep/ .el-form-item__content{
+    line-height:100%;
+    width:69%;
+    height:100%;
+}
+/deep/ .el-input__inner{
+    line-height:100%;
+    text-align: center;
+    height:100%;
+    font-size:1rem;
+}
+.el-button{
+    height:100%;
+    width:100%;
+    padding:0;
+}
+.el-input{
+    height:100%;
+}
+#main{
     position:absolute;
     width: calc(100% - 0.1rem);
     height: calc(100% - 0.1rem);
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #clipinfo{
     position:absolute;
     left:1rem;
-    width:calc(60% - 1.2rem);
+    width:calc(55% - 1.2rem);
     height:calc(100% - 0.2rem);
+}
+#vad{
+    position:absolute;
+    left:0rem;
+    width:calc(100% - 0.5rem);
+    height:calc(20% - 0.2rem);
+}
+#refchart{
+    position:absolute;
+    left:0rem;
+    top:20%;
+    width:calc(100% - 0.5rem);
+    height:calc(20% - 0.2rem);
+}
+#pitchchart{
+    position:absolute;
+    left:0rem;
+    top:40%;
+    width:calc(100% - 0.5rem);
+    height:calc(20% - 0.2rem);
+}
+#spectrum{
+    position:absolute;
+    left:0rem;
+    top:60%;
+    width:calc(100% - 0.5rem);
+    height:calc(40% - 0.2rem);
+}
+#stftchart{
+    position:absolute;
+    left:0;
+    top:0;
+    width:calc(50% - 0.1rem);
+    height:calc(100% - 0.1rem);
+}
+#medium{
+    position:absolute;
+    left:50%;
+    top:0;
+    width:calc(50% - 0.1rem);
+    height:calc(100% - 0.1rem);
     border-color:blue;
     border-width:0.05rem;
     border-style:solid;
 }
+
 #labeling{
     position:absolute;
-    left:calc(60% + 0.4rem);
-    width:calc(40% - 0.5rem);
+    left:calc(55% + 0.4rem);
+    width:calc(45% - 0.5rem);
     height:calc(100% - 0.2rem);
-    border-color:green;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #ref{
     position:absolute;
@@ -95,9 +195,6 @@ export default {
     left:0.2rem;
     width:calc(100% - 0.4rem);
     top:2.2rem;
-    height:6.2rem;
-    border-color:cyan;
-    border-width:0.05rem;
-    border-style:solid;
+    height:5.2rem;
 }
 </style>

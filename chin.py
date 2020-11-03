@@ -222,9 +222,9 @@ class Chin:
                 pitch = pitches[i]
                 if pitch > 20:
                     formatStr = ""
-                    formatStr = formatStr + "%.2f&nbsp&nbsp&nbsp&nbsp" % pitch
+                    formatStr = formatStr + "%.2f\t" % pitch
                     noteTone = librosa.hz_to_note(pitch / self.get_scaling(), cents=True)  # 用于测量tone的note，不求百分数
-                    formatStr = formatStr + noteTone + "&nbsp&nbsp&nbsp&nbsp"
+                    formatStr = formatStr + noteTone + "\t"
                     tone = self.note2tone(noteTone)  # 计算音高 ，因为程序编写费时间，不提供直接设置tone的方式
                     tonestr = '%.1f_%d' % (tone[0], tone[1])  # tone[0] 是音高， tone[1]是grade
                     formatStr = formatStr + tonestr + "\n"

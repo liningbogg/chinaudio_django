@@ -2,9 +2,14 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, FormItem, Input, Table, TableColumn, Select, Option} from 'element-ui';
+import { Button, Form, FormItem, Input, Table, TableColumn, Select, Option, Switch} from 'element-ui';
 import axios from 'axios'
 import VueAxios from 'vue-axios'
+//import ECharts from "vue-echarts";
+//import 'echarts/lib/chart/line'
+//import 'echarts/lib/component/markLine'
+//import 'echarts/lib/component/legend'
+//import 'echarts/lib/component/title'
 Vue.use(Button);
 Vue.use(Form);
 Vue.use(FormItem);
@@ -12,9 +17,11 @@ Vue.use(Table);
 Vue.use(TableColumn);
 Vue.use(Input);
 Vue.use(Select);
+Vue.use(Switch);
 Vue.use(Option);
 Vue.use(VueAxios, axios);
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
+//Vue.component('chart', ECharts);
 
 axios.interceptors.request.use(config =>{
   /*为请求头对象添加Token验证的Authorization对象，就不用每次都在要传送的字段上加token了*/

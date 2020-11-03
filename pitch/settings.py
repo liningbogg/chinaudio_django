@@ -135,11 +135,13 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1024000000
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'fronted/dist/static')
 STATICFILES_DIRS = [
-    '../../static',
-    '/home/liningbo/waveFiles/'
+    '/home/liningbo/chinaudio_vue/frontend/dist/static',
+    '/home/liningbo/chinaudio_vue/frontend/dist',
+    '/home/liningbo/waveFiles/',
 ]
+    
 
 
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)

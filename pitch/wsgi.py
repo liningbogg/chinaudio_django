@@ -8,9 +8,11 @@ https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 """
 
 import os
+import django
 from django.core.wsgi import get_wsgi_application
 from os.path import dirname, abspath
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pitch.settings')
 os.environ["DJANGO_SETTINGS_MODULE"] = 'pitch.settings'
 application = get_wsgi_application()
+

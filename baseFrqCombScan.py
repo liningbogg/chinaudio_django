@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import interp1d
 
@@ -140,9 +139,6 @@ def getPitchDeScan(dataClip, Fs, nfft, showTestView):
     pitch = 0
     dataClip[0:int(30 * nfft / Fs)] = 0
     dataClip = subpeakAmpLimiting(dataClip, int(30.0 / Fs * nfft), 0.1)  # 次峰限幅
-    if showTestView:
-        plt.subplot(231)
-        plt.plot(np.arange(len(dataClip)), dataClip, label='amp-frq')
     lowCutoff = int(40 * 441000.0 / Fs)  # 最低截止频率对应的坐标
     highCutoff = int(1400 * 441000.0 / Fs)  # 最高截止频率对应的坐标
     peakSearchPixes = int(3 * 441000 / Fs)  # 寻峰间距
@@ -158,9 +154,6 @@ def getPitchDeScan(dataClip, Fs, nfft, showTestView):
     resampY = finterp(x_pred)
     lenResampY = len(resampY)
     # print(len(resampY))
-    if showTestView == 1:
-        plt.subplot(232)
-        plt.plot(np.arange(len(resampY)), resampY, label='rs_Amp-frq')
     maxResampY = max(resampY[lowCutoff:-1]) / 2  # 待测频率内的最大值
     # 测试梳状变换
     # pixes=10
@@ -169,23 +162,11 @@ def getPitchDeScan(dataClip, Fs, nfft, showTestView):
     indexComb = np.arange(lowCutoff, highCutoff, 0.1)  # 栅栏变换索引
     for k in np.arange(1, highCutoff, 1):
         combTrans[k] = np.sum([resampY[i] for i in np.arange(0, lenResampY - 1, k)])
-    if showTestView == 1:
-        plt.subplot(233)
-        plt.plot(np.arange(len(combTrans)), combTrans, label='combTrans')
     deSamp = [combTrans[m] for m in np.arange(0, len(combTrans), 10)]  # 10倍数降采样
     deSamp[0] = 1000
-    if showTestView == 1:
-        plt.subplot(234)
-        plt.plot(np.arange(len(deSamp)), deSamp, label='DsCombTrans')
     baseLine = getBaseLineFromScan(deSamp, num)  # 通过扫描线算法求基准曲线
-    if showTestView == 1:
-        plt.subplot(235)
-        plt.plot(np.arange(len(baseLine)), baseLine, label='baseline')
     trueTrans = combTrans - baseLine
     trueTrans[0:lowCutoff] = 0
-    if showTestView == 1:
-        plt.subplot(236)
-        plt.plot(np.arange(len(trueTrans)), trueTrans, label='trueTrans')
     if (sum(dataClip) < 1):
         return [0 / 10.0, resampY, trueTrans]
     pitch = max(trueTrans) / sum(dataClip)
@@ -209,7 +190,4 @@ def getPitchDeScan(dataClip, Fs, nfft, showTestView):
         else:
             continue
     pitch = preBaseFrq;
-    if showTestView == 1:
-        plt.scatter(combTransPeaks, trueTrans[combTransPeaks], color='', marker='o', edgecolors='r', s=100)
-        plt.show()
     return [pitch / 10.0, resampY, trueTrans]

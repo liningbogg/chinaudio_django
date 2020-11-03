@@ -11,32 +11,32 @@
             </el-table-column>
             <el-table-column prop="nfft" label="nfft" min-width="10%" align="center">
             </el-table-column>
-            <el-table-column prop="extend_rad" label="extend" min-width="10%" align="center">
+            <el-table-column prop="extend_rad" label="extend" min-width="9%" align="center">
                 <template slot-scope="scope">
                     <el-input v-model="scope.row.extend_rad" :data="scope.row.extend_rad" size="mini"></el-input>
                 </template>
             </el-table-column>
-            <el-table-column prop="toneextend_rad" label="tone_ext" min-width="12%" align="center">
+            <el-table-column prop="toneextend_rad" label="tone_ext" min-width="11%" align="center">
                 <template slot-scope="scope">
                     <el-input v-model="scope.row.toneextend_rad" :data="scope.row.toneextend_rad" size="mini"></el-input>
                 </template>
             </el-table-column>
-            <el-table-column prop="nn_art" label="NNART" min-width="10%" align="center">
+            <el-table-column prop="nn_art" label="NNART" min-width="9%" align="center">
                 <template slot-scope="scope">
                     <el-input v-model="scope.row.nn_art" :data="scope.row.nn_art" size="mini"></el-input>
                 </template>
             </el-table-column>
-            <el-table-column prop="nn_op" label="NNOP" min-width="10%" align="center">
+            <el-table-column prop="nn_op" label="NNOP" min-width="9%" align="center">
                 <template slot-scope="scope">
                     <el-input v-model="scope.row.nn_op" :data="scope.row.nn_op" size="mini"></el-input>
                 </template>
             </el-table-column>
-            <el-table-column prop="rmse" label="RMSE" min-width="10%" align="center">
+            <el-table-column prop="rmse" label="RMSE" min-width="9%" align="center">
                 <template slot-scope="scope">
                     <el-input v-model="scope.row.rmse" :data="scope.row.rmse" size="mini"></el-input>
                 </template>
             </el-table-column>
-            <el-table-column prop="pri_ref" label="主参考" min-width="10%" align="center">
+            <el-table-column prop="pri_ref" label="主参考" min-width="15%" align="center">
             </el-table-column>
         </el-table>
     </div>
@@ -59,6 +59,9 @@ export default {
     mounted() {
         this.waveid = this.$route.query.waveid;
         this.tableHeight=this.$refs.waveconfigure.offsetHeight*0.95;
+        window.addEventListener('resize', () => {
+            this.tableHeight=this.$refs.waveconfigure.offsetHeight*0.95;
+        })
     },
     beforeDestroy() {
     },
@@ -107,20 +110,21 @@ export default {
 /deep/ .el-table th>.cell {
     padding-right:0rem;
     padding-left:0rem;
-    height:2.0rem;
+    height:100%;
     text-align:center;
 }
 /deep/ .el-input__mini{
     padding:0rem;
     border-radius:0rem;
     text-align:center;
-    height:2.0rem;
 }
 /deep/ .el-input__inner{
     padding:0rem;
     border-radius:0rem;
     text-align:center;
-    height:2.0rem;
+    height:100%;
+    line-height:100%;
+    font-size:2.0rem;
 }
 /deep/ .el-table--mini tr{
     padding:0rem;
@@ -134,38 +138,31 @@ export default {
 /deep/ .el-table--mini{
     font-size:1rem;
 }
-    
+/deep/ .el-table .cell{
+    height:100%;
+    line-height:100%;
+}
 #main{
     top:0rem;
     width:100%;
     height:100%;
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #titleview{
     top:0rem;
-    height:calc(25% - 0.2rem);
+    height:1.5rem;
     width:100%;
-    border-color:yellow;
-    border-width:0.05rem;
-    border-style:solid;
+    font-size:1rem;
+
 }
 .h3{
     text-align:center;
     padding:0rem;
     margin:0rem;
-    border-color:black;
-    border-width:0.05rem;
-    border-style:solid;
 }
 .configuretable{
-    top:25%;
-    height:calc(75% - 0.2rem);
+    top:1.5rem;
+    height:calc(100% - 1.5rem);
     width:100%;
     overflow-y:auto;
-    border-color:black;
-    border-width:0.05rem;
-    border-style:solid;
 }
 </style>

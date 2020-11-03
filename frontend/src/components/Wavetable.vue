@@ -1,6 +1,6 @@
 <template>
     <div class="wavetable" ref="wave">
-        <el-table :data="waves"  ref="wavesTable" min-height="99.6%" :height="tableHeight">
+        <el-table :data="waves" ref="wavesTable" min-height="99.6%" :height="tableHeight">
             <el-table-column prop="title" label="标题" align="center" min-width="26%"></el-table-column>
             <el-table-column prop="frameTotal" label="总帧数" min-width="10%" align="center"></el-table-column>
             <el-table-column prop="frameLabeled" label="已标记帧数" min-width="13%" align="center"></el-table-column>
@@ -59,6 +59,7 @@ export default {
     height:100%;
     overflow-y:auto;
 }
+
 /deep/ .el-table__body tr td .cell{
     padding-right:0rem;
     padding-left:0rem;

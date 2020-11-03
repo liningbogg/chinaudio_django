@@ -18,7 +18,10 @@ from django.conf.urls import url
 from django.conf.urls import include
 from django.contrib import admin
 from web.views import WebView
+from django.views.generic.base import RedirectView
+
 web_view = WebView()
+favicon_view = RedirectView.as_view(url='/static/favicon.ico', permanent=True)
 
 urlpatterns = [
     path('', web_view.index),
@@ -26,4 +29,5 @@ urlpatterns = [
     path('web/', include('web.urls')),
     path('target/', include('target.urls')),
     path('ocr/', include('ocr.urls')),
+    url(r'^favicon\.ico$', favicon_view),
 ]

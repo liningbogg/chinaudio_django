@@ -1,0 +1,8 @@
+Framesrc.vue 帧频谱数据
+Refconfigure.vue 参考数据信息配置
+ReferencePitch.vue 参考pitch数据
+Sidebar.vue 侧边栏
+Tunetable.vue 定弦数据
+Vad.vue 端点划分
+Waveconfigure.vue 标注配置
+Wavetable.vue 声波信息表

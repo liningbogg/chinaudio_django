@@ -1,4 +1,4 @@
-#encoding = utf-8
+# encoding=utf-8
 import time
 import json
 import pickle
@@ -119,7 +119,7 @@ class WaveMemWave:
             cache_block_size = labeling.cache_block_size
             first_block_index = int(start / cache_block_size)  # 第一块缓存索引
             last_block_index = int(end / cache_block_size)  # 最后一块缓存索引
-            for i in range(first_block_index, last_block_index + 1):
+            for i in range(first_block_index, last_block_index+1):
                 cache_name = str(user_id) + "_" + str(title) + "_" + "wave_" + str(fs) +"_"+str(cache_block_size)+ "_" + str(i)
                 cache_name = str(cache_name)
                 start_pos = max(i * cache_block_size, start)
@@ -499,6 +499,180 @@ class TargetView(View):
             return JsonResponse(result)
 
     @method_decorator(check_login)
+    def disable_algorithm(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            algorithm = request.GET.get('algorithm')
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            LabelingAlgorithmsConf.objects.get(labeling=labeling, algorithms=algorithm).delete()
+            result = {"status":"success" , "username":str(request.user), "tip": "禁用算法成功", "body":None}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    @method_decorator(check_login)
+    def enable_algorithm(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            algorithm = request.GET.get('algorithm')
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            LabelingAlgorithmsConf.objects.create(labeling=labeling, algorithms=algorithm, is_filter=True, anote="算法辅助")
+            result = {"status":"success" , "username":str(request.user), "tip": "启用算法成功", "body":None}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    @method_decorator(check_login)
+    def set_reference_filter(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            algorithm = request.GET.get('algorithm')
+            has_filter = request.GET.get('has_filter')
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            labelingalgorithmsconf = LabelingAlgorithmsConf.objects.get(labeling=labeling, algorithms=algorithm)    
+            if has_filter == "true":
+                labelingalgorithmsconf.is_filter=True
+            else:
+                labelingalgorithmsconf.is_filter=False
+            labelingalgorithmsconf.save()
+            result = {"status":"success" , "username":str(request.user), "tip": "设置参考算法成功", "body":None}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def ref_recalculate(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            algorithm = request.GET.get('algorithm')
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            clips_all = labeling.algorithmsclips_set.filter(algorithms=algorithm)
+            clips_all.delete()
+            medium_all = labeling.algorithmsmediums_set.filter(algorithms=algorithm)
+            for medium in medium_all:
+                medium.delete()
+            # 创建数据
+            clips_num_oncreate = labeling.frameNum  # 需要创建数据总条目
+            user_id = labeling.create_user_id
+            title = labeling.title
+            wave = Wave.objects.get(create_user_id=user_id, title=title)
+            fs = labeling.fs
+            nfft = labeling.nfft
+            # 获取原始左声道波形
+            # 获取stft
+            stream ,sr = soundfile.read(wave.waveFile)
+            stream = stream[:,0]
+            stream = np.ascontiguousarray(stream, dtype=np.float32)
+            stft_arr, phase = librosa.magphase(
+                librosa.stft(
+                    stream, n_fft=wave.nfft,
+                    hop_length=wave.nfft,
+                    window=scipy.signal.windows.hann,
+                    center=False
+                )
+            )
+            stft_arr = np.transpose(stft_arr)  # stft转置'''a
+            rmse_arr = librosa.feature.rmse(
+                y=stream,
+                S=None,
+                frame_length=nfft,
+                hop_length=nfft,
+                center=False
+            )[0]
+            detector = None
+            rmse_arr = maxminnormalization(rmse_arr, 0, 1)
+            if algorithm == "combDescan":
+                detector = BaseFrqDetector(True)  # 去扫描线算法
+            if algorithm == "comb":
+                detector = BaseFrqDetector(False)  # 不去扫描线算法
+            thread = threading.Thread(
+                target=self.algorithm_cal_thread,
+                args=(labeling, detector, stft_arr, rmse_arr, fs, nfft, algorithm, self.redis_pool)
+            )  # 创建监视线程
+            thread.setDaemon(True)  # 设置为守护线程， 一旦用户线程消失，此线程自动回收
+            thread.start()
+            result = {"status":"success" , "username":str(request.user), "tip": "算法计算成功", "body":None}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def get_referenceinfo(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            framenumAll=0
+            framenumDone=0
+            hasfilter=False
+            enable=False
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            referenceSelected = json.loads(request.GET.get('referenceselected'))
+            framenumAll=len(referenceSelected)*wave.frameNum
+            for reference in referenceSelected:
+                clips = AlgorithmsClips.objects.filter(labeling=labeling, algorithms=reference)
+                if clips:
+                    framenumDone += clips.count()
+            if len(referenceSelected)==1:
+                try:
+                    labelingalgorithmsconf = LabelingAlgorithmsConf.objects.get(labeling=labeling, algorithms=referenceSelected[0])        
+                    hasfilter=labelingalgorithmsconf.is_filter
+                    enable=True
+                except Exception as e:
+                    enable=False
+                    hasfilter=False
+            body={"framenumAll":framenumAll, "framenumDone":framenumDone, "hasfilter":hasfilter, "enable":enable}
+            result = {"status":"success" , "username":str(request.user), "tip": "获取参考算法成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    @method_decorator(check_login)
     def get_labelingconfigure(self, request):
         """
         :param request:
@@ -534,6 +708,154 @@ class TargetView(View):
             else:
                 result = {"status":"failure" , "username":str(request.user), "tip":"曲目不属于当前用户"}
                 return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def get_referencepitch(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            currentframe = int(request.GET.get('currentframe'))
+            wave = Wave.objects.get(id=waveid)
+            end = wave.frameNum
+            try:
+                labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            except Exception as e:
+                Labeling(title=title, create_user_id=user_id, nfft=nfft, frameNum=wave.frameNum).save()
+                labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            
+            reference = {}  # 算法支撑数据
+            labeling_algorithms_conf = labeling.labelingalgorithmsconf_set.all()  # 算法支持数据配置
+            extend_rad = labeling.extend_rad
+            start_ref = max(currentframe - extend_rad, 0)  # 起始位置
+            end_ref = min(currentframe + extend_rad, end)  # 终止位置
+
+            for algorithmsConf in labeling_algorithms_conf:
+                reference_name = algorithmsConf.algorithms
+                local_reference_clips = labeling.algorithmsclips_set.filter(
+                    algorithms=reference_name,
+                    startingPos__range=(currentframe-extend_rad, currentframe+extend_rad-1),
+                    length=1
+                )
+                primary_arr = np.zeros(end_ref-start_ref)  # 算法主数据
+                for reference_clip in local_reference_clips:
+                    primary_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[0]
+                reference.update({reference_name: list(primary_arr)})
+                if algorithmsConf.is_filter is True:
+                    reference_name = reference_name+"_filter"
+                    filter_arr = np.zeros(end_ref - start_ref)  # 算法主数据
+                    for reference_clip in local_reference_clips:
+                        filter_arr[reference_clip.startingPos-start_ref] = pickle.loads(reference_clip.tar)[1]
+                    reference.update({reference_name: list(filter_arr)})
+            body={
+                "start":start_ref,
+                "stop":end_ref,
+                "referencepitch":reference,
+            }
+            print(body)
+            body=json.dumps(body,cls=NpEncoder)
+            result = {"status":"success" , "username":str(request.user), "tip": "获取参考算法成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def get_vad(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            end = wave.frameNum
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            vad_thrart_EE = labeling.vad_thrart_EE
+            vad_thrart_RMSE = labeling.vad_thrart_RMSE
+            vad_throp_EE = labeling.vad_throp_EE
+            extend_rad = labeling.extend_rad
+            current_frame = int(request.GET.get('current_frame'))
+            eefile_path = wave.ee
+
+            with open(eefile_path, "rb") as eefile:
+                waveee = pickle.load(eefile)
+                ee = waveee[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
+                ee = list(ee)
+                ee = [float("%.2f" % f) for f in ee]
+
+            rmsefile_path = wave.rmse
+            rmsefile = open(rmsefile_path, "rb")
+            wavermse = pickle.load(rmsefile)
+            rmsefile.close()
+            rmse = wavermse[max(current_frame-extend_rad, 0): min(current_frame+extend_rad, end)]
+            rmse = list(rmse)
+            rmse = [float("%.2f" % f) for f in rmse]
+
+            vadrs = targetTools.vad(ee, rmse, vad_thrart_EE, vad_thrart_RMSE, vad_throp_EE)
+            body={
+                "startPos":vadrs["startPos"],
+                "stopPos":vadrs["stopPos"],
+                "rmse":rmse,
+                "ee":ee,
+                "graphstart":max(current_frame-extend_rad, 0),
+                "graphend":min(current_frame+extend_rad, end),
+                "framenum":wave.frameNum,
+            }
+            body=json.dumps(body,cls=NpEncoder)
+            result = {"status":"success" , "username":str(request.user), "tip": "设置参考算法成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    @method_decorator(check_login)
+    def get_primary_reference(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            current_frame = int(request.GET.get('current_frame'))
+            current_clip = labeling.algorithmsclips_set.get(
+                algorithms=labeling.primary_ref,
+                startingPos=current_frame,
+                length=1
+            )
+            labeling_algorithms_conf_primary = labeling.labelingalgorithmsconf_set.get(
+                algorithms=labeling.primary_ref
+            )
+            if labeling_algorithms_conf_primary.is_filter is True:
+                current_tar = pickle.loads(current_clip.tar)  # 当前帧主音高估计
+            else:
+                current_tar = [pickle.loads(current_clip.tar)[0]]
+
+            body={
+                "basefrq":current_tar,
+                "nfft":wave.nfft,
+                "fs":wave.fs,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "设置参考算法成功", "body":body}
+            return JsonResponse(result)
 
         except Exception as e:
             traceback.print_exc()
@@ -601,7 +923,7 @@ class TargetView(View):
             rmse = list()
             vadrs = { 
                 'info':None,
-                'clipStart':None ,
+                'clipStart':None,
                 'clipStop': None,
                 'startPos': None,
                 'stopPos': None,
@@ -697,7 +1019,6 @@ class TargetView(View):
             mediumfile = open(mediumfile_path, 'rb')
             medium = pickle.load(mediumfile)
             mediumfile.close()
-
             # 重新采样(降低采样), 只降低中间结果
             is_resampling = labelinfo.medium_resampling
             if is_resampling is True:
@@ -712,8 +1033,8 @@ class TargetView(View):
                 )
                 resampling_y = finterp(x_pred)
                 medium = resampling_y
-                src_fft = [round(i, 4) for i in src_fft]
-                medium = [round(i, 4) for i in medium]
+            src_fft = [round(i, 4) for i in src_fft]
+            medium = [round(i, 4) for i in medium]
         except Exception as e:
             print(e)
             medium = []
@@ -929,6 +1250,93 @@ class TargetView(View):
         resampling_y = finterp(x_pred)
         return resampling_y
 
+    def get_basefrq_custom(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            framestart = int(request.GET.get('framestart'))
+            frameend = int(request.GET.get('frameend'))
+            pitch=[]
+            possible_pos=[]
+            a = time.perf_counter()
+            wave_arr = self.wave_mem_wave.achieve(str(request.user), wave.title, wave.fs, wave.nfft, framestart, frameend)  #
+            b = time.perf_counter()
+            print(b-a)
+            wave_len = len(wave_arr)
+            wave_fft_src = fft(wave_arr)  # 自定义序列的fft
+            wave_fft = abs(wave_fft_src)[0:int((len(wave_fft_src)+1)/2)]
+            target_len = wave.nfft/2
+            algorithms_name = labeling.primary_ref
+            detector = None
+            
+            if algorithms_name == "combDescan":
+                detector = BaseFrqDetector(True)  # 去扫描线算法
+            if algorithms_name == "comb":
+                detector = BaseFrqDetector(False)  # 不去扫描线算法
+            reference_pitch_allinfo = detector.getpitch(wave_fft, wave.fs, wave_len, False)
+            src = TargetView.resampling(wave_fft, target_len)[0:int(4000*wave.nfft/wave.fs)]  # 重新采样后的适合显示的fft
+            primary_pitch = reference_pitch_allinfo[0]  # 主音高
+            medium = reference_pitch_allinfo[2]  # 中间结果
+            pitch.append(primary_pitch)
+            is_resampling = labeling.medium_resampling
+            if is_resampling is True:
+                medium = TargetView.resampling(medium, int(len(medium)/10))
+            if primary_pitch > 40:
+                filter_fft = filter_by_base(src, primary_pitch, labeling.filter_rad, wave.nfft, wave.fs)  # 过滤后fft
+                filter_pith_allinfo = detector.getpitch(filter_fft, wave.fs, wave_len, False)
+                pitch.append(filter_pith_allinfo[0])
+            if wave.chin is not None:
+                chin = pickle.loads(wave.chin)
+            else:
+                chin = None
+            src = list(src)
+            medium = list(medium)
+            src = [float("%.2f" % f) for f in src]
+            medium=medium/(max(medium)+0.000000001)
+            medium = [float("%.2f" % f) for f in medium]
+            
+            if wave.chin is not None:
+                # 获得chin class
+                try:
+                    chin = pickle.loads(wave.chin)
+                except Exception as e:
+                    print(e)
+                    chin = None
+            else:
+                # chin class 不存在
+                chin = None
+            possible_pos = ""
+            if chin is not None:
+                try:
+                    possible_list = chin.cal_possiblepos(pitch)[1]
+                    for possible in possible_list:
+                        possible_pos+=possible
+                except Exception as e:
+                    print(e)
+            else:
+                possible_pos="尚未设置chin信息"
+
+            body = {
+                'basefrq': pitch, 
+                'stft': list(src),
+                'medium': list(medium),
+                'fs':wave.fs,
+                'nfft':wave.nfft,
+                'possible_pos':possible_pos,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "设置参考算法成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
     @method_decorator(login_required)
     def cal_custom_pitch(self, request):
         title = request.GET.get('title')
@@ -940,7 +1348,7 @@ class TargetView(View):
         labeling_id = int(request.GET.get('labeling_id'))
         try:
             pitch=[]
-            possible_pos=[]
+            possible_pos=""
             wave_arr = self.wave_mem_wave.achieve(user_id, title, fs, nfft, start, end)  #
             wave_len = len(wave_arr)
             wave_fft_src = fft(wave_arr)  # 自定义序列的fft
@@ -975,14 +1383,13 @@ class TargetView(View):
             else:
                 chin = None
             possible_pos_set = chin.cal_possiblepos(pitch)[1]
+            print(possible_pos_set)
             for pos in possible_pos_set:
-                possible_pos.append(pos.replace("\n", "<br>"))
-            while(len(possible_pos)<2):
-                possible_pos.append("")
+                possible_pos+=pos
             context = {
                 'primary_pitch': primary_pitch, 'src': list(src), 'filter_fft': filter_fft,
                 'medium': list(medium),
-                "possible_pos": list(possible_pos)
+                "possible_pos": possible_pos
             }
             return HttpResponse(json.dumps(context))
         except Exception as e:
@@ -1404,7 +1811,7 @@ class TargetView(View):
         }
         return render(request, 'wave.html', context)
 
-    def get_phrase(self, request):
+    def get_phrase_old(self, request):
         """
         获取音乐片段
         :return:音乐片段wav格式2进制流
@@ -1438,7 +1845,39 @@ class TargetView(View):
 
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return None
+
+    @method_decorator(check_login)
+    def get_phrase(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            wave = Wave.objects.get(id=waveid)
+            start = int(request.GET.get('start'))
+            end = int(request.GET.get('end'))
+            wave_arr = self.wave_mem_wave.achieve(str(request.user), wave.title, wave.fs, wave.nfft, start, end)  # 获取音频信号
+            wave_arr = np.array(wave_arr) * 32767
+            wave_arr = wave_arr.astype(np.int16)
+            io_stream = BytesIO()  # 内存文件
+            f = waveout.open(io_stream, 'wb')  # 定位于内存镜像
+            f.setnchannels(1)  # 设置为单通道
+            f.setsampwidth(2)  # 16位采样
+            f.setframerate(wave.fs)  # 设置采样率
+            f.writeframes(wave_arr.tostring())  # 写入音频信息
+            f.close()  # 关闭写入流
+            seg = AudioSegment.from_wav(io_stream)
+            io_stream_flac = BytesIO()  # 内存文件
+            seg.export(io_stream_flac, format='wav')
+            blobwav = io_stream_flac.getvalue()
+            return HttpResponse(blobwav)
+
+        except Exception as e:
+            print(e)
 
     def post_phrase(self, request):
         """
@@ -1516,6 +1955,7 @@ class TargetView(View):
                     rs = "err"
         return HttpResponse(rs)
 
+
     @classmethod
     def get_clip_fft(cls, request):
         clip_id = request.GET.get('id')  # clip_id
@@ -1532,6 +1972,102 @@ class TargetView(View):
         srcfile.close()
         src = src.tolist()[0:cutoff]
         return HttpResponse(json.dumps(src))
+
+
+    @method_decorator(check_login)
+    def get_primaryrefinfo(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            cutoff = float(request.GET.get('cutoff'))
+            wave = Wave.objects.get(id=waveid)
+            current_frame = int(request.GET.get('currentframe'))
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            stftfile_path = labeling.stft_set.get(startingPos=current_frame, length=1).src
+            stftfile = open(stftfile_path, "rb")
+            src_fft = pickle.load(stftfile)
+            stftfile.close()
+            src_fft[0:int(30 * wave.nfft / wave.fs)] = 0  # 清空30hz以下信号
+            cutoff = int(cutoff * wave.nfft / wave.fs)  # src 截断位置
+            src = src_fft.tolist()[0:cutoff+1]
+            src = [float("%.2f" % f) for f in src]
+
+            mediumfile_path = labeling.algorithmsmediums_set.get(
+                algorithms=labeling.primary_ref,
+                startingPos=current_frame,
+                length=1
+            ).medium
+            mediumfile = open(mediumfile_path, 'rb')
+            medium = pickle.load(mediumfile)
+            mediumfile.close()
+            # 重新采样(降低采样), 只降低中间结果
+            is_resampling = labeling.medium_resampling
+            if is_resampling is True:
+                processing_x = np.arange(0, len(medium))
+                len_processing_x = len(processing_x)
+                processing_y = medium
+                finterp = interp1d(processing_x, processing_y, kind="linear")
+
+                x_pred = np.linspace(
+                    0, processing_x[len_processing_x - 1] * 1.0,
+                    int(processing_x[len_processing_x - 1] / 10) + 1
+                )
+                resampling_y = finterp(x_pred)
+                medium = resampling_y
+            medium = medium/max(medium)
+            medium = [float("%.2f" % f) for f in medium]
+
+            current_clip = labeling.algorithmsclips_set.get(
+                algorithms=labeling.primary_ref,
+                startingPos=current_frame,
+                length=1
+            )
+            labeling_algorithms_conf_primary = labeling.labelingalgorithmsconf_set.get(
+                algorithms=labeling.primary_ref
+            )
+            if labeling_algorithms_conf_primary.is_filter is True:
+                current_tar = pickle.loads(current_clip.tar)  # 当前帧主音高估计
+            else:
+                current_tar = [pickle.loads(current_clip.tar)[0]]
+            if wave.chin is not None:
+                # 获得chin class
+                try:
+                    chin = pickle.loads(wave.chin)
+                except Exception as e:
+                    print(e)
+                    chin = None
+            else:
+                # chin class 不存在
+                chin = None
+            possible_pos = ""
+            if chin is not None:
+                try:
+                    possible_list = chin.cal_possiblepos(current_tar)[1]
+                    for possible in possible_list:
+                        possible_pos+=possible
+                except Exception as e:
+                    print(e)
+            else:
+                possible_pos="尚未设置chin信息"
+            body={
+                "stft":src,
+                "fs":wave.fs,
+                "nfft":wave.nfft,
+                "medium":medium,
+                "basefrq":current_tar,
+                "possible_pos":possible_pos,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取stft成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @staticmethod
     def cal_size(w, h, w_box, h_box):
