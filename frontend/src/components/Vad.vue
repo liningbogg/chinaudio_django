@@ -12,6 +12,7 @@ require("echarts/lib/component/tooltip");
 require("echarts/lib/component/markLine");
 require("echarts/lib/component/toolbox");
 require("echarts/lib/component/dataZoom");
+import elementResizeDetectorMaker from 'element-resize-detector'
 
 export default {
   name: 'Vad',
@@ -203,14 +204,19 @@ export default {
     }
     this.vadChart = echarts.init(document.getElementById("graph"), 'macarons');
 
-    window.addEventListener('resize', () => {
+    /*window.addEventListener('resize', () => {
         console.log('窗口发生变化');
         if(this.vadChart){
             this.vadChart.resize();
         }else{
             console.log("图形不存在");
         }
-    })
+    });*/
+    let erd = elementResizeDetectorMaker();
+    erd.listenTo(document.getElementById("graph"), ()=> {
+        //执行操作
+        this.vadChart.resize();
+    });
   },
   beforeDestroy() {
   },
@@ -225,7 +231,7 @@ export default {
     
 }
 </script>
-<style scoped lang="less">
+<style scoped >
 #graph{
     position:absolute;
     left:0rem;

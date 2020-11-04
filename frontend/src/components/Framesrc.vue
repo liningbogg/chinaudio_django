@@ -5,15 +5,23 @@
                 <el-form-item label="起始" style="position:absolute;left:0;width:25%">
                     <el-input v-model="formInline.start" placeholder="起始位置"></el-input>
                 </el-form-item>
-                <el-form-item label="终止" style="position:absolute;left:25%;width:25%">
+                <el-form-item label="终止" style="position:absolute;left:25%;width:25%;height:100%">
                     <el-input v-model="formInline.end" placeholder="终止位置"></el-input>
                 </el-form-item>
-                <el-form-item style="position:absolute;left:50%;width:25%;">
-                    <el-button type="primary" @click="onEvaluate" style="width:60%">评估</el-button>
+                <el-form-item style="position:absolute;left:50%;width:16%;">
+                    <el-button type="primary" @click="customEvaluate" style="position:absolute;width:100%;height:100%">评估</el-button>
                 </el-form-item>
-                <el-form-item style="position:absolute;left:75%;width:25%;">
-                    <el-button type="primary" @click="onPlaycustom" style="width:60%" icon="el-icon-video-play" v-if="playstatusReady">播放</el-button>
-                    <el-button type="primary" @click="onStopplay" style="width:60%" icon="el-icon-video-pause" v-else>停止</el-button>
+                <el-form-item style="position:absolute;left:66%;width:16%;">
+                    <el-button type="primary" @click="onPlaycustom" style="position:absolute;width:100%;height:100%" icon="el-icon-video-play" v-if="playstatusReady">播放</el-button>
+                    <el-button type="primary" @click="onStopplay" style="position:absolute;width:100%;height:100%" icon="el-icon-video-pause" v-else>停止</el-button>
+                </el-form-item>
+                <el-form-item style="position:absolute;left:82%;width:17%;">
+                    <el-switch
+                        v-model="spectrogramOn"
+                        active-text="时频图"
+                        @change="handleEnable($event)"
+                        >
+                    </el-switch>
                 </el-form-item>
             </el-form>
         </div>
@@ -42,6 +50,7 @@ require("echarts/lib/component/tooltip");
 require("echarts/lib/component/toolbox");
 require("echarts/lib/component/dataZoom");
 require("echarts/lib/component/markLine");
+import elementResizeDetectorMaker from 'element-resize-detector'
 export default {
   name: 'Stft',
   props: ['currentframe'],
@@ -54,6 +63,7 @@ export default {
         possible_pos:null,
         phrase:null,
         playstatusReady:true,
+        spectrogramOn:false,
         formInline:{
             start:null,
             end:null,
@@ -313,9 +323,13 @@ export default {
             this.playstatusReady=true;
         }
     },
-    customEvaluate(framestart, frameend){
-        console.log(framestart, frameend);
-        this.axios.get('target/getBasefrqCustom/?waveid='+this.waveid+"&framestart="+framestart+"&frameend="+frameend).then(
+    handleEnable(){
+        console.log(this.spectrogramOn);
+        this.$emit('spectrogramOn',this.spectrogramOn);
+
+    },
+    customEvaluate(){
+        this.axios.get('target/getBasefrqCustom/?waveid='+this.waveid+"&framestart="+this.formInline.start+"&frameend="+this.formInline.end).then(
             response => {
                 if(response){
                     if(response.data.status==="success"){
@@ -343,7 +357,7 @@ export default {
     this.stftChart = echarts.init(document.getElementById("stftecharts"), 'macarons');
     this.mediumChart = echarts.init(document.getElementById("mediumecharts"), 'macarons');
 
-    window.addEventListener('resize', () => {
+    /*window.addEventListener('resize', () => {
         console.log('窗口发生变化');
         if(this.stftChart){
             this.stftChart.resize();
@@ -351,7 +365,17 @@ export default {
         }else{
             console.log("图形不存在");
         }
-    })
+    })*/
+    let erd = elementResizeDetectorMaker();
+    erd.listenTo(document.getElementById("stftecharts"), ()=> {
+        //执行操作
+        this.stftChart.resize();
+    });
+    erd.listenTo(document.getElementById("mediumecharts"), ()=> {
+        //执行操作
+        this.mediumChart.resize();
+    });
+
   },
   beforeDestroy() {
   },
@@ -372,7 +396,18 @@ export default {
 .el-textarea {
     height: 100% !important;
     font-size: 0.875rem;
-    line-height: 1rem;
+    line-height: normal;
+}
+/deep/ .el-form-item__label{
+    height: 100% !important;
+    font-size: 1rem;
+    line-height: normal;
+}
+.el-button{
+    padding:0;
+}
+.el-input{
+    height:100%;
 }
 #customize{
     position:absolute;

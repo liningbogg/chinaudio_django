@@ -6,3 +6,5 @@ Tunetable.vue 定弦数据
 Vad.vue 端点划分
 Waveconfigure.vue 标注配置
 Wavetable.vue 声波信息表
+Labelingpitch.vue 标注的音高
+SpectrumChart.vue 时频图

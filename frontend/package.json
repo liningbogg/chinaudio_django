@@ -12,6 +12,7 @@
     "compression-webpack-plugin": "~6.0.2",
     "core-js": "~3.6.5",
     "echarts": "^4.9.0",
+    "element-resize-detector": "^1.2.1",
     "element-ui": "^2.13.2",
     "less": "~3.12.2",
     "less-loader": "~7.0.1",

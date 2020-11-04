@@ -9,10 +9,14 @@
                 <referencepitch :currentframe="current_frame" />
             </div>
             <div id="pitchchart">
+                <labelingpitch :currentframe="current_frame" />
             </div>
             <div id="spectrum">
-                <framesrc :currentframe="current_frame" ref="framesrc"/>
+                <framesrc :currentframe="current_frame" ref="framesrc" @spectrogramOn="handleSpectrogramOn"/>
             </div>
+        </div>
+        <div id="spectrogram" v-if="hasSpectrogram">
+            <spectrumchart :currentframe="current_frame" />
         </div>
         <!--右侧标注,主要是wave配置以及标注-->
         <div id="labeling">
@@ -34,13 +38,17 @@ import Refconfigure from '@/components/Refconfigure.vue'
 import Vad from '@/components/Vad.vue'
 import Framesrc from '@/components/Framesrc.vue'
 import Referencepitch from '@/components/Referencepitch.vue'
+import Spectrumchart from '@/components/Spectrumchart.vue'
+import Labelingpitch from '@/components/Labelingpitch.vue'
 
 export default {
     name: 'Wavelabeling',
     components:{
         Waveconfigure,
         Referencepitch,
+        Labelingpitch,
         Refconfigure,
+        Spectrumchart,
         Vad,
         Framesrc,
     },
@@ -48,6 +56,7 @@ export default {
         return {
             waveid:null,
             playstatusCustom:"el-icon-video-play",
+            hasSpectrogram:false,
             current_frame:null,
             formInline:{
                 start:null,
@@ -62,6 +71,29 @@ export default {
     methods:{
         onEvaluate(){
             this.$refs.framesrc.customEvaluate(this.formInline.start, this.formInline.end);
+        },
+        handleSpectrogramOn(isEnable){
+            let spectrogramOn=isEnable;
+            console.log(spectrogramOn);
+            if(spectrogramOn){
+                //压缩div空间
+                let divclipinfo=document.getElementById("clipinfo");
+                divclipinfo.style.width="calc(45% - 1.2rem)";
+                let divlabeling=document.getElementById("labeling");
+                divlabeling.style.width="calc(35% - 0.5rem)";
+                divlabeling.style.left="calc(65% + 0.4rem)";
+                this.hasSpectrogram=spectrogramOn;
+
+            }else{
+                this.hasSpectrogram=spectrogramOn;
+                //恢复div尺寸
+                let divclipinfo=document.getElementById("clipinfo");
+                divclipinfo.style.width="calc(55% - 1.2rem)";
+                let divlabeling=document.getElementById("labeling");
+                divlabeling.style.width="calc(45% - 0.5rem)";
+                divlabeling.style.left="calc(55% + 0.4rem)";
+
+            }
         },
         nextframeFromBackend(){
             this.axios.get('target/nextframe/?waveid='+this.waveid).then(
@@ -85,6 +117,7 @@ export default {
 }
 </script>
 <style scoped >
+
 /deep/ .el-form--inline .el-form-item {
     margin-right: 0;
     height:100%;
@@ -177,7 +210,15 @@ export default {
     border-width:0.05rem;
     border-style:solid;
 }
-
+#spectrogram{
+    position:absolute;
+    left:calc(45% + 0.4rem);
+    width:calc(20% - 0.5rem);
+    height:calc(100% - 0.2rem);
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
 #labeling{
     position:absolute;
     left:calc(55% + 0.4rem);

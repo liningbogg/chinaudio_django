@@ -63,6 +63,7 @@ urlpatterns = [
     path('getBasefrqCustom/', target_view.get_basefrq_custom),
     path('getPhrase/', target_view.get_phrase),
     path('getReferencepitch/', target_view.get_referencepitch),
+    path('getLabelingpitch/', target_view.get_labelingpitch),
     path('nextframe/', target_view.nextframe),
     path('labeling/tune_reset/', target_view.tune_reset),  # 此处是指根据曲调重新设置弦高的危险算操作
     path('labeling/strings_reset/', target_view.strings_reset),

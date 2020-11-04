@@ -145,9 +145,6 @@ class WaveMemWave:
         :param nfft: 帧长度
         :param start: 起始帧
         :param end: 终止帧
-        
-    
-
         :param user_id 用户id
         :param fs: 采样率
         :return: float32array
@@ -197,6 +194,40 @@ class WaveMemWave:
         finally:
             return sub_wave
 
+
+class WaveMemStft:
+
+    @staticmethod
+    def achieve(labelingid, startingPos, length):
+        """
+        获取制定片段，原始wave波形
+        :param labelingid: 标注id
+        :param startingPos: 起始帧
+        :param length: 帧长度
+        :return: float32array
+        """
+        try:
+            key_stft = "stft_%d_%d_%d" % (labelingid, startingPos, length)
+            stft = None
+            cache_stft = cache.get(key_stft)
+            if cache_stft is None:
+                labeling = Labeling.objects.get(id = labelingid)
+                stftitem = labeling.stft_set.get(startingPos=startingPos, length=length)
+                pathname = stftitem.src
+                with open(pathname, "rb") as f:
+                    src_fft = pickle.load(f)
+                stft = src_fft
+                cache.set(key_stft, pickle.dumps(src_fft))
+                print("%s achieve from disk." % key_stft)
+            else:
+                stft = pickle.loads(cache_stft)
+                print("%s bingo." % key_stft)
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+        finally:
+            return stft
+
 # Create your views here.
 class TargetView(View):
     msg_from = '1214397815@qq.com'  # 发送方邮箱
@@ -241,6 +272,7 @@ class TargetView(View):
             tunes = Tune.objects.filter(create_user_id=request.user)
         except Exception as e:
             print(e)
+            traceback.print_exc()
         context = {'waves': waves, 'tunes': tunes}
         return render(request, 'target_index.html', context)
 
@@ -714,6 +746,62 @@ class TargetView(View):
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
+    @method_decorator(check_login)
+    def get_labelingpitch(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            waveid = request.GET.get('waveid')
+            currentframe = int(request.GET.get('currentframe'))
+            wave = Wave.objects.get(id=waveid)
+            end = wave.frameNum
+            try:
+                labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            except Exception as e:
+                Labeling(title=title, create_user_id=user_id, nfft=nfft, frameNum=wave.frameNum).save()
+                labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            
+            extend_rad = labeling.extend_rad
+            start_ref = max(currentframe - extend_rad, 0)  # 起始位置
+            end_ref = min(currentframe + extend_rad, end)  # 终止位置
+            target = [[0] * (end_ref-start_ref), [0] * (end_ref-start_ref), [0] * (end_ref-start_ref)]  # 存储前三个音高的二维数组
+
+            try:
+                clips = Clip.objects.filter(
+                    title=wave.title, create_user_id=str(request.user),
+                    startingPos__range=(currentframe-extend_rad, currentframe+extend_rad-1)
+                )
+                for clip in clips:
+                    pos = clip.startingPos
+                    tar = pickle.loads(clip.tar)
+                    index = 0
+                    for pitch in tar:
+                        target[index][pos-start_ref] = pitch
+                        index = index+1
+            except Exception as e:
+                print(e)
+                pass
+
+            body={
+                "start":start_ref,
+                "stop":end_ref,
+                "labelingpitch":{
+                    "pitch0":target[0],
+                    "pitch1":target[1],
+                    "pitch2":target[2],
+                },
+            }
+            body=json.dumps(body,cls=NpEncoder)
+            result = {"status":"success" , "username":str(request.user), "tip": "获取参考算法成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @method_decorator(check_login)
     def get_referencepitch(self, request):
@@ -986,10 +1074,7 @@ class TargetView(View):
         # fft及中间结果
         # fft_range=list(range(extend_rad*2))
         try:
-            stftfile_path = labelinfo.stft_set.get(startingPos=current_frame, length=1).src
-            stftfile = open(stftfile_path, "rb")
-            src_fft = pickle.load(stftfile)
-            stftfile.close()
+            src_fft = WaveMemStft.achieve(labelinfo.id, current_frame, 1)
             src_fft[0:int(30 * nfft / fs)] = 0  # 清空30hz以下信号
             filter_rad = labelinfo.filter_rad  # 过滤带宽半径
             current_clip = labelinfo.algorithmsclips_set.get(
@@ -1176,6 +1261,46 @@ class TargetView(View):
         except Exception as e:
             traceback.print_exc()
             return None
+
+
+    @method_decorator(check_login)
+    def get_spectrum(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            waveid = int(request.GET.get("waveid"))
+            currentframe = int(request.GET.get("currentframe"))
+            wave = Wave.objects.get(id=waveid)
+            labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
+            extend_rad = labeling.extend_rad
+            nfft = labeling.nfft
+            fs = labeling.fs
+            stft_set=labeling.stft_set.filter(startingPos__range=(currentframe-extend_rad,currentframe+extend_rad-1),length=1)
+            fft_range=[]
+            for stft in stft_set:
+                stftsrc = WaveMemStft.achieve(labelinfo.id, current_frame, 1)
+                stft_src=list(stftsrc[0:int(4000*nfft/fs)])
+                stft_src = [round(i, 4) for i in stft_src]
+                fft_range.append(stft_src)
+            max_fft_range_medium=max(fft_range)
+            max_fft_range = max(max_fft_range_medium)
+            min_fft_range_medium=min(fft_range)
+            min_fft_range = min(min_fft_range_medium)
+            body={
+                'length': int(4000*nfft/fs),
+                "spectrogram": fft_range,
+                "max_fft_range": max_fft_range,
+                "min_fft_range": min_fft_range
+            }
+            body=json.dumps(body, cls=NpEncoder)
+            result = {"status":"success" , "username":str(request.user), "tip": "获取时频图成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @method_decorator(login_required)
     def cal_pitch_pos(self, request):
@@ -1987,10 +2112,7 @@ class TargetView(View):
             wave = Wave.objects.get(id=waveid)
             current_frame = int(request.GET.get('currentframe'))
             labeling = Labeling.objects.get(title=wave.title, create_user_id=wave.create_user_id, nfft=wave.nfft)
-            stftfile_path = labeling.stft_set.get(startingPos=current_frame, length=1).src
-            stftfile = open(stftfile_path, "rb")
-            src_fft = pickle.load(stftfile)
-            stftfile.close()
+            src_fft = WaveMemStft.achieve(labeling.id, current_frame, 1)
             src_fft[0:int(30 * wave.nfft / wave.fs)] = 0  # 清空30hz以下信号
             cutoff = int(cutoff * wave.nfft / wave.fs)  # src 截断位置
             src = src_fft.tolist()[0:cutoff+1]

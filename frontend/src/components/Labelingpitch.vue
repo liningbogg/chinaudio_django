@@ -1,5 +1,5 @@
 <template>
-    <div id="pitchecharts">
+    <div id="labelingpitchecharts">
     </div>
 </template>
 
@@ -14,7 +14,7 @@ require("echarts/lib/component/dataZoom");
 require("echarts/lib/component/markLine");
 import elementResizeDetectorMaker from 'element-resize-detector'
 export default {
-  name: 'Referencepitch',
+  name: 'Labelingpitch',
   props: ['currentframe'],
   data(){
     return{
@@ -79,10 +79,10 @@ export default {
     }
   },
   methods:{
-    drawCharts(referencepitch, start, stop){
+    drawCharts(labelingpitch, start, stop){
         this.pitchchartOption.xAxis.data=this.indexArr.slice(start, stop);
-        for(let pitchname in referencepitch){
-            let data=referencepitch[pitchname];
+        for(let pitchname in labelingpitch){
+            let data=labelingpitch[pitchname];
             let seriesItem={
                 data: data,
                 name: pitchname,
@@ -114,21 +114,22 @@ export default {
             }
             this.pitchchartOption.series.push(seriesItem);
         }
+        console.log("ok");
         console.log(this.pitchchartOption);
         this.pitchChart.setOption(this.pitchchartOption);
         this.pitchChart.resize();
 
     },
     dataFromBackend(){
-        this.axios.get('target/getReferencepitch/?waveid='+this.waveid+"&currentframe="+this.currentframe).then(
+        this.axios.get('target/getLabelingpitch/?waveid='+this.waveid+"&currentframe="+this.currentframe).then(
             response => {
                 if(response){
                     if(response.data.status==="success"){
-                        let referenceinfo = JSON.parse(response.data.body);
-                        let referencepitch = referenceinfo.referencepitch;
-                        let start = referenceinfo.start;
-                        let stop = referenceinfo.stop;
-                        this.drawCharts(referencepitch, start, stop);
+                        let labelinginfo = JSON.parse(response.data.body);
+                        let labelingpitch = labelinginfo.labelingpitch;
+                        let start = labelinginfo.start;
+                        let stop = labelinginfo.stop;
+                        this.drawCharts(labelingpitch, start, stop);
                     }else{
                         this.msg = "获取basefrq失败,原因:"+response.data.tip;
                         console.log(this.msg);
@@ -146,7 +147,7 @@ export default {
     for(var i=0;i<99999;i++){
         this.indexArr[i]=i;
     }
-    this.pitchChart = echarts.init(document.getElementById("pitchecharts"), 'macarons');
+    this.pitchChart = echarts.init(document.getElementById("labelingpitchecharts"), 'macarons');
 
     /*window.addEventListener('resize', () => {
         console.log('窗口发生变化');
@@ -157,11 +158,10 @@ export default {
         }
     })*/
     let erd = elementResizeDetectorMaker();
-    erd.listenTo(document.getElementById("pitchecharts"), ()=> {
+    erd.listenTo(document.getElementById("labelingpitchecharts"), ()=> {
         //执行操作
         this.pitchChart.resize();
     });
-
   },
   beforeDestroy() {
   },
@@ -177,7 +177,7 @@ export default {
 }
 </script>
 <style scoped lang="less">
-#pitchecharts{
+#labelingpitchecharts{
     position:absolute;
     left:0rem;
     top:0;
