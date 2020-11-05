@@ -1280,14 +1280,14 @@ class TargetView(View):
             stft_set=labeling.stft_set.filter(startingPos__range=(currentframe-extend_rad,currentframe+extend_rad-1),length=1)
             fft_range=[]
             for stft in stft_set:
-                stftsrc = WaveMemStft.achieve(labelinfo.id, current_frame, 1)
+                stftsrc = WaveMemStft.achieve(labeling.id, stft.startingPos, stft.length)
                 stft_src=list(stftsrc[0:int(4000*nfft/fs)])
-                stft_src = [round(i, 4) for i in stft_src]
                 fft_range.append(stft_src)
-            max_fft_range_medium=max(fft_range)
-            max_fft_range = max(max_fft_range_medium)
-            min_fft_range_medium=min(fft_range)
-            min_fft_range = min(min_fft_range_medium)
+            fft_range=maxminnormalization(fft_range, 0, 1)
+            for key, value in enumerate(fft_range):
+                fft_range[key] = [float("%.2f" % i) for i in value]
+            max_fft_range = 1
+            min_fft_range = 0
             body={
                 'length': int(4000*nfft/fs),
                 "spectrogram": fft_range,

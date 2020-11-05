@@ -219,6 +219,7 @@ export default {
     });
   },
   beforeDestroy() {
+    this.vadChart.clear();
   },
   watch: {
     currentframe:{

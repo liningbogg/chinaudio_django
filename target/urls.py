@@ -62,6 +62,7 @@ urlpatterns = [
     path('getPrimaryReference/', target_view.get_primary_reference),
     path('getBasefrqCustom/', target_view.get_basefrq_custom),
     path('getPhrase/', target_view.get_phrase),
+    path('getSpectrum/', target_view.get_spectrum),
     path('getReferencepitch/', target_view.get_referencepitch),
     path('getLabelingpitch/', target_view.get_labelingpitch),
     path('nextframe/', target_view.nextframe),

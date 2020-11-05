@@ -270,7 +270,8 @@ export default {
         }
         this.mediumchartOption.xAxis.data=xAxis;
         this.mediumchartOption.series[0].data=medium;
-        console.log(this.chartOption);
+        this.stftChart.clear();
+        this.mediumChart.clear();
         this.stftChart.setOption(this.chartOption);
         this.mediumChart.setOption(this.mediumchartOption);
     },
@@ -378,6 +379,8 @@ export default {
 
   },
   beforeDestroy() {
+    this.stftChart.clear();
+    this.mediumecharts.clear();
   },
   watch: {
     currentframe:{

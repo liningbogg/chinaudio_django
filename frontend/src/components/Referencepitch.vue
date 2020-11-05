@@ -164,6 +164,7 @@ export default {
 
   },
   beforeDestroy() {
+    this.pitchChart.clear();
   },
   watch: {
     currentframe:{
