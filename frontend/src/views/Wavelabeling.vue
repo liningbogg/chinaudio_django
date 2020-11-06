@@ -2,14 +2,8 @@
     <div class="main">
         <!--左侧图表，主要是标记片段的信息-->
         <div id="clipinfo">
-            <div id="vad">
-                <vad :currentframe="current_frame"/>
-            </div>
-            <div id="refchart">
-                <referencepitch :currentframe="current_frame" />
-            </div>
-            <div id="pitchchart">
-                <labelingpitch :currentframe="current_frame" />
+            <div id="localinfo">
+                <localinfo :currentframe="current_frame"/>
             </div>
             <div id="spectrum">
                 <framesrc :currentframe="current_frame" ref="framesrc" @spectrogramOn="handleSpectrogramOn"/>
@@ -35,21 +29,17 @@
 <script>
 import Waveconfigure from '@/components/Waveconfigure.vue'
 import Refconfigure from '@/components/Refconfigure.vue'
-import Vad from '@/components/Vad.vue'
+import Localinfo from '@/components/Localinfo.vue'
 import Framesrc from '@/components/Framesrc.vue'
-import Referencepitch from '@/components/Referencepitch.vue'
 import Spectrumchart from '@/components/Spectrumchart.vue'
-import Labelingpitch from '@/components/Labelingpitch.vue'
 
 export default {
     name: 'Wavelabeling',
     components:{
         Waveconfigure,
-        Referencepitch,
-        Labelingpitch,
         Refconfigure,
         Spectrumchart,
-        Vad,
+        Localinfo,
         Framesrc,
     },
     data() {
@@ -166,25 +156,11 @@ export default {
     width:calc(55% - 1.2rem);
     height:calc(100% - 0.2rem);
 }
-#vad{
+#localinfo{
     position:absolute;
     left:0rem;
     width:calc(100% - 0.5rem);
-    height:calc(20% - 0.2rem);
-}
-#refchart{
-    position:absolute;
-    left:0rem;
-    top:20%;
-    width:calc(100% - 0.5rem);
-    height:calc(20% - 0.2rem);
-}
-#pitchchart{
-    position:absolute;
-    left:0rem;
-    top:40%;
-    width:calc(100% - 0.5rem);
-    height:calc(20% - 0.2rem);
+    height:calc(60% - 0.2rem);
 }
 #spectrum{
     position:absolute;

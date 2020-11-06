@@ -1,6 +1,6 @@
 <template>
     <div id="spectrum_tf">
-        <v-chart theme="ovilia-green" :options="spectrumchartOption" style="height:100%;width:100%"/>
+        <v-chart theme="ovilia-green" :options="spectrumchartOption" style="height:100%;width:100%" autoresize="true"/>
     </div>
 </template>
 
