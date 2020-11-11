@@ -22,6 +22,9 @@
             <div id="configue">
                 <waveconfigure :currentframe="current_frame"> </waveconfigure>
             </div>
+            <!--夜跳转信息-->
+            <div id="pages">
+            </div>
         </div>
     </div>
 </template>
@@ -191,9 +194,6 @@ export default {
     left:calc(45% + 0.4rem);
     width:calc(20% - 0.5rem);
     height:calc(100% - 0.2rem);
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #labeling{
     position:absolute;
@@ -213,5 +213,15 @@ export default {
     width:calc(100% - 0.4rem);
     top:2.2rem;
     height:5.2rem;
+}
+#pages{
+    position:absolute;
+    left:0.2rem;
+    width:calc(100% - 0.4rem);
+    top:7.45rem;
+    height:1.8rem;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
 }
 </style>

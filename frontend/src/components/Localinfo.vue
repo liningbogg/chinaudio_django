@@ -13,9 +13,20 @@ export default {
             vadChart:null,
             waveid:null,
             indexArr:null,
+            seriesAll: {
+                "rmse":0,
+                "ee":1,
+                "combDescan":2,
+                "combDescan_filter":3,
+                "comb":4,
+                "comb_filter":5,
+                "pitch0":6,
+                "pitch1":7,
+                "pitch2":8,
+            },
             chartOption: {
                 backgroundColor:"#f0f0f0",
-                color:['#ff0000','#0000ff', '#000000', '#00ff00', '#00ffff','#ff00ff','#006400', '#00008b', '#8b0000'],
+                color:['#ff0000','#0000ff', '#000000', '#ff34b3', '#8b8b00','#aa00ff','#006464', '#00008b', '#8b0000'],
                 title : [
                     {
                         show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
@@ -24,13 +35,13 @@ export default {
                     },
                     {
                         show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
-                        top: "29%",
+                        top: "32%",
                         left:'center',
                         text:"Reference",//主标题文本，'\n'指定换行
                     },
                     {
                         show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
-                        top: "55%",
+                        top: "61%",
                         left:'center',
                         text:"Labeling",//主标题文本，'\n'指定换行
                     },
@@ -56,7 +67,7 @@ export default {
                 ],
                 yAxis: [
                     {
-                        scale: 'true',
+                         scale: 'true',
                     },
                     {
                         gridIndex: 1,
@@ -70,11 +81,11 @@ export default {
                 series: [
                 ],
                 dataZoom: [
-                {
-                    type: 'inside',
-                    realtime: true,
-                    xAxisIndex: [0, 1, 2]
-                }
+                    {
+                        type: 'inside',
+                        realtime: true,
+                        xAxisIndex: [0, 1, 2]
+                    }
                 ],
                 grid:[
                     {
@@ -86,13 +97,13 @@ export default {
                     {
                         left:'5%',
                         right:'5%',
-                        top:'32%',
+                        top:'36%',
                         height:'20%',
                     },
                     {
                         left:'5%',
                         right:'5%',
-                        top:'58%',
+                        top:'66%',
                         height:'20%',
                     },
                 ],
@@ -110,6 +121,19 @@ export default {
                 },
                 tooltip: {
                     trigger: 'axis',
+                    formatter:  (params) => {  // params为悬浮框上的全部数据
+                        let newParams = [];
+                        let tooltipString = [];
+                        newParams = [...params];
+                        newParams.sort((a,b) => {
+                            return this.seriesAll[a.seriesName] - this.seriesAll[b.seriesName]
+                        });
+                        newParams.forEach((p) => {
+                            const cont = p.marker + ' ' + p.seriesName + ': ' + p.value + '<br/>';
+                            tooltipString.push(cont);
+                        });
+                        return tooltipString.join('');
+                    },
                     axisPointer: {
                         animation: false
                     }
@@ -119,6 +143,17 @@ export default {
                     x:"left",
                     y:"bottom",
                     orient:'horizontal',
+                    data:[
+                        "rmse",
+                        "ee",
+                        "combDescan",
+                        "combDescan_filter",
+                        "comb",
+                        "comb_filter",
+                        "pitch0",
+                        "pitch1",
+                        "pitch2",
+                    ],
                     textStyle:{
                     }
                 },

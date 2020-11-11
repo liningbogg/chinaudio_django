@@ -2,10 +2,10 @@
     <div>
         <div id="customize">
             <el-form :inline="true" :model="formInline" class="demo-form-inline" style="height:100%">
-                <el-form-item label="起始" style="position:absolute;left:0;width:25%">
+                <el-form-item label="起始" style="position:absolute;left:25%;width:12%">
                     <el-input v-model="formInline.start" placeholder="起始位置"></el-input>
                 </el-form-item>
-                <el-form-item label="终止" style="position:absolute;left:25%;width:25%;height:100%">
+                <el-form-item label="终止" style="position:absolute;left:37.5%;width:12%;height:100%">
                     <el-input v-model="formInline.end" placeholder="终止位置"></el-input>
                 </el-form-item>
                 <el-form-item style="position:absolute;left:50%;width:16%;">
@@ -25,9 +25,8 @@
                 </el-form-item>
             </el-form>
         </div>
-        <div id="stftecharts" class="chart">
-        </div>
-        <div id="mediumecharts" class="chart">
+        <div id="charts">
+            <v-chart theme="ovilia-green" :options="chartOption" style="height:100%;width:100%" autoresize="true"/>
         </div>
         <div id="possible">
             <el-input
@@ -42,22 +41,11 @@
 </template>
 
 <script>
-var echarts = require("echarts/lib/echarts");
-require("echarts/lib/chart/line");
-require("echarts/lib/component/title");
-require("echarts/lib/component/legend");
-require("echarts/lib/component/tooltip");
-require("echarts/lib/component/toolbox");
-require("echarts/lib/component/dataZoom");
-require("echarts/lib/component/markLine");
-import elementResizeDetectorMaker from 'element-resize-detector'
 export default {
-  name: 'Stft',
+  name: 'Framesrc',
   props: ['currentframe'],
   data(){
     return{
-        stftChart:null,
-        mediumChart:null,
         waveid:null,
         indexArr:null,
         possible_pos:null,
@@ -69,115 +57,51 @@ export default {
             end:null,
         },
 
-        mediumchartOption: {
-            backgroundColor:"#f0f0f0",
-            title : {
-                show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
-                x:'center',
-                y:'top',
-                textAlign:'left',
-                text:"medium",//主标题文本，'\n'指定换行
-            },
-            dataZoom:[
-                {
-                    type: 'inside',
-                },
-            ],
-            xAxis: {
-                data: null,
-            },
-            yAxis: {
-                scale: 'true',
-                axisLabel:{
-                    rotate:-30,
-                },
-            },
-            series: [
-                {
-                    data: null,
-                    name: "medium",
-                    type: 'line',
-                    lineStyle:{
-                        normal:{
-                            width:1,
-                        },
-                    },
-                    symbol: 'none',
-                    markLine: {
-                        symbol: 'none',
-                        silent: true,
-                        data: [
-                        ],
-                        lineStyle: {
-                            show: true,
-                            color: '#0000ff',
-                            type: 'solid',
-                            width:0.5,
-                        },
-                        label:{
-                            show: false,
-                            formatter: (params) => {
-                                let str = params.data.value;                                            
-                                return str;
-                            },
-                        },
-                    },
-                },
-            ],
-            grid:{
-                left:'5%',
-                right:'5%',
-                top:'15%',
-                bottom:'15%',
-                containLabel: true
-            },
-            toolbox: {
-                show:true,
-                feature:{
-                    dataZoom: {
-                        yAxisIndex:"none"
-                    },
-                }
-            },
-            tooltip: {
-                trigger: 'axis',
-            },
-            color:[
-                '#0000ff',
-            ],
-            legend: {
-                show: true,
-                x:"left",
-                y:"bottom",
-                orient:'horizontal',
-                textStyle:{
-                }
-            },
-
-        },
         chartOption: {
             backgroundColor:"#f0f0f0",
-            title : {
-                show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
-                x:'center',
-                y:'top',
-                textAlign:'left',
-                text:"stft",//主标题文本，'\n'指定换行
-            },
+            title : [
+                {
+                    show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
+                    left:'15%',
+
+                    text:"Stft",//主标题文本，'\n'指定换行
+                },
+                {
+                    show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
+                    left:'65%',
+                    text:"Medium",//主标题文本，'\n'指定换行
+                },
+            ],
+
             dataZoom:[
                 {
                     type: 'inside',
+                    realtime: true,
                 },
             ],
-            xAxis: {
-                data: null,
-            },
-            yAxis: {
-                scale: 'true',
-                axisLabel:{
-                    rotate:-30,
+            xAxis: [
+                {
+                    data: null,
+                    type: 'category',
+                    axisLine: {onZero: true},
                 },
-            },
+                {
+                    data: null,
+                    type: 'category',
+                    axisLine: {onZero: true},
+                    gridIndex: 1,
+                },
+            ],
+            yAxis: [
+                {
+                    scale: 'true',
+                },
+                {
+                    gridIndex: 1,
+                    scale: 'true',
+                },
+            ],
+
             series: [
                 {
                     data: null,
@@ -209,28 +133,82 @@ export default {
                         },
                     },
                 },
+                {
+                    data: null,
+                    name: "medium",
+                    type: 'line',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    lineStyle:{
+                        normal:{
+                            width:1,
+                        },
+                    },
+                    symbol: 'none',
+                    markLine: {
+                        symbol: 'none',
+                        silent: true,
+                        data: [
+                        ],
+                        lineStyle: {
+                            show: true,
+                            color: '#0000ff',
+                            type: 'solid',
+                            width:0.5,
+                        },
+                        label:{
+                            show: false,
+                            formatter: (params) => {
+                                let str = params.data.value;                                            
+                                return str;
+                            },
+                        },
+                    },
+                },
             ],
-            grid:{
-                left:'5%',
-                right:'5%',
-                top:'15%',
-                bottom:'15%',
-                containLabel: true
-            },
+            grid:[
+                {
+                    left:'5%',
+                    width:'40%',
+                    top:'10%',
+                    bottom:'15%',
+                },
+                {
+                    left:'55%',
+                    width:'40%',
+                    top:'10%',
+                    bottom:'15%',
+
+                },
+            ],
             toolbox: {
                 show:true,
                 feature:{
                     dataZoom: {
                         yAxisIndex:"none"
                     },
+                    restore: {},
+                    saveAsImage: {},
                 }
             },
             tooltip: {
                 trigger: 'axis',
+                axisPointer: {
+                    animation: false
+                }
             },
             color:[
-                '#0000ff',
+                '#ff0000',
+                '#0000ff', 
+                '#000000', 
+                '#00ff00', 
+                '#00ffff',
+                '#ff00ff',
+                '#006400',
+                '#00008b',
+                '#8b0000'
             ],
+
             legend: {
                 show: true,
                 x:"left",
@@ -261,19 +239,15 @@ export default {
         for(let key=0; key<xAxis.length; key++){
             xAxis[key]=key*fs/nfft;
         }
-        this.chartOption.xAxis.data=xAxis;
+        this.chartOption.xAxis[0].data=xAxis;
         this.chartOption.series[0].data=stft;
 
         xAxis = new Array(medium.length);
         for(let key=0; key<xAxis.length; key++){
             xAxis[key]=key;
         }
-        this.mediumchartOption.xAxis.data=xAxis;
-        this.mediumchartOption.series[0].data=medium;
-        this.stftChart.clear();
-        this.mediumChart.clear();
-        this.stftChart.setOption(this.chartOption);
-        this.mediumChart.setOption(this.mediumchartOption);
+        this.chartOption.xAxis[1].data=xAxis;
+        this.chartOption.series[1].data=medium;
     },
     dataFromBackend(){
         this.axios.get('target/getPrimaryrefinfo/?waveid='+this.waveid+"&currentframe="+this.currentframe+"&cutoff=4000").then(
@@ -355,8 +329,6 @@ export default {
     for(var i=0;i<99999;i++){
         this.indexArr[i]=i;
     }
-    this.stftChart = echarts.init(document.getElementById("stftecharts"), 'macarons');
-    this.mediumChart = echarts.init(document.getElementById("mediumecharts"), 'macarons');
 
     /*window.addEventListener('resize', () => {
         console.log('窗口发生变化');
@@ -367,20 +339,8 @@ export default {
             console.log("图形不存在");
         }
     })*/
-    let erd = elementResizeDetectorMaker();
-    erd.listenTo(document.getElementById("stftecharts"), ()=> {
-        //执行操作
-        this.stftChart.resize();
-    });
-    erd.listenTo(document.getElementById("mediumecharts"), ()=> {
-        //执行操作
-        this.mediumChart.resize();
-    });
-
   },
   beforeDestroy() {
-    this.stftChart.clear();
-    this.mediumecharts.clear();
   },
   watch: {
     currentframe:{
@@ -414,24 +374,18 @@ export default {
 }
 #customize{
     position:absolute;
+    background:#00f0f0;
     left:0rem;
     top:0rem;
-    height:calc(10% - 0.1rem);
+    height:calc(6% - 0.1rem);
     width:calc(100% - 0.1rem);
 }
-#stftecharts{
+#charts{
     position:absolute;
     left:0rem;
-    top:10%;
-    height:calc(50% - 0.1rem);
-    width:calc(50% - 0.1rem);
-}
-#mediumecharts{
-    position:absolute;
-    left:50%;
-    top:10%;
-    height:calc(50% - 0.1rem);
-    width:calc(50% - 0.1rem);
+    top:6%;
+    height:calc(54% - 0.1rem);
+    width:calc(100% - 0.1rem);
 }
 #possible{
     position:absolute;

@@ -849,7 +849,6 @@ class TargetView(View):
                 "stop":end_ref,
                 "referencepitch":reference,
             }
-            print(body)
             body=json.dumps(body,cls=NpEncoder)
             result = {"status":"success" , "username":str(request.user), "tip": "获取参考算法成功", "body":body}
             return JsonResponse(result)
@@ -1290,6 +1289,7 @@ class TargetView(View):
             min_fft_range = 0
             body={
                 'length': int(4000*nfft/fs),
+                "start": max(currentframe-extend_rad,0),
                 "spectrogram": fft_range,
                 "max_fft_range": max_fft_range,
                 "min_fft_range": min_fft_range

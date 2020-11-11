@@ -12,6 +12,7 @@ export default {
     return{
         indexArr:null,
         waveid:null,
+        start:0,
         spectrumchartOption: {
             xAxis: {
                 type: 'category',
@@ -53,7 +54,11 @@ export default {
                     return obj;
                 },
                 extraCssText: "width: 30%;height: 10%",
-                formatter:'{a}<br>{c}'
+                formatter:  (params) => {
+                    let tooltipString = [];
+                    const cont = params.value[0]+this.start + ' ' + params.value[1] + ': ' + params.value[2] + '<br/>';
+                    return cont;
+                },
             },
         },
     }
@@ -72,6 +77,7 @@ export default {
                 if(response){
                     if(response.data.status==="success"){
                         let context = JSON.parse(response.data.body);
+                        this.start=context["start"];
                         let length=context["length"];
                         let spectrogram=context["spectrogram"];
                         let max_fft_range=context["max_fft_range"];
@@ -84,7 +90,7 @@ export default {
                             for(let j=0;j<length;j++){
                                 data.push([i,j,spectrogram[i][j]]);
                             }
-                            xData.push(i);
+                            xData.push(i+context["start"]);
                         }
                         for(let j=0;j<length;j++)
                         {
