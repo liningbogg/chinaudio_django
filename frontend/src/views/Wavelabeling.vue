@@ -18,12 +18,24 @@
             <div id="ref">
                 <refconfigure></refconfigure>
             </div>
+            <div id="localcal">
+                <localcal></localcal>
+            </div>
             <!--配置信息-->
             <div id="configue">
                 <waveconfigure :currentframe="current_frame"> </waveconfigure>
             </div>
             <!--夜跳转信息-->
             <div id="pages">
+                <el-form :inline="true" class="demo-form-inline" style="height:100%">
+                    <el-form-item label="页码" style="position:absolute;left:1%;width:18%">
+                        <el-input v-model="formInline.page" placeholder="位置" type="number"></el-input>
+                    </el-form-item>
+                <el-form-item style="position:absolute;left:20%;width:24%;">
+                    <el-button type="primary" @click="jump" style="position:absolute;width:100%;height:100%">跳转</el-button>
+                </el-form-item>
+            </el-form>
+
             </div>
         </div>
     </div>
@@ -35,6 +47,7 @@ import Refconfigure from '@/components/Refconfigure.vue'
 import Localinfo from '@/components/Localinfo.vue'
 import Framesrc from '@/components/Framesrc.vue'
 import Spectrumchart from '@/components/Spectrumchart.vue'
+import Localcal from '@/components/Localcal.vue'
 
 export default {
     name: 'Wavelabeling',
@@ -44,6 +57,7 @@ export default {
         Spectrumchart,
         Localinfo,
         Framesrc,
+        Localcal,
     },
     data() {
         return {
@@ -52,8 +66,7 @@ export default {
             hasSpectrogram:false,
             current_frame:null,
             formInline:{
-                start:null,
-                end:null,
+                page:0,
             },
         }
     },
@@ -64,6 +77,9 @@ export default {
     methods:{
         onEvaluate(){
             this.$refs.framesrc.customEvaluate(this.formInline.start, this.formInline.end);
+        },
+        jump(){
+            this.current_frame=this.formInline.page;
         },
         handleSpectrogramOn(isEnable){
             let spectrogramOn=isEnable;
@@ -94,8 +110,7 @@ export default {
                     if(response){
                         if(response.data.status==="success"){
                             this.current_frame = response.data.body;
-                            this.formInline.start=this.current_frame;
-                            this.formInline.end=this.current_frame+1;
+                            this.formInline.page=this.current_frame;
                         }else{
                             this.msg = "获取待标记帧号出错,原因:"+response.data.tip;
                             console.log(this.msg);
@@ -207,21 +222,28 @@ export default {
     width:calc(100% - 0.4rem);
     height:2rem;
 }
+#localcal{
+    position:absolute;
+    left:0.2rem;
+    top:2.2rem;
+    width:calc(100% - 0.4rem);
+    height:2rem;
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
 #configue{
     position:absolute;
     left:0.2rem;
+    top:4.2rem;
     width:calc(100% - 0.4rem);
-    top:2.2rem;
     height:5.2rem;
 }
 #pages{
     position:absolute;
     left:0.2rem;
     width:calc(100% - 0.4rem);
-    top:7.45rem;
+    top:9.45rem;
     height:1.8rem;
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
 }
 </style>

@@ -171,13 +171,13 @@ export default {
                     left:'5%',
                     width:'40%',
                     top:'10%',
-                    bottom:'15%',
+                    bottom:'20%',
                 },
                 {
                     left:'55%',
                     width:'40%',
                     top:'10%',
-                    bottom:'15%',
+                    bottom:'20%',
 
                 },
             ],
@@ -347,7 +347,7 @@ export default {
         handler:function(value){
             this.dataFromBackend();
             this.formInline.start=value;
-            this.formInline.end=value+1;
+            this.formInline.end=parseInt(value)+1;
         },
     }
   },

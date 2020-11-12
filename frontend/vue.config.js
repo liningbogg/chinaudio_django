@@ -28,8 +28,11 @@ module.exports = {
                 //入口起点的最大体积
                 maxEntrypointSize: 4194304,
                 //生成文件的最大体积
-                maxAssetSize: 786432,
-            }
+                maxAssetSize: 1048576,
+            },
+            externals: {
+　　　　　　　　'echarts': 'echarts', // 配置使用CDN
+　　　　　　}
 
         }
     },

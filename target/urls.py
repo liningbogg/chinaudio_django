@@ -42,7 +42,7 @@ urlpatterns = [
     path('labeling/reference_select/', target_view.reference_select),
     path('labeling/addReference/', target_view.add_reference),
     path('labeling/delReference/', target_view.del_reference),
-    path('labeling/calStft/', target_view.cal_stft),
+    path('labeling/calStft/', target_view.cal_stft_old),
     path('labeling/setPrimary/', target_view.set_primary),
     path('labeling/setRefFilter/', target_view.set_ref_filter),
     path('labeling/calRmse/', target_view.cal_rmse),
@@ -65,6 +65,7 @@ urlpatterns = [
     path('getSpectrum/', target_view.get_spectrum),
     path('getReferencepitch/', target_view.get_referencepitch),
     path('getLabelingpitch/', target_view.get_labelingpitch),
+    path('calStft/', target_view.cal_stft),
     path('nextframe/', target_view.nextframe),
     path('labeling/tune_reset/', target_view.tune_reset),  # 此处是指根据曲调重新设置弦高的危险算操作
     path('labeling/strings_reset/', target_view.strings_reset),

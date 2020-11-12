@@ -1292,7 +1292,9 @@ class TargetView(View):
                 "start": max(currentframe-extend_rad,0),
                 "spectrogram": fft_range,
                 "max_fft_range": max_fft_range,
-                "min_fft_range": min_fft_range
+                "min_fft_range": min_fft_range,
+                "nfft": nfft,
+                "fs": fs,
             }
             body=json.dumps(body, cls=NpEncoder)
             result = {"status":"success" , "username":str(request.user), "tip": "获取时频图成功", "body":body}
@@ -1680,8 +1682,9 @@ class TargetView(View):
             print(e)
         return HttpResponse("reference deleted ")
 
+
     @method_decorator(login_required)
-    def cal_stft(self, request):
+    def cal_stft_old(self, request):
         try:
             labeling_id = int(request.GET.get('labeling_id'))
             labeling = Labeling.objects.get(id=labeling_id)
@@ -1736,6 +1739,63 @@ class TargetView(View):
             print(e)
             return HttpResponse("STFT ERR")
         return HttpResponse("STFT calculated ")
+
+
+    @method_decorator(login_required)
+    def cal_stft(self, request):
+        body = None
+        try:
+            waveid = int(request.GET.get('waveid'))
+            wave = Wave.objects.get(id=waveid)
+            userid = str(request.user)
+            labeling = Labeling.objects.get(create_user_id=userid, title=wave.title, nfft=wave.nfft)
+            labelingid = labeling.id
+
+            stftarr = labeling.stft_set.all()
+            if stftarr:
+                stftarr.delete()
+            # 获取原始左声道波形
+            stream ,sr = soundfile.read(wave.waveFile)
+            stream = stream[:,0]
+            stream = np.ascontiguousarray(stream, dtype=np.float32) 
+            # 获取stft
+            speech_stft, phase = librosa.magphase(
+                librosa.stft(
+                    stream,
+                    n_fft=wave.nfft,
+                    hop_length=wave.nfft,
+                    window=scipy.signal.windows.hann,
+                    center=False
+                )
+            )
+            speech_stft = np.transpose(speech_stft)  # stft转置
+
+            stft_arr = speech_stft
+            # 短时傅里叶谱
+            list_stft = []
+            for i in range(len(stft_arr)):
+                stftfile_path = "/home/liningbo/data_chinaudio/stft/%s_%d_%d_%d.pkl" % ("stft", labelingid, i, 1)
+                stftfile = open(stftfile_path, "wb")
+                pickle.dump(stft_arr[i], stftfile)
+                stftfile.close()
+                
+                stft = Stft(startingPos=i, length=1, labeling=labeling, src=stftfile_path, create_user_id=userid)
+                list_stft.append(stft)
+            labeling.stft_set.bulk_create(list_stft)
+            labeling.frameNum = len(stft_arr)
+            labeling.save()
+            wave.frameNum = len(stft_arr)
+            wave.save(update_fields=["frameNum"])
+            body = {
+                "frameNum": wave.frameNum,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "计算stft成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @method_decorator(login_required)
     def cal_ee(self, request):

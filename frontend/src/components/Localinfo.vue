@@ -1,6 +1,6 @@
 <template>
     <div id="graph" class="chart">
-        <v-chart theme="ovilia-green" :options="chartOption" style="height:100%;width:100%" autoresize="true"/>
+        <v-chart  :options="chartOption" style="height:100%;width:100%" autoresize="true"/>
     </div>
 </template>
 
@@ -132,6 +132,8 @@ export default {
                             const cont = p.marker + ' ' + p.seriesName + ': ' + p.value + '<br/>';
                             tooltipString.push(cont);
                         });
+                        const position = "position:" + params[0].axisValue +"<br/>";
+                        tooltipString.push(position);
                         return tooltipString.join('');
                     },
                     axisPointer: {
@@ -383,6 +385,10 @@ export default {
   watch: {
     currentframe:{
         handler:function(value){
+            this.chartOption.series=[];
+            this.chartOption.xAxis[0].data=null;
+            this.chartOption.xAxis[1].data=null;
+            this.chartOption.xAxis[2].data=null;
             this.vadFromBackend();
             this.referencepitchFrombackend();
             this.labelingpitchFrombackend();

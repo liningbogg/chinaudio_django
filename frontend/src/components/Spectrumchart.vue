@@ -1,6 +1,6 @@
 <template>
     <div id="spectrum_tf">
-        <v-chart theme="ovilia-green" :options="spectrumchartOption" style="height:100%;width:100%" autoresize="true"/>
+        <v-chart theme="ovilia-green" :options="spectrumchartOption" autoresize="true" id="spectrum"/>
     </div>
 </template>
 
@@ -12,8 +12,16 @@ export default {
     return{
         indexArr:null,
         waveid:null,
+        nfft:4410,
+        fs:44100,
         start:0,
         spectrumchartOption: {
+            grid:{
+                left:'20%',
+                right:'5%',
+                top:'6%',
+                bottom:'6%',
+            },
             xAxis: {
                 type: 'category',
                 data: null,
@@ -42,9 +50,37 @@ export default {
                         borderWidth: 0,
                     }
                 },
+                markLine: {
+                    symbol: 'none',
+                    silent: true,
+                    data:null,
+                    lineStyle: {
+                        show: true,
+                        type: 'solid',
+                        color: 'white',
+                        width: 0.5,
+                    },
+                    label:{
+                        show: true,
+                        formatter: (params) => {
+                            let str = this.currentframe+params.data.value;
+                            return str;
+                        },
+                    },
+                },
+
                 progressive: 10000,
                 animation: false
             }],
+            toolbox: {
+                feature: {
+                    dataZoom: {
+                    },
+                    restore: {},
+                    saveAsImage: {}
+                }
+            },
+
 
             tooltip: {
                 trigger:'item',
@@ -55,8 +91,7 @@ export default {
                 },
                 extraCssText: "width: 30%;height: 10%",
                 formatter:  (params) => {
-                    let tooltipString = [];
-                    const cont = params.value[0]+this.start + ' ' + params.value[1] + ': ' + params.value[2] + '<br/>';
+                    const cont = params.value[0]+this.start + ' ' + params.value[1]*this.fs/this.nfft + ': ' + params.value[2] + '<br/>';
                     return cont;
                 },
             },
@@ -64,12 +99,13 @@ export default {
     }
   },
   methods:{
-    drawCharts(xData, yData, min_data, max_data, data){
+    drawCharts(xData, yData, min_data, max_data, data, start){
         this.spectrumchartOption.xAxis.data = xData;
         this.spectrumchartOption.yAxis.data = yData;
         this.spectrumchartOption.visualMap.min = min_data;
         this.spectrumchartOption.visualMap.max = max_data;
         this.spectrumchartOption.series[0].data = data;
+        this.spectrumchartOption.series[0].markLine.data=[{"xAxis": this.currentframe-start}];
     },
     dataFromBackend(){
         this.axios.get('target/getSpectrum/?waveid='+this.waveid+"&currentframe="+this.currentframe).then(
@@ -79,6 +115,10 @@ export default {
                         let context = JSON.parse(response.data.body);
                         this.start=context["start"];
                         let length=context["length"];
+                        let nfft = context["nfft"];
+                        this.nfft=nfft;
+                        let fs = context["fs"];
+                        this.fs=fs;
                         let spectrogram=context["spectrogram"];
                         let max_fft_range=context["max_fft_range"];
                         let min_fft_range=context["min_fft_range"];
@@ -94,9 +134,9 @@ export default {
                         }
                         for(let j=0;j<length;j++)
                         {
-                            yData.push(j);
+                            yData.push(j*fs/nfft);
                         }
-                        this.drawCharts(xData, yData, min_fft_range, max_fft_range, data);
+                        this.drawCharts(xData, yData, min_fft_range, max_fft_range, data, this.start);
                     }else{
                         this.msg = "获取时频图失败,原因:"+response.data.tip;
                         console.log(this.msg);
@@ -133,7 +173,7 @@ export default {
 }
 </script>
 <style scoped lang="less">
-#spectrum_tf{
+#spectrum{
     position:absolute;
     left:0rem;
     top:0;
