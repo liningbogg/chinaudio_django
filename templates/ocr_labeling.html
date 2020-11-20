@@ -76,7 +76,7 @@
                                         <input style="font-size:1.25rem;width:100%" type="button" id="delete_all_polygon" value="整页删除" onclick="delete_all_polygon({{image_id}})"/>
                                     </td>
                                 </tr>
-                                <tr>
+                    :q            <tr>
                                     <td>
                                         <label style="font-size:1.25rem;width:49%">
                                             <input style="font-size:1.25rem" type="radio" name="gdbox_mode" value="pan" checked="false" onchange="set_gdbox_mode(this.value,gFetureStyle)" />
@@ -218,9 +218,9 @@
                 if((-tar_width+div_width)>5){
                     let div_page = document.getElementById("page_image");
                     let page_width = div_page.offsetWidth;
-                    div_img.style.width  = ((tar_width+5.0)/page_width*100) + "%";
-                    let div_tool = document.getElementById("page_image_tool");
-                    div_tool.style.width = ((page_width-tar_width-10.0)/page_width*100) + "%";
+                      = ((tar_width*1.0)/page_width*100);
+                    //let div_tool = document.getElementById("page_image_tool");
+                    //div_tool.style.width = ((page_width-tar_width-10.0)/page_width*100) + "%";
                 }
 
                 //tar_room = Math.max(tar_width,tar_height);

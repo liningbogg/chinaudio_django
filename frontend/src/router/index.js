@@ -30,6 +30,30 @@ const routes = [
     component: () => import(/* webpackChunkName: "wavelabeling" */ '../views/Wavelabeling.vue')
   },
   {
+    path: '/Ocrlabeling',
+    name: 'Ocrlabeling',
+    meta: {
+        requireAuth: true
+    },
+
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "ocrlabeling" */ '../views/Ocrlabeling.vue')
+  },
+  {
+    path: '/Ocr',
+    name: 'Ocr',
+    meta: {
+        requireAuth: true
+    },
+
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "ocr" */ '../views/Ocr.vue')
+  },
+  {
     path: '/Target',
     name: 'Target',
     meta: {

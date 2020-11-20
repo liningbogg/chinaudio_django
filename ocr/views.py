@@ -14,7 +14,7 @@ import redis
 from PIL import Image, ImageOps
 from django.db.models import Max
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import *
 from ocr.models import *
 from django import db
@@ -24,6 +24,11 @@ import time
 import cv2 as cv
 from django.core.cache import cache
 import pickle
+from pitch.np_encoder import NpEncoder
+from pitch.check_auth import check_login
+from PIL import Image
+import traceback
+
 
 # 归一化函数
 def maxminnormalization(x, minv, maxv):
@@ -120,6 +125,66 @@ class OcrView(View):
             print(e)
             return HttpResponse("err")
 
+    @method_decorator(check_login)
+    def get_docs(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            userid = str(request.user)
+            ocrDocList = OcrPDF.objects.filter(create_user_id=userid, is_deleted=False)
+            for ocrdoc in ocrDocList.iterator():
+                count_all = 0
+                count_user = 0
+                image_set = PDFImage.objects.filter(ocrPDF=ocrdoc).values("id")
+                for image in image_set.iterator():
+                    count_all_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"]).count()
+                    count_all = count_all_inc + count_all
+                    if count_all_inc > 0:
+                        count_user_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id = userid).count()
+                        count_user = count_user + count_user_inc
+                data = {"id":ocrdoc.id,"title":ocrdoc.title,"frameNum":ocrdoc.frame_num,"currentframe":ocrdoc.current_frame,"assistnum":ocrdoc.assist_num ,"labelNum":count_all,"userlabelNum":count_user}
+                body.append(data)
+            result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def get_docsassist(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            userid = str(request.user)
+            ocr_assist_set = OcrAssist.objects.filter(assist_user_name=userid, is_deleted=False)
+            for ocrassist in ocr_assist_set:
+                ocrdoc = ocrassist.ocrPDF
+                count_all = 0
+                count_user = 0
+                image_set = PDFImage.objects.filter(ocrPDF=ocrdoc).values("id")
+                for image in image_set.iterator():
+                    count_all_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"]).count()
+                    count_all = count_all_inc + count_all
+                    if count_all_inc > 0:
+                        count_user_inc = OcrLabelingPolygon.objects.filter(pdfImage=image["id"], create_user_id = userid).count()
+                        count_user = count_user + count_user_inc
+                data = {"id":ocrdoc.id,"title":ocrdoc.title,"frameNum":ocrdoc.frame_num,"currentframe":ocrdoc.current_frame,"assistnum":ocrdoc.assist_num ,"labelNum":count_all,"userlabelNum":count_user}
+                body.append(data)
+
+            result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
 
     @classmethod
@@ -811,6 +876,108 @@ class OcrView(View):
             print(e)
             return render(request, 'ocr_content_labeling.html',None)
 
+    @method_decorator(check_login)
+    def nextframe(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            docid = request.GET.get('docid')
+            doc = OcrPDF.objects.get(id=docid)
+            if doc.create_user_id == str(request.user):
+                current_frame = doc.current_frame
+            else:
+                assist = doc.ocrassist_set.get(assist_user_name=str(request.user))
+                current_frame = assist.current_frame
+                
+            body={
+                "current_frame": current_frame,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取帧号成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def get_imageinfo(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            docid = request.GET.get('docid')
+            currentframe = int(request.GET.get('currentframe'))
+            doc = OcrPDF.objects.get(id=docid)
+            ocrimage = doc.pdfimage_set.get(frame_id=currentframe)
+            polygon_set = ocrimage.ocrlabelingpolygon_set.all()
+            create_user_id_set = polygon_set.values("create_user_id").distinct()  # achieve distinct create_user_id
+            if doc.create_user_id == str(request.user):
+                is_vertical_pdf = doc.is_vertical
+            else:
+                assist = doc.ocrassist_set.get(assist_user_name=str(request.user))
+                is_vertical_pdf = assist.is_vertical
+            # build a dictionary with create_user_id as its key and polygon list as its value
+            polygon_dict = dict()
+            for create_user_id in create_user_id_set:
+                polygon_dict[create_user_id["create_user_id"]] = dict()  # initialized as an empty list
+            for polygon in polygon_set:
+                polygon_dict[polygon.create_user_id][polygon.id]= {
+                    "polygon_id":polygon.id,
+                    "image_id":polygon.pdfImage.id,
+                    "create_user_id":polygon.create_user_id,  # redundant data for a verification
+                    "points":str(polygon.polygon,'utf-8'),
+                    "labeling_content":polygon.labeling_content
+                }
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr_strict":0.6,"projection_thr_easing":0.1})
+            body={
+                "ori_width":ocrimage.width,
+                "image_id":ocrimage.id,
+                "ori_height":ocrimage.height,
+                "polygon_dict":json.dumps(polygon_dict),
+                "current_rotate":image_user_conf.rotate_degree,
+                "is_vertical":image_user_conf.is_vertical,
+                "center_x":image_user_conf.center_x,
+                "center_y":image_user_conf.center_y,
+                "zoom_scale":image_user_conf.zoom_scale,
+                "username":str(request.user),
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取image信息成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(login_required)
+    def get_image(self, request):
+        try:
+            ocrimage=PDFImage.objects.get(id=request.GET['image_id'])
+            tar_width = int(request.GET.get('tar_width'))
+            tar_height = int(request.GET.get('tar_height'))
+            pil_image = Image.open(ocrimage.data_byte)
+            width, height = pil_image.size
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
+            if abs(image_user_conf.rotate_degree)>0.0001:
+                image_rotated = pil_image.rotate(image_user_conf.rotate_degree)
+            else:
+                image_rotated = pil_image
+            image_resized = image_rotated.resize((tar_width, tar_height), Image.ANTIALIAS)
+            new_imageIO = BytesIO()
+            image_resized.save(new_imageIO,"JPEG")
+            data_byte=new_imageIO.getvalue()
+            return HttpResponse(data_byte, 'image/jpeg')
+
+        except Exception as e:
+            traceback.print_exc()
+            return None
 
     @method_decorator(login_required)
     def labeling(self, request):
@@ -839,6 +1006,7 @@ class OcrView(View):
             for polygon in polygon_set:
                 polygon_dict[polygon.create_user_id].append(
                     {
+                        "image_id":ocrimage.id,
                         "polygon_id":polygon.id,
                         "image_id":polygon.pdfImage.id,
                         "create_user_id":polygon.create_user_id,  # redundant data for a verification
@@ -1625,8 +1793,53 @@ class OcrView(View):
             return HttpResponse("err")
 
 
-    @method_decorator(login_required)
+    @method_decorator(check_login)
     def add_labeling_polygon(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            pointsStr = request.GET.get("points")
+            points_rotate = json.loads(pointsStr.encode("utf-8"))
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)  # 被标注的图片
+            delete_info = dict()
+            user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belonging to this user
+            rect_region = OcrView.get_rect_info(points_rotate[0], points_rotate[2])
+            for polygon in user_polygon_set:
+                points = json.loads(polygon.polygon)
+                rect_candidate = OcrView.get_rect_info(points[0], points[2])
+                intersection = OcrView.cal_intersection_ratio(rect_region, rect_candidate)
+                intersection_ratio = intersection['ratio_b']
+                if intersection_ratio > 0.75:
+                    delete_info[polygon.id]={'polygon_id':polygon.id, 'rect_info':rect_candidate}
+                    polygon.delete()
+            polygon = OcrLabelingPolygon(pdfImage=image, polygon=pointsStr.encode("utf-8"), create_user_id=str(request.user))
+            polygon.save()
+            polygonAdd = {
+                "polygon_id":polygon.id,
+                "image_id":polygon.pdfImage.id,
+                "create_user_id":polygon.create_user_id,  # redundant data for a verification
+                "points":str(polygon.polygon,'utf-8'),
+                "labeling_content":polygon.labeling_content
+            }
+
+            body={
+                "polygonAdd":polygonAdd,
+                "delete_info":delete_info,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "添加标注成功", "body":body}
+            print(result)
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    @method_decorator(login_required)
+    def add_labeling_polygon_old(self, request):
         try:
             pointsStr = request.GET.get("points")
             points_rotate = json.loads(pointsStr.encode("utf-8"))

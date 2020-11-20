@@ -2,10 +2,10 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, FormItem, Input, Table, TableColumn, Select, Option, Switch} from 'element-ui';
+import { Button, Form, FormItem, Input, Table, TableColumn, Radio, Select, Option, Switch} from 'element-ui';
 import axios from 'axios'
 import VueAxios from 'vue-axios'
-import ECharts from "vue-echarts";
+import ECharts from "vue-echarts"
 
 Vue.use(Button);
 Vue.use(Form);
@@ -14,6 +14,7 @@ Vue.use(Table);
 Vue.use(TableColumn);
 Vue.use(Input);
 Vue.use(Select);
+Vue.use(Radio);
 Vue.use(Switch);
 Vue.use(Option);
 Vue.use(VueAxios, axios);
@@ -52,8 +53,6 @@ router.beforeEach((to, from, next) => {
                 next();
             }else{
                 let redirect = from.query.redirect;
-                console.log(to.path);
-                console.log(redirect);
                 if(!redirect || to.path === redirect.split("?")[0]){
                     next();  //避免重复循环
                 }else{
