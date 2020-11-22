@@ -333,6 +333,16 @@ export default {
         }, 
         labelmode:{
             handler:function(value){
+                const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 1});
+                if(value=="draw"){
+                    this.gMap.setMode("drawRect",gFetureStyle);
+                }else{
+                    this.gMap.setMode("pan",gFetureStyle);
+                }
+            },
+        },
+        toolmode:{
+            handler:function(value){
                 console.log(value);
             },
             immediate: true,

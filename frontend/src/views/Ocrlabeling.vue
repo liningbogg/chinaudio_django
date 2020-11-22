@@ -15,6 +15,15 @@
                 <div id="ocrmodediv">
                     <ocrmode />
                 </div>
+                <div id="processtip">
+                    <messagebox />
+                </div>
+                <div id="recomment">
+                </div>
+                <div id="rotation">
+                </div>
+                <div id="statistic">
+                </div>
             </div>
         </div>
     </div>
@@ -23,12 +32,14 @@
 <script>
 import Ocrailabel from '@/components/Ocrailabel.vue'
 import Ocrmode from '@/components/Ocrmode.vue'
+import Messagebox from '@/components/Messagebox.vue'
 
 export default {
     name: 'Ocrlabeling',
     components:{
         Ocrailabel,
         Ocrmode,
+        Messagebox,
     },
     data() {
         return {
@@ -128,8 +139,48 @@ export default {
     left:0.1rem;
     top:0.1rem;
     width:calc(50% - 0.2rem);
-    height:calc(12% - 0.2rem);
+    height:calc(24% - 0.2rem);
     border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+#processtip{
+    position:absolute;
+    left:calc(50% + 0.1rem);
+    top:0.1rem;
+    width:calc(50% - 0.2rem);
+    height:calc(24% - 0.2rem);
+    border-color:green;
+    border-width:0.05rem;
+    border-style:solid;
+}
+#recomment{
+    position:absolute;
+    left:0.1rem;
+    top:calc(24%+ 0.1rem);
+    width:calc(100% - 0.2rem);
+    height:calc(24% - 0.2rem);
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
+#rotation{
+    position:absolute;
+    left:0.1rem;
+    top:calc(48%+ 0.1rem);
+    width:calc(100% - 0.2rem);
+    height:calc(24% - 0.2rem);
+    border-color:red;
+    border-width:0.05rem;
+    border-style:solid;
+}
+#statistic{
+    position:absolute;
+    left:0.1rem;
+    top:calc(72%+ 0.1rem);
+    width:calc(100% - 0.2rem);
+    height:calc(28% - 0.2rem);
+    border-color:red;
     border-width:0.05rem;
     border-style:solid;
 }
