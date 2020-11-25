@@ -62,7 +62,6 @@ class GdboxConfigure {
                 this.gMap.addLayer(this.layer_set[user_name]);
                 return this.layer_set[user_name];
             }
-
         }else{
             return this.layer_set[user_name];
         }
@@ -83,6 +82,11 @@ export default {
         let div_img=document.getElementById("imagebox");
         this.divwidthmax=div_img.offsetWidth;
         this.divheightmax=div_img.offsetHeight;
+        this.indexArr=new Array(100000);
+        for(var i=0;i<99999;i++){
+            this.indexArr[i]=i;
+        }
+
     },
     computed: {
         labelmode:function(){
@@ -95,9 +99,6 @@ export default {
     beforeDestroy() {
     },
     methods: {
-        sleep (time) {
-            return new Promise((resolve) => setTimeout(resolve, time));
-        },
         //w_box为div原始尺寸
         cal_size(w_box,h_box,w,h,is_vertical){
             let height=0;
@@ -169,6 +170,180 @@ export default {
             }
             return polygon_rotated;
         },
+        /*粗标注*/
+        rough_labeling(image_id, points, gFeatureLayer, gFetureStyle){
+            let pointsStr=JSON.stringify(points);
+            this.axios.get('ocr/rough_labeling/?image_id='+image_id+"&rotate_points_str="+pointsStr).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            let info_rough = response.data.body;
+                            console.log(info_rough);
+                            for(let elem of info_rough.delete_info){
+                                //delete feature related
+                                gFeatureLayer.getFeatureById(elem.polygon_id+"");
+                                gFeatureLayer.removeFeatureById(elem.polygon_id+"");
+                                //在polygon_dict中移除元素
+                                delete this.polygonList[elem.polygon_id];
+                            }
+                            let polygon_add = info_rough.polygon_add;
+                            for(let polygon in polygon_add){
+                                let elem = polygon_add[polygon];
+                                let polygon_points = JSON.parse(elem['points']);
+                                let polygon_id = elem['polygon_id'];
+                                //rotate the label
+                                let rotate=this.current_rotate;
+                                let polygon_rotated = this.rotate_polygon(polygon_points,rotate,this.ori_width,this.ori_height);
+                                //map it into feature layer
+                                console.log(polygon_rotated, this.tar_width, this.tar_height, this.ori_width,this.ori_height);
+                                let polygon_map = this.img2gdbox_map(polygon_rotated, this.tar_width, this.tar_height, this.ori_width, this.ori_height);
+                                console.log(polygon_map, polygon_id, elem['create_user_id']);
+                                this.add_polygon_disp(gFeatureLayer, gFetureStyle, polygon_map, polygon_id, elem['create_user_id']);
+                            }
+                            //设置粗标注图形option
+                            let projection = JSON.parse(info_rough.projection);
+                            let entropy = JSON.parse(info_rough.entropy);
+                            let entropy_diff = JSON.parse(info_rough.entropy_diff);
+                            let chartOption = {
+                                backgroundColor:"#f0f0f0",
+                                color:['#ff0000','#0000ff', '#000000', '#ff34b3', '#8b8b00','#aa00ff','#006464', '#00008b', '#8b0000'],
+                                title : 
+                                {
+                                    show:true,//显示策略，默认值true,可选为：true（显示） | false（隐藏）
+                                    left:'center',
+                                    text:"粗标注过程信息",//主标题文本，'\n'指定换行
+                                    textStyle:{
+                                        fontSize:16
+                                    }
+                                },
+                                xAxis:
+                                {
+                                    data: this.indexArr.slice(0, projection.length),
+                                    type: 'category',
+                                    axisLine: {onZero: true},
+                                },
+                                yAxis: 
+                                {
+                                    scale: 'true',
+                                },
+                                series: [
+                                    {
+                                        data: projection,
+                                        name: "projection",
+                                        type: 'line',
+                                        lineStyle:{
+                                            normal:{
+                                                width:1,
+                                            },
+                                        },
+                                        markLine: {
+                                            symbol: 'none',
+                                            silent: true,
+                                            data: [
+                                            ],
+                                        },
+                                        symbol: 'none',
+                                    },
+                                    {
+                                        data: entropy,
+                                        name: "entropy",
+                                        type: 'line',
+                                        lineStyle:{
+                                            normal:{
+                                                width:1,
+                                            },
+                                        },
+                                        markLine: {
+                                            symbol: 'none',
+                                            silent: true,
+                                            data: [
+                                            ],
+                                        },
+                                        symbol: 'none',
+                                    },
+                                    {
+                                        data: entropy_diff,
+                                        name: "entropy_diff",
+                                        type: 'line',
+                                        lineStyle:{
+                                            normal:{
+                                                width:1,
+                                            },
+                                        },
+                                        markLine: {
+                                            symbol: 'none',
+                                            silent: true,
+                                            data: [
+                                            ],
+                                        },
+                                        symbol: 'none',
+                                    },
+                                ],
+                                dataZoom: [
+                                    {
+                                        type: 'inside',
+                                        realtime: true,
+                                    }
+                                ],
+                                grid:
+                                {
+                                    left:'5%',
+                                    right:'5%',
+                                    top:'6%',
+                                    height:'75%',
+                                    containLabel: true,
+                                },
+                                toolbox: {
+                                    feature: {
+                                        dataZoom: {
+                                            yAxisIndex: 'none'
+                                        },
+                                        restore: {},
+                                        saveAsImage: {}
+                                    }
+                                },
+                                axisPointer: {
+                                    link: {xAxisIndex: 'all'}
+                                },
+                                tooltip: {
+                                    trigger: 'axis',
+                                    axisPointer: {
+                                        animation: false
+                                    }
+                                },
+                                legend: {
+                                    show: true,
+                                    x:"left",
+                                    y:"bottom",
+                                    orient:'horizontal',
+                                    textStyle:{
+                                    }
+                                },
+                            }
+                            for(let series of chartOption.series){
+                                for(let start_pos of info_rough.start_pos){
+                                    series.markLine.data.push({
+                                        "xAxis":start_pos,
+                                        "lineStyle": {
+                                            "show": true,
+                                            "color": '#0000ff',
+                                            "type": 'solid',
+                                            "width":1,
+                                        },
+                                    });
+                                }
+                            }
+                            console.log(chartOption);
+                            this.$store.commit("setRecommenttip_option",chartOption);
+
+                        }else{
+                            this.msg = "粗标注出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }   
+                }
+            ); 
+        },
         /*增加多边形*/
         add_labeling_polygon(image_id, points, fea_points, gFeatureLayer, gFetureStyle){
             const time = new Date().getTime();
@@ -198,9 +373,8 @@ export default {
                         }
                     }   
                 }
-            ) 
+            ); 
         },
-
         add_polygon_disp(gFeatureLayer,gFetureStyle,points, polygon_id, create_user_id){
             // 元素添加展示
             let fea = new gDBox.Feature.Polygon(
@@ -230,6 +404,11 @@ export default {
                     case "manual":
                     {
                         this.add_labeling_polygon(image_id, rotate_points, points, this.gdboxConfigure.get_layer(this.username),this.gdboxConfigure.get_style(this.username, false));
+                        break;
+                    }
+                    case "recomment":
+                    {
+                        this.rough_labeling(image_id, rotate_points, this.gdboxConfigure.get_layer(this.username), this.gdboxConfigure.get_style(this.username, false));
                         break;
                     }
                     default:
@@ -311,10 +490,14 @@ export default {
                             this.username=imageinfo.username;
                             this.current_rotate=imageinfo.current_rotate;
                             this.polygonList = JSON.parse(imageinfo.polygon_dict);
+                            this.ori_height=imageinfo.ori_height;
+                            this.ori_width=imageinfo.ori_width;
                             let tar_size= this.cal_size(this.divwidthmax, this.divheightmax, imageinfo.ori_width, imageinfo.ori_height, imageinfo.is_vertical);
                             //只修改宽度, 牵涉父组件，这里只发送消息
                             this.$emit('adjustDiv',Math.min(tar_size.width,this.divwidthmax));
                             this.initMap(imageinfo.image_id, tar_size.width, tar_size.height, imageinfo.ori_width, imageinfo.ori_height, imageinfo.zoom_scale, imageinfo.center_x, imageinfo.center_y);
+                            this.tar_width = tar_size.width;
+                            this.tar_height = tar_size.height;
                         }else{
                             this.msg = "获取image信息出错,原因:"+response.data.tip;
                         }

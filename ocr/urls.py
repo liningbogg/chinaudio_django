@@ -38,7 +38,6 @@ urlpatterns = [
     path('labeling/delete_polygon_by_id/', ocr_view.delete_polygon_by_id),
     path('labeling/delete_region/', ocr_view.delete_region),
     path('labeling/merge_labeling/', ocr_view.merge_labeling),
-    path('labeling/rough_labeling/', ocr_view.rough_labeling),
     path('labeling/yolo_labeling/', ocr_view.yolo_labeling),
     path('labeling/update_polygon_id_thr_next/', ocr_view.update_polygon_id_thr_next),
     path('content_labeling/', ocr_view.content_labeling),
@@ -66,4 +65,5 @@ urlpatterns = [
     path('getImageinfo/', ocr_view.get_imageinfo),
     path('getImage/', ocr_view.get_image),
     path('addLabelingPolygon/', ocr_view.add_labeling_polygon),
+    path('rough_labeling/', ocr_view.rough_labeling),
 ]

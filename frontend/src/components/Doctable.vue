@@ -36,9 +36,10 @@ export default {
     methods: {
         docsFromBackend(){
             this.axios.get('ocr/get_docs/').then(
-                response => {
+                (response) => {
                     if(response){
-                        if(response.data.status==="success"){
+                        console.log(response.data);
+                        if(response.data.status=="success"){
                             this.docs = response.data.body;
                         }else{
                             this.msg = "获取doc列表信息出错,原因:"+response.data.tip;

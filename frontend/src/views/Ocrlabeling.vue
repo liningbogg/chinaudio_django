@@ -19,6 +19,7 @@
                     <messagebox />
                 </div>
                 <div id="recomment">
+                    <recommenttip />                    
                 </div>
                 <div id="rotation">
                 </div>
@@ -33,6 +34,7 @@
 import Ocrailabel from '@/components/Ocrailabel.vue'
 import Ocrmode from '@/components/Ocrmode.vue'
 import Messagebox from '@/components/Messagebox.vue'
+import Recommenttip from '@/components/Recommenttip.vue'
 
 export default {
     name: 'Ocrlabeling',
@@ -40,6 +42,7 @@ export default {
         Ocrailabel,
         Ocrmode,
         Messagebox,
+        Recommenttip,
     },
     data() {
         return {
@@ -159,7 +162,7 @@ export default {
     left:0.1rem;
     top:calc(24%+ 0.1rem);
     width:calc(100% - 0.2rem);
-    height:calc(24% - 0.2rem);
+    height:calc(28% - 0.2rem);
     border-color:red;
     border-width:0.05rem;
     border-style:solid;
@@ -167,7 +170,7 @@ export default {
 #rotation{
     position:absolute;
     left:0.1rem;
-    top:calc(48%+ 0.1rem);
+    top:calc(52%+ 0.1rem);
     width:calc(100% - 0.2rem);
     height:calc(24% - 0.2rem);
     border-color:red;
@@ -177,9 +180,9 @@ export default {
 #statistic{
     position:absolute;
     left:0.1rem;
-    top:calc(72%+ 0.1rem);
+    top:calc(76%+ 0.1rem);
     width:calc(100% - 0.2rem);
-    height:calc(28% - 0.2rem);
+    height:calc(24% - 0.2rem);
     border-color:red;
     border-width:0.05rem;
     border-style:solid;

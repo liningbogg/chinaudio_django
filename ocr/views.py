@@ -2159,8 +2159,6 @@ class OcrView(View):
             print(e)
             return HttpResponse("err")
 
-
-
     @method_decorator(login_required)
     def rough_labeling(self, request):
         try:
@@ -2344,22 +2342,23 @@ class OcrView(View):
                     "points":str(polygon.polygon,"utf-8")
                 })
 
-            rough_labeling_info = {
-                "projection":projection.tolist(),
-                "entropy":entropy.tolist(),
-                "entropy_diff":entropy_diff,
+            body = {
+                "projection":json.dumps(projection.tolist(),cls=NpEncoder),
+                "entropy":json.dumps(entropy.tolist(),cls=NpEncoder),
+                "entropy_diff":json.dumps(entropy_diff,cls=NpEncoder),
                 "gray_mean":float(gray_mean),
-                # "array_image":array_image.tolist(),
                 "text_interval":interval_dim1["text_interval"],
                 "start_pos":interval_dim1["start_pos"],
                 "stop_pos":interval_dim1["stop_pos"],
                 "delete_info":delete_info,
                 "polygon_add":polygon_add,
             }
-            return HttpResponse(json.dumps(rough_labeling_info, cls=NpEncoder))
+            result = {"status":"success" , "username":str(request.user), "tip": "粗标注成功", "body":body}
+            return JsonResponse(result)
         except Exception as e:
-            print(e)
-            return HttpResponse("err")
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
 
     # calculate intervals of a line

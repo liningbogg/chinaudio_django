@@ -8,6 +8,7 @@ export default new Vuex.Store({
     state: {
         AILabelmode:"draw",
         AIToolmode:"manual",
+        Recommenttip_option:null,
         Messagetip:[],
     },
     getters: {
@@ -30,6 +31,9 @@ export default new Vuex.Store({
             }
             return tip;
         },
+        getRecommenttip_option(state){
+            return state.Recommenttip_option;
+        },
     },
     mutations: {
         setAILabelmode(state, AILabelmode){
@@ -43,7 +47,10 @@ export default new Vuex.Store({
                 state.Messagetip.shift();
             }
             state.Messagetip.push(Message);
-        }
+        },
+        setRecommenttip_option(state, option){
+            state.Recommenttip_option=option;
+        },
     },
     actions: {
     },

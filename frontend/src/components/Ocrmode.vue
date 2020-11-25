@@ -38,7 +38,11 @@ export default {
             ocrtoolmode:"manual",
         }
     },
+    computed() {
+    },
     mounted() {
+        this.ocrlabelmode=this.$store.getters.getAILabelmode;
+        this.ocrtoolmode=this.$store.getters.getAIToolmode;
         window.addEventListener('keydown', event => {
             const e = event||window.event||arguments.callee.caller.arguments[0];
             if(!e) return;

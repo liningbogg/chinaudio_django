@@ -84,11 +84,15 @@ axios.interceptors.response.use(
         if (error.response) {
             switch (error.response.status) {
                 case 401:
-                alert(error.response.data)
+                alert(error.response.data);
                 router.replace({
                     path: '/login',
                     query: {redirect: router.currentRoute.fullPath}//登录成功后跳入浏览的当前页面
-                })
+                });
+                break;
+                default:
+                alert(error.response.data);
+                break;
             }
         }
         return Promise.reject(error.response.data)
