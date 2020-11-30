@@ -170,6 +170,30 @@ export default {
             }
             return polygon_rotated;
         },
+        /*区域删除*/
+        region_delete(image_id, points, gFeatureLayer){
+            let pointsStr=JSON.stringify(points);
+            this.axios.get('ocr/regionDelete/?image_id='+image_id+"&rotate_points_str="+pointsStr).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            let info_delete = response.data.body.delete_info;
+                            for(let polygon_id in info_delete){
+                                gFeatureLayer.removeFeatureById(polygon_id+"");
+                            }
+                            let message={
+                                "type":"notice",
+                                "text":"区域删除:"+Object.keys(info_delete).length+"个polygon被删除",
+                            }
+                            this.$store.commit("addMessagetip",message);
+                        }else{
+                            this.msg = "区域删除出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }   
+                }
+            ); 
+        },
         /*粗标注*/
         rough_labeling(image_id, points, gFeatureLayer, gFetureStyle){
             let pointsStr=JSON.stringify(points);
@@ -332,6 +356,44 @@ export default {
                                         },
                                     });
                                 }
+                                for(let end_pos of info_rough.stop_pos){
+                                    series.markLine.data.push({
+                                        "xAxis":end_pos,
+                                        "lineStyle": {
+                                            "show": true,
+                                            "color": '#ff0000',
+                                            "type": 'solid',
+                                            "width":1,
+                                        },
+                                    });
+                                }
+                                series.markLine.data.push({
+                                    "yAxis":info_rough.projection_thr_easing,
+                                    "lineStyle": {
+                                        "show": true,
+                                        "color": '#0000ff',
+                                        "type": 'solid',
+                                        "width":0.5,
+                                    },
+                                });
+                                series.markLine.data.push({
+                                    "yAxis":info_rough.projection_thr_strict,
+                                    "lineStyle": {
+                                        "show": true,
+                                        "color": '#ff0000',
+                                        "type": 'solid',
+                                        "width":0.5,
+                                    },
+                                });
+                                series.markLine.data.push({
+                                    "yAxis":info_rough.entropy_thr,
+                                    "lineStyle": {
+                                        "show": true,
+                                        "color": '#ff00ff',
+                                        "type": 'solid',
+                                        "width":0.5,
+                                    },
+                                });
                             }
                             console.log(chartOption);
                             this.$store.commit("setRecommenttip_option",chartOption);
@@ -375,6 +437,22 @@ export default {
                 }
             ); 
         },
+        /*删除多边形*/
+        delete_polygon_by_id(polygon_id, gFeatureLayer, gMap){
+            this.axios.get('ocr/deletePolygonById/?polygon_id='+polygon_id).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            gFeatureLayer.removeFeatureById(polygon_id+"");
+                            gMap.mLayer.removeAllMarkers();
+                        }else{
+                            this.msg = "删除多边形出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }   
+                }
+            ); 
+        },
         add_polygon_disp(gFeatureLayer,gFetureStyle,points, polygon_id, create_user_id){
             // 元素添加展示
             let fea = new gDBox.Feature.Polygon(
@@ -411,6 +489,12 @@ export default {
                         this.rough_labeling(image_id, rotate_points, this.gdboxConfigure.get_layer(this.username), this.gdboxConfigure.get_style(this.username, false));
                         break;
                     }
+                    case "delete":
+                    {
+                        this.region_delete(image_id, rotate_points, this.gdboxConfigure.get_layer(this.username));
+                        break;
+                    }
+
                     default:
                         alert("labeling_mode err!");
                 }
@@ -446,9 +530,9 @@ export default {
                     }
                 );
                 this.gMap.mLayer.addMarker(deleteMarker);
-
-                deleteMarker.regEvent('click', function () {
+                deleteMarker.regEvent('click',() => {
                     // 执行选中元素删除
+                    this.delete_polygon_by_id(cFeature.id, this.gdboxConfigure.get_layer(this.username), this.gMap);
                 });
             });
             this.gMap.events.on('featureStatusReset', () => {

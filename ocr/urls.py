@@ -66,4 +66,11 @@ urlpatterns = [
     path('getImage/', ocr_view.get_image),
     path('addLabelingPolygon/', ocr_view.add_labeling_polygon),
     path('rough_labeling/', ocr_view.rough_labeling),
+    path('getRoughThr/', ocr_view.get_roughthr),
+    path('setRoughThrEasing/', ocr_view.set_roughthr_easing),
+    path('setRoughThrStrict/', ocr_view.set_roughthr_strict),
+    path('setRoughThrEntropy/', ocr_view.set_roughthr_entropy),
+    path('deletePolygonById/', ocr_view.delete_polygon),
+    path('regionDelete/', ocr_view.region_delete),
+    path('getPolygonNum/', ocr_view.get_polygon_num),
 ]

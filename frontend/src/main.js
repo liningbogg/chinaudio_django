@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, FormItem, Input, Table, TableColumn, Radio, Select, Option, Switch} from 'element-ui';
+import { Button, Form, FormItem, Input, Table, TableColumn, Radio, Select, Option, Switch, Pagination} from 'element-ui';
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import ECharts from "vue-echarts"
@@ -17,6 +17,7 @@ Vue.use(Select);
 Vue.use(Radio);
 Vue.use(Switch);
 Vue.use(Option);
+Vue.use(Pagination);
 Vue.use(VueAxios, axios);
 Vue.config.productionTip = false;
 require('echarts/lib/chart/line')
@@ -84,14 +85,14 @@ axios.interceptors.response.use(
         if (error.response) {
             switch (error.response.status) {
                 case 401:
-                alert(error.response.data);
+                console.log(error.response.data);
                 router.replace({
                     path: '/login',
                     query: {redirect: router.currentRoute.fullPath}//登录成功后跳入浏览的当前页面
                 });
                 break;
                 default:
-                alert(error.response.data);
+                console.log(error.response.data);
                 break;
             }
         }

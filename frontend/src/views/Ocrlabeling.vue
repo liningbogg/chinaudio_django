@@ -6,10 +6,23 @@
         <div id="content">
             <!--图像信息-->
             <div id="imageinfo">
+                <imageinfo :tarwidth="tarwidth" :tarheight="tarheight" :currentframe="current_frame"/>
             </div>
             <!--图像标注-->
             <div id="pageimage" :style="{width:boxwidth}">
                 <ocrailabel :currentframe="current_frame" @adjustDiv="adjustDiv"/>
+            </div>
+            <div id="page_navi" :style="{width:boxwidth}">
+                <el-pagination
+                    background
+                    @current-change="handleCurrentChange"
+                    :current-page="current_frame"
+                    :page-sizes="1"
+                    :page-size="1"
+                    layout="total, prev, pager, next, jumper"
+                    :total="framenum">
+                    style="height:100%"
+                </el-pagination>
             </div>
             <div id="tools" :style={left:toolleft,width:toolwidth}>
                 <div id="ocrmodediv">
@@ -19,7 +32,7 @@
                     <messagebox />
                 </div>
                 <div id="recomment">
-                    <recommenttip />                    
+                    <recommenttip :currentframe="current_frame"/>                    
                 </div>
                 <div id="rotation">
                 </div>
@@ -35,6 +48,7 @@ import Ocrailabel from '@/components/Ocrailabel.vue'
 import Ocrmode from '@/components/Ocrmode.vue'
 import Messagebox from '@/components/Messagebox.vue'
 import Recommenttip from '@/components/Recommenttip.vue'
+import Imageinfo from '@/components/Imageinfo.vue'
 
 export default {
     name: 'Ocrlabeling',
@@ -43,6 +57,7 @@ export default {
         Ocrmode,
         Messagebox,
         Recommenttip,
+        Imageinfo,
     },
     data() {
         return {
@@ -50,20 +65,30 @@ export default {
             docid:null,
             gMap:null,
             current_frame:null,
+            framenum:null,
             is_vertical_pdf:null,
             msg:null,
             boxwidth:"calc(70% - 0.2rem)",
             toolleft:"calc(70% + 0.1rem)",
             toolwidth:"calc(30% - 0.2rem)",
+            tarwidth:0,
+            tarheight:0,
         }
     },
+    computed:{
+    },
     methods:{
+        handleCurrentChange(val){
+           this.current_frame = val; 
+           
+        },
         nextframeFromBackend(){
             this.axios.get('ocr/nextframe/?docid='+this.docid).then(
                 response => {
                     if(response){
                         if(response.data.status==="success"){
                             this.current_frame = response.data.body.current_frame;
+                            this.framenum = response.data.body.framenum;
                             this.is_vertical_pdf = response.data.body.is_vertical_pdf;
                         }else{
                             this.msg = "获取待标记帧号出错,原因:"+response.data.tip;
@@ -81,6 +106,10 @@ export default {
             this.boxwidth = tar_width*100.0/div_total.offsetWidth+"%";
             this.toolleft = "calc("+tar_width*100.0/div_total.offsetWidth+"% + 0.3rem)";
             this.toolwidth = "calc("+(100-tar_width*100.0/div_total.offsetWidth)+"% - 0.4rem)";
+            let div_page = document.getElementById("pageimage");
+            this.tarwidth = div_page.offsetWidth;
+            this.tarheight = div_page.offsetHeight;
+
         },
     },
     mounted(){
@@ -88,6 +117,9 @@ export default {
         this.docid = this.$route.query.docid;
         console.log(this.title,this.docid);
         this.nextframeFromBackend();
+        let div_page = document.getElementById("pageimage");
+        this.tarwidth = div_page.offsetWidth;
+        this.tarheight = div_page.offsetHeight;
     },
 }
 </script>
@@ -122,11 +154,18 @@ export default {
     position:absolute;
     left:0.1rem;
     top:2.1rem;
-    height:calc(100% - 2.2rem);
+    height:calc(100% - 2.1rem - 32px);
     border-color:red;
-    border-width:0.05rem;
+    border-width:0.01rem;
     border-style:solid;
 }
+#page_navi{
+    position:absolute;
+    left:0.1rem;
+    top:calc(100% - 30px);
+    height:28px;
+}
+
 #tools{
     position:absolute;
     top:2.1rem;
@@ -163,9 +202,6 @@ export default {
     top:calc(24%+ 0.1rem);
     width:calc(100% - 0.2rem);
     height:calc(28% - 0.2rem);
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #rotation{
     position:absolute;

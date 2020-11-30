@@ -219,6 +219,34 @@ class OcrView(View):
             print(e)
 
 
+    @method_decorator(check_login)
+    def get_polygon_num(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            docid = request.GET.get('docid')
+            currentframe = int(request.GET.get('currentframe'))
+            doc = OcrPDF.objects.get(id=docid)
+            image = doc.pdfimage_set.get(frame_id=currentframe)
+            polygonnumall = image.ocrlabelingpolygon_set.all().count()
+            polygonnumuser = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user)).count()
+
+            body={
+                "polygonnumall":polygonnumall,
+                "polygonnumuser":polygonnumuser,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取帧号成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
     @method_decorator(login_required)
     def get_polygon_elem_statistic(self, request):
         try:
@@ -888,14 +916,143 @@ class OcrView(View):
             doc = OcrPDF.objects.get(id=docid)
             if doc.create_user_id == str(request.user):
                 current_frame = doc.current_frame
+                framenum = doc.frame_num
             else:
                 assist = doc.ocrassist_set.get(assist_user_name=str(request.user))
                 current_frame = assist.current_frame
-                
+                framenum = assist.ocrPDF.frame_num
             body={
                 "current_frame": current_frame,
+                "framenum": framenum,
             }
             result = {"status":"success" , "username":str(request.user), "tip": "获取帧号成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def get_roughthr(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            docid = request.GET.get('docid')
+            currentframe = int(request.GET.get('currentframe'))
+            doc = OcrPDF.objects.get(id=docid)
+            if doc.create_user_id == str(request.user):
+                is_vertical_pdf = doc.is_vertical
+            else:
+                assist = doc.ocrassist_set.get(assist_user_name=str(request.user))
+                is_vertical_pdf = assist.is_vertical
+            ocrimage = doc.pdfimage_set.get(frame_id=currentframe)
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr_strict":0.6,"projection_thr_easing":0.1})
+            body={
+                "projection_thr_strict":image_user_conf.projection_thr_strict,
+                "projection_thr_easing":image_user_conf.projection_thr_easing,
+                "entropy_thr":image_user_conf.entropy_thr,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取粗标注信息成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def set_roughthr_easing(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            docid = request.GET.get('docid')
+            currentframe = int(request.GET.get('currentframe'))
+            projection_thr_easing = float(request.GET.get('projection_thr_easing'))
+            doc = OcrPDF.objects.get(id=docid)
+            if doc.create_user_id == str(request.user):
+                is_vertical_pdf = doc.is_vertical
+            else:
+                assist = doc.ocrassist_set.get(assist_user_name=str(request.user))
+                is_vertical_pdf = assist.is_vertical
+            ocrimage = doc.pdfimage_set.get(frame_id=currentframe)
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr_strict":0.6,"projection_thr_easing":0.1})
+            image_user_conf.projection_thr_easing=projection_thr_easing
+            image_user_conf.save()
+            body={
+                "projection_thr_easing":image_user_conf.projection_thr_easing,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "设置粗标注阈值easing成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def set_roughthr_strict(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            docid = request.GET.get('docid')
+            currentframe = int(request.GET.get('currentframe'))
+            projection_thr_strict = float(request.GET.get('projection_thr_strict'))
+            doc = OcrPDF.objects.get(id=docid)
+            if doc.create_user_id == str(request.user):
+                is_vertical_pdf = doc.is_vertical
+            else:
+                assist = doc.ocrassist_set.get(assist_user_name=str(request.user))
+                is_vertical_pdf = assist.is_vertical
+            ocrimage = doc.pdfimage_set.get(frame_id=currentframe)
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr_strict":0.6,"projection_thr_easing":0.1})
+            image_user_conf.projection_thr_strict=projection_thr_strict
+            image_user_conf.save()
+            body={
+                "projection_thr_strict":image_user_conf.projection_thr_strict,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "设置粗标注阈值strict成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def set_roughthr_entropy(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            docid = request.GET.get('docid')
+            currentframe = int(request.GET.get('currentframe'))
+            entropy_thr = float(request.GET.get('entropy_thr'))
+            doc = OcrPDF.objects.get(id=docid)
+            if doc.create_user_id == str(request.user):
+                is_vertical_pdf = doc.is_vertical
+            else:
+                assist = doc.ocrassist_set.get(assist_user_name=str(request.user))
+                is_vertical_pdf = assist.is_vertical
+            ocrimage = doc.pdfimage_set.get(frame_id=currentframe)
+            (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0, "is_vertical":is_vertical_pdf, "entropy_thr":0.9, "projection_thr_strict":0.6,"projection_thr_easing":0.1})
+            image_user_conf.entropy_thr = entropy_thr
+            image_user_conf.save()
+            body={
+                "entropy_thr" : image_user_conf.entropy_thr,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "设置粗标注阈值entropy成功", "body":body}
             return JsonResponse(result)
 
         except Exception as e:
@@ -1964,6 +2121,28 @@ class OcrView(View):
             print(e)
             return HttpResponse(e)
 
+    # 删除指定ip的多边形标注
+    @method_decorator(check_login)
+    def delete_polygon(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            polygon_id = request.GET.get("polygon_id")
+            item_delete = OcrLabelingPolygon.objects.get(id=polygon_id)
+            if str(request.user)!=item_delete.create_user_id:
+                result = {"status":"failure" , "username":str(request.user), "tip":"polygon不属于当前用户"}
+                return JsonResponse(result)
+            else:
+                item_delete.delete()
+                result = {"status":"success" , "username":str(request.user), "tip": "删除polygon成功", "body":body}
+                return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     # 删除指定IP的偏旁部首
     @method_decorator(login_required)
@@ -2021,6 +2200,38 @@ class OcrView(View):
             print(e)
             return HttpResponse("err")
 
+    @method_decorator(check_login)
+    def region_delete(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            delete_info = dict()
+            select_pointsStr = request.GET.get("rotate_points_str")
+            select_points = json.loads(select_pointsStr)  # region to be deleted
+            image_id = request.GET.get("image_id")  # related picture
+            image = PDFImage.objects.get(id=image_id) 
+            user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all related label belong to user
+            rect_region = OcrView.get_rect_info(select_points[0], select_points[2])
+            for polygon in user_polygon_set:
+                points = json.loads(polygon.polygon)
+                rect_candidate = OcrView.get_rect_info(points[0], points[2])
+                intersection = OcrView.cal_intersection_ratio(rect_region, rect_candidate)
+                intersection_ratio = intersection['ratio_b']
+                if intersection_ratio > 0.75:
+                    delete_info[polygon.id]=rect_candidate
+                    polygon.delete()
+            body={
+                "delete_info":delete_info,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "区域删除成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
             
     @staticmethod
     def merge_rects(rect_array):
@@ -2237,8 +2448,8 @@ class OcrView(View):
             entropy_diff = list(np.diff(entropy))
             entropy_diff.insert(0,0)
             entropy_thr = conf_entropy_thr  # 熵阈
-            projection_thr_strict = 0.6 # 投影阈
-            projection_thr_easing = 0.01 # 宽松投影阈
+            projection_thr_easing =  conf.projection_thr_easing# 宽松影阈
+            projection_thr_strict = conf.projection_thr_strict # 投影阈
             # 分割第一维
             interval_dim1 = OcrView.cal_interval(entropy, entropy_thr, projection, projection_thr_strict, projection_thr_easing)
             # 文字融合暂缺
@@ -2266,7 +2477,7 @@ class OcrView(View):
                 entropy_dim2 = maxminnormalization(entropy_dim2,0,1)
 
                 area_thr = filter_size
-                interval_dim2 = OcrView.cal_interval(entropy_dim2, 0.9, projection_dim2, projection_thr_strict, projection_thr_easing)
+                interval_dim2 = OcrView.cal_interval(entropy_dim2, entropy_thr, projection_dim2, projection_thr_strict, projection_thr_easing)
                 if is_vertical is True:
                     for item_dim2 in interval_dim2["text_interval"]:
                         start_dim2 = item_dim2["start"]
@@ -2284,7 +2495,7 @@ class OcrView(View):
                         entropy3 = maxminnormalization(entropy3,0,1)
                         entropy3_diff = list(np.diff(entropy3))
                         entropy3_diff.insert(0, 0)
-                        interval_dim3 = OcrView.cal_interval(entropy3, 0.9, projection3, projection_thr_strict, projection_thr_easing)
+                        interval_dim3 = OcrView.cal_interval(entropy3, entropy_thr, projection3, projection_thr_strict, projection_thr_easing)
                         for item_dim3 in interval_dim3["text_interval"]:
                             start_dim3 = item_dim3["start"]
                             end_dim3 = item_dim3["end"]
@@ -2314,7 +2525,7 @@ class OcrView(View):
                         entropy3 = maxminnormalization(entropy3, 0, 1)
                         entropy3_diff = list(np.diff(entropy3))
                         entropy3_diff.insert(0, 0)
-                        interval_dim3 = OcrView.cal_interval(entropy3, 0.9, projection3, projection_thr_strict, projection_thr_easing)
+                        interval_dim3 = OcrView.cal_interval(entropy3, entropy_thr, projection3, projection_thr_strict, projection_thr_easing)
                         for item_dim3 in interval_dim3["text_interval"]:
                             start_dim3 = item_dim3["start"]
                             end_dim3 = item_dim3["end"]
@@ -2352,6 +2563,9 @@ class OcrView(View):
                 "stop_pos":interval_dim1["stop_pos"],
                 "delete_info":delete_info,
                 "polygon_add":polygon_add,
+                "projection_thr_easing":projection_thr_easing,
+                "projection_thr_strict":projection_thr_strict,
+                "entropy_thr":entropy_thr,
             }
             result = {"status":"success" , "username":str(request.user), "tip": "粗标注成功", "body":body}
             return JsonResponse(result)
