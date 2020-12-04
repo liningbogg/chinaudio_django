@@ -94,11 +94,10 @@ class OcrView(View):
         super(View, self).__init__()
         self.redis_pool=redis.ConnectionPool(host='localhost', port=6379,db=0, password='1a2a3a', encoding='utf-8')
 
-
-    @classmethod
-    def moveData(self, request):
+    @staticmethod
+    def saveData():
         try:
-            query = PDFImage.objects.all()
+            query = ChineseElem.objects.all()
             all_num = query.count()
             print(all_num)
             delete_count = 0
@@ -106,12 +105,29 @@ class OcrView(View):
                 create_user = elem.create_user_id
                 user_list = ['root', 'pi', 'test']
 
-                if create_user not in user_list:
-                    print(elem.id)
-                    elem.delete()
-                    delete_count = delete_count + 1
-                    continue
-                path = "/home/liningbo/data_chinaudio/pdfimage/%s_%d_%d.png" % ("pdfimage", elem.ocrPDF.id, elem.frame_id)
+                path = "/home/liningbo/data_chinaudio/elemimage/%s_%d.jpg" % ("elemimage", elem.id)
+
+                blob = elem.image_bytes
+                file_blob = open(path,"wb")
+                file_blob.write(blob)
+                file_blob.close()
+                print(path)
+
+        except Exception as e:
+            print(e)
+
+    @staticmethod
+    def moveData():
+        try:
+            query = ChineseElem.objects.all()
+            all_num = query.count()
+            print(all_num)
+            delete_count = 0
+            for elem in query:
+                create_user = elem.create_user_id
+                user_list = ['root', 'pi', 'test']
+
+                path = "/home/liningbo/data_chinaudio/elemimage/%s_%d.jpg" % ("elemimage", elem.id)
                 elem.data_byte=path
                 elem.save()
                 '''blob = elem.data_byte
@@ -120,10 +136,8 @@ class OcrView(View):
                 file_blob.close()'''
                 print(path)
 
-            return HttpResponse("总共%s个数据,删除了%d个数据" % (all_num, delete_count))
         except Exception as e:
             print(e)
-            return HttpResponse("err")
 
     @method_decorator(check_login)
     def get_docs(self, request):
@@ -147,6 +161,8 @@ class OcrView(View):
                         count_user = count_user + count_user_inc
                 data = {"id":ocrdoc.id,"title":ocrdoc.title,"frameNum":ocrdoc.frame_num,"currentframe":ocrdoc.current_frame,"assistnum":ocrdoc.assist_num ,"labelNum":count_all,"userlabelNum":count_user}
                 body.append(data)
+            # 保存img
+            
             result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
@@ -2132,10 +2148,15 @@ class OcrView(View):
     @staticmethod
     def get_rect_info(point_a, point_b):
         try:
+             
              x = min(point_a['x'], point_b['x'])
              x_ = max(point_a['x'], point_b['x'])
              y = min(point_a['y'], point_b['y'])
              y_ = max(point_a['y'], point_b['y'])
+             x = round(x)
+             y = round(y)
+             x_ = round(x_)
+             y_ = round(y_)
              w = abs(x_-x)
              h = abs(y_-y)
              area = w*h
@@ -2518,16 +2539,28 @@ class OcrView(View):
                     polygon.delete()
 
             # rect = OcrView.get_rect_info(points_rotate[0],points_rotate[2])
-            pil_image = Image.open(image.data_byte)
-            gray_image = pil_image.convert('F')
+
+            #pil_image = Image.open(image.data_byte)
+            cv_image = cv.imread(image.data_byte)
+            cv_gray = cv.cvtColor(cv_image, cv.COLOR_RGB2GRAY)
+            #gray_image = pil_image.convert('F')
 
             if abs(rotate_degree)>0.0001:
-                image_rotated = gray_image.rotate(rotate_degree)
+                #image_rotated = gray_image.rotate(rotate_degree)
+                (height, width) = cv_gray.shape
+                print(height, width, rotate_degree)
+                matrotate = cv.getRotationMatrix2D((width*0.5, height*0.5), rotate_degree, 1)
+                image_rotated = cv.warpAffine(cv_gray, matrotate, (width, height))
+                print(image_rotated.shape)
             else:
-                image_rotated = gray_image
+                #image_rotated = gray_image
+                image_rotated = cv_gray
             box = (rect_region['x'],rect_region['y'],rect_region['x_'],rect_region['y_'])
-            region_select = image_rotated.crop(box)
-            array_image = 1-np.asarray(region_select)/255.0  # 选定区域图片数组
+            print(box)
+            region_select = image_rotated[box[1]:box[3],box[0]:box[2]]
+            #region_select = image_rotated.crop(box)
+            print(region_select)
+            array_image = 1-region_select/255.0  # 选定区域图片数组
             # get projection
             if is_vertical is True:
                 projection = array_image.sum(axis=1)/rect_region['w']
@@ -2537,7 +2570,7 @@ class OcrView(View):
                 projection = projection*2
 
             # get entropy
-            gray_mean = (1-np.asarray(gray_image)/255.0).mean()  # 区域灰度平均值
+            gray_mean = (1-cv_gray/255.0).mean()  # 区域灰度平均值
             background_modification = max(0.0000000001,0.16-gray_mean)
             array_image = array_image + background_modification  # Background entropy solidification
             if is_vertical is True:
