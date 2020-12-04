@@ -759,6 +759,63 @@ class OcrView(View):
         return HttpResponse("add pdfs done")
 
 
+    @method_decorator(check_login)
+    def nextpolygoninfo(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            docid = request.GET.get('docid')
+            currentframe = int(request.GET.get('current_frame'))
+            doc = OcrPDF.objects.get(id=docid)
+            image = doc.pdfimage_set.get(frame_id=currentframe)
+            imageuserconf = image.imageuserconf_set.get(create_user_id=str(request.user))
+            non_label_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__gt=imageuserconf.polygon_id_thr)
+            if non_label_set.count() == 0:
+                result = {"status":"failure" , "username":str(request.user), "tip":"没要要进行的标注"}
+                return JsonResponse(result)
+            else:
+                polygon = non_label_set[0]
+                body={
+                    "polygonid": polygon.id,
+                }
+                result = {"status":"success" , "username":str(request.user), "tip": "获取polygonid成功", "body":body}
+                return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def get_elemselected(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            polygonid = int(request.GET.get('polygonid'))
+            polygon_label = OcrLabelingPolygon.objects.get(id=polygonid)
+            elem_selected = []
+            polygonElemSet = polygon_label.polygonelem_set.filter(create_user_id=str(request.user))
+            for polygonElem in polygonElemSet:
+                elem_selected.append(polygonElem.elem.id)
+            body={
+                "elemselected":elem_selected,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取elemselected成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
     @method_decorator(login_required)
     def content_labeling(self, request):
         try:
@@ -1347,11 +1404,32 @@ class OcrView(View):
             map_bytes = mapIO.getvalue()
             return HttpResponse(map_bytes, 'image/jpeg')
 
-
         except Exception as e:
             print(e)
             return None
 
+
+    @method_decorator(check_login)
+    def get_elemset(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            elemset = ChineseElem.objects.filter(create_user_id=str(request.user))
+            elemids=[]
+            for elem in elemset:
+                elemids.append(elem.id)
+            body={
+                "elemset":elemids,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取elemset成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @method_decorator(login_required)
     def get_elem_page(self, request):
@@ -1851,6 +1929,33 @@ class OcrView(View):
         except Exception as e:
             print(e)
             return HttpResponse("err")
+
+    # 设置当前帧
+    @method_decorator(check_login)
+    def set_current(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            page_apointed = int(request.GET.get("page_apointed"))
+            ocr_pdf_id = int(request.GET.get("ocr_pdf"))
+            ocr_pdf=OcrPDF.objects.get(id=ocr_pdf_id)
+            if str(request.user) == ocr_pdf.create_user_id:
+                ocr_pdf.current_frame = page_apointed
+                ocr_pdf.save()
+            else:
+                ocr_assist = ocr_pdf.ocrassist_set.get(assist_user_name=str(request.user))
+                ocr_assist.current_frame = page_apointed
+                ocr_assist.save()
+            result = {"status":"success" , "username":str(request.user), "tip": "设置当前页成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
 
     # PDF设置文字方向
     @method_decorator(login_required)
@@ -2415,6 +2520,7 @@ class OcrView(View):
             # rect = OcrView.get_rect_info(points_rotate[0],points_rotate[2])
             pil_image = Image.open(image.data_byte)
             gray_image = pil_image.convert('F')
+
             if abs(rotate_degree)>0.0001:
                 image_rotated = gray_image.rotate(rotate_degree)
             else:

@@ -10,6 +10,7 @@ export default new Vuex.Store({
         AIToolmode:"manual",
         Recommenttip_option:null,
         Messagetip:[],
+        Elemselected:[],
     },
     getters: {
         getAILabelmode(state){
@@ -34,6 +35,16 @@ export default new Vuex.Store({
         getRecommenttip_option(state){
             return state.Recommenttip_option;
         },
+        isElemSelected(state){
+            return function (args) {
+                if(args==null) return false;
+                if(state.Elemselected.indexOf(args)<0){
+                    return false;
+                }else{
+                    return true;
+                }
+            };
+        },
     },
     mutations: {
         setAILabelmode(state, AILabelmode){
@@ -50,6 +61,22 @@ export default new Vuex.Store({
         },
         setRecommenttip_option(state, option){
             state.Recommenttip_option=option;
+        },
+        changeElemSelected(state, elem){
+            let index = state.Elemselected.indexOf(elem);
+            if(index<0){
+                state.Elemselected.push(elem);
+                console.log("push");
+            }else{
+                state.Elemselected.splice(index, 1);
+                console.log("pop");
+            }
+        },
+        initElemSelected(state, elemset){
+            state.Elemselected.splice(0,state.Elemselected.length);
+            for(let elem of elemset){
+                state.Elemselected.push(elem);
+            }
         },
     },
     actions: {

@@ -44,7 +44,7 @@ export default {
                             this.polygonnumuser = polygonnumInfo.polygonnumuser;
                             this.polygonnumall = polygonnumInfo.polygonnumall;
                         }else{
-                            this.msg = "获取标注矩形出错,原因:"+response.data.tip;
+                            this.msg = "获取标注数目出错,原因:"+response.data.tip;
                             console.log(this.msg);
                         }
                     }   
@@ -56,7 +56,7 @@ export default {
     
     mounted() {
         this.docid = this.$route.query.docid;
-        this.timer = setInterval(this.polygonnumFromBackend, 5000);
+        this.timer = setInterval(this.polygonnumFromBackend, 100);
     },
     watch: {
         currentframe:{

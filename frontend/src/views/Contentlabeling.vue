@@ -1,38 +1,29 @@
 <template>
     <div class="main">
         <div id="title">
-            OCR标注:{{title}}
+            内容标注:{{title}}
         </div>
         <div id="contentlabeling">
-            <router-link :to="{path:'/Contentlabeling',query: {docid: this.docid, currentframe:this.current_frame, title:this.title}}">内容标注</router-link>
+            <router-link :to="{path:'/Ocrlabeling',query: {docid: this.docid, currentframe:this.current_frame, title:this.title}}">返回</router-link>
         </div>
         <div id="content">
             <!--图像信息-->
             <div id="imageinfo">
-                <imageinfo :tarwidth="tarwidth" :tarheight="tarheight" :currentframe="current_frame"/>
             </div>
             <!--图像标注-->
-            <div id="pageimage" :style="{width:boxwidth}">
-                <ocrailabel :currentframe="current_frame" @adjustDiv="adjustDiv"/>
+            <div id="pageimage">
             </div>
-            <div id="page_navi" :style="{width:boxwidth}">
-                <el-pagination
-                    background
-                    @current-change="handleCurrentChange"
-                    :current-page="current_frame"
-                    :page-sizes="1"
-                    :page-size="1"
-                    layout="total, prev, pager, next, jumper"
-                    :total="framenum">
-                    style="height:100%"
-                </el-pagination>
+            <!-- 偏旁部首列表 -->
+            <div id="elemdisp">
+                <!--分页的elem-->
+                <div id="elempage">
+                    <elemlist :currentframe="currentframe" :polygonid="polygonid"/>
+                </div>
             </div>
-            <div id="tools" :style="{left:toolleft,width:toolwidth}">
+            <div id="tools">
                 <div id="ocrmodediv">
-                    <ocrmode />
                 </div>
                 <div id="processtip">
-                    <messagebox />
                 </div>
                 <div id="recomment">
                     <recommenttip :currentframe="current_frame"/>                    
@@ -47,27 +38,25 @@
 </template>
 
 <script>
-import Ocrailabel from '@/components/Ocrailabel.vue'
 import Ocrmode from '@/components/Ocrmode.vue'
 import Messagebox from '@/components/Messagebox.vue'
 import Recommenttip from '@/components/Recommenttip.vue'
 import Imageinfo from '@/components/Imageinfo.vue'
+import Elemlist from '@/components/Elemlist.vue'
 
 export default {
-    name: 'Ocrlabeling',
+    name: 'Contentlabeling',
     components:{
-        Ocrailabel,
         Ocrmode,
         Messagebox,
         Recommenttip,
         Imageinfo,
+        Elemlist,
     },
     data() {
         return {
             title:null,
-            docid:null,
             gMap:null,
-            current_frame:null,
             framenum:null,
             is_vertical_pdf:null,
             msg:null,
@@ -76,77 +65,41 @@ export default {
             toolwidth:"calc(30% - 0.2rem)",
             tarwidth:0,
             tarheight:0,
+            polygonid:null,
+            currentframe:null,
+            docid:null,
         }
     },
     computed:{
     },
     methods:{
-        handleCurrentChange(val){
-           this.current_frame = val; 
-        },
-        nextframeFromBackend(){
-            this.axios.get('ocr/nextframe/?docid='+this.docid).then(
+        nextPolygonFromBackend(){
+            this.axios.get('ocr/nextpolygoninfo/?docid='+this.docid+"&current_frame="+this.currentframe).then(
                 response => {
                     if(response){
                         if(response.data.status==="success"){
-                            this.current_frame = response.data.body.current_frame;
-                            this.framenum = response.data.body.framenum;
-                            this.is_vertical_pdf = response.data.body.is_vertical_pdf;
+                            let polygoninfo = response.data.body;
+                            this.polygonid = polygoninfo.polygonid;
+                            console.log(this.polygonid);
                         }else{
-                            this.msg = "获取待标记帧号出错,原因:"+response.data.tip;
+                            this.msg = "获取标记polygonid出错,原因:"+response.data.tip;
                             console.log(this.msg);
                         }
                     }
                 }
             )
         },
-        //响应子组件div调整"tools"请求
-        adjustDiv(tar_width){
-            console.log(tar_width);
-            //let div_page = document.getElementById("pageimage");
-            let div_total = document.getElementById("content");
-            this.boxwidth = tar_width*100.0/div_total.offsetWidth+"%";
-            this.toolleft = "calc("+tar_width*100.0/div_total.offsetWidth+"% + 0.3rem)";
-            this.toolwidth = "calc("+(100-tar_width*100.0/div_total.offsetWidth)+"% - 0.4rem)";
-            let div_page = document.getElementById("pageimage");
-            this.tarwidth = div_page.offsetWidth;
-            this.tarheight = div_page.offsetHeight;
-
-        },
     },
     mounted(){
-        this.title = this.$route.query.title;
+        this.currentframe = this.$route.query.currentframe;
         this.docid = this.$route.query.docid;
-        console.log(this.title,this.docid);
-        this.nextframeFromBackend();
+        this.title = this.$route.query.title;
+        console.log(this.currentframe, this.docid, this.title);
+        this.nextPolygonFromBackend();
         let div_page = document.getElementById("pageimage");
         this.tarwidth = div_page.offsetWidth;
         this.tarheight = div_page.offsetHeight;
     },
-    watch: {
-        current_frame:{
-            handler:function(value){
-                this.axios.get('ocr/setCurrent/?ocr_pdf='+this.docid+"&page_apointed="+value).then(
-                    response => {
-                        if(response){
-                            if(response.data.status==="success"){
-                                let message={
-                                    "type":"notice",
-                                    "text":"修改当前页为:"+value,
-                                }
-                                this.$store.commit("addMessagetip",message);
-                            }else{
-                                this.msg = "设置待标记帧号出错,原因:"+response.data.tip;
-                                console.log(this.msg);
-                            }
-                        }
-                    }
-                );
-            },
-        },
-
-    },
-
 }
 </script>
 <style scoped lang="less">
@@ -190,24 +143,41 @@ export default {
     position:absolute;
     left:0.1rem;
     top:2.1rem;
-    height:calc(100% - 2.1rem - 32px);
+    width:41rem;
+    height:calc(100% - 2.2rem);
     border-color:red;
     border-width:0.01rem;
     border-style:solid;
 }
+
+/*
 #page_navi{
     position:absolute;
     left:0.1rem;
     top:calc(100% - 30px);
     height:28px;
+}*/
+#elemdisp{
+    position:absolute;
+    left:41.2rem;
+    top:2.1rem;
+    width:45rem;
+    height:calc(100% - 2.2rem);
+}
+#elempage{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:calc(36rem + 32px);
 }
 
 #tools{
     position:absolute;
     top:2.1rem;
-    left:70%;
+    left:86.3rem;
     height:calc(100% - 2.2rem);
-    width:calc(30% - 2.2rem);
+    width:calc(100% - 86.4rem);
     border-color:blue;
     border-width:0.05rem;
     border-style:solid;

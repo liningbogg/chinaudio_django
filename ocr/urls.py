@@ -73,4 +73,8 @@ urlpatterns = [
     path('deletePolygonById/', ocr_view.delete_polygon),
     path('regionDelete/', ocr_view.region_delete),
     path('getPolygonNum/', ocr_view.get_polygon_num),
+    path('setCurrent/', ocr_view.set_current),
+    path('getElemset/', ocr_view.get_elemset),
+    path('nextpolygoninfo/', ocr_view.nextpolygoninfo),
+    path('getElemselected/', ocr_view.get_elemselected),
 ]

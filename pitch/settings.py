@@ -141,7 +141,5 @@ STATICFILES_DIRS = [
     '/home/liningbo/chinaudio_vue/frontend/dist',
     '/home/liningbo/waveFiles/',
 ]
-    
-
 
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)

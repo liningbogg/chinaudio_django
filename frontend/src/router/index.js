@@ -42,6 +42,18 @@ const routes = [
     component: () => import(/* webpackChunkName: "ocrlabeling" */ '../views/Ocrlabeling.vue')
   },
   {
+    path: '/Contentlabeling',
+    name: 'Contentlabeling',
+    meta: {
+        requireAuth: true
+    },
+
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "contentlabeling" */ '../views/Contentlabeling.vue')
+  },
+  {
     path: '/Ocr',
     name: 'Ocr',
     meta: {
