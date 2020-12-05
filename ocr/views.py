@@ -128,12 +128,8 @@ class OcrView(View):
                 user_list = ['root', 'pi', 'test']
 
                 path = "/home/liningbo/data_chinaudio/elemimage/%s_%d.jpg" % ("elemimage", elem.id)
-                elem.data_byte=path
+                elem.image_bytes=path
                 elem.save()
-                '''blob = elem.data_byte
-                file_blob = open(path,"wb")
-                file_blob.write(blob)
-                file_blob.close()'''
                 print(path)
 
         except Exception as e:
@@ -161,7 +157,6 @@ class OcrView(View):
                         count_user = count_user + count_user_inc
                 data = {"id":ocrdoc.id,"title":ocrdoc.title,"frameNum":ocrdoc.frame_num,"currentframe":ocrdoc.current_frame,"assistnum":ocrdoc.assist_num ,"labelNum":count_all,"userlabelNum":count_user}
                 body.append(data)
-            # 保存img
             
             result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
             return JsonResponse(result)
@@ -1192,17 +1187,13 @@ class OcrView(View):
             ocrimage=PDFImage.objects.get(id=request.GET['image_id'])
             tar_width = int(request.GET.get('tar_width'))
             tar_height = int(request.GET.get('tar_height'))
-            pil_image = Image.open(ocrimage.data_byte)
-            width, height = pil_image.size
             (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
-            if abs(image_user_conf.rotate_degree)>0.0001:
-                image_rotated = pil_image.rotate(image_user_conf.rotate_degree)
-            else:
-                image_rotated = pil_image
-            image_resized = image_rotated.resize((tar_width, tar_height), Image.ANTIALIAS)
-            new_imageIO = BytesIO()
-            image_resized.save(new_imageIO,"JPEG")
-            data_byte=new_imageIO.getvalue()
+            image_rotated = OcrView.achieveImageRotated(str(request.user), ocrimage, image_user_conf.rotate_degree, width=tar_width, height=tar_height)
+            print(image_rotated.shape)
+            img_encode = cv.imencode('.jpg', image_rotated)  # 可以看出第二个元素是矩阵 print(img_encode)
+            data_encode = np.array(img_encode[1])
+            str_encode = data_encode.tostring()
+            data_byte = BytesIO(str_encode).getvalue()
             return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
@@ -2496,6 +2487,54 @@ class OcrView(View):
             print(e)
             return HttpResponse("err")
 
+    @staticmethod
+    def achieveImageRotated(user, image, degree_to_rotate, width=0, height=0):
+        rotate_image_key = "image_rotated_resized_%s_%s_%.2f_%d_%d" % (user, image.id, degree_to_rotate,width,height)
+        image_rotate_str = cache.get(rotate_image_key)
+        if image_rotate_str is None:
+            #读取原始图像
+            cv_image = cv.imread(image.data_byte)
+            if height==0 or width==0:
+                height, width = cv_image.shape
+            if abs(degree_to_rotate)>0.000001:
+                matrotate = cv.getRotationMatrix2D((cv_image.shape[1]*0.5, cv_image.shape[0]*0.5), degree_to_rotate, 1)
+                image_rotated = cv.warpAffine(cv_image, matrotate, (cv_image.shape[1], cv_image.shape[0]))
+            else:
+                image_rotated = cv_image
+            image_resized = cv.resize(image_rotated, (width, height), interpolation=cv.INTER_LINEAR)
+            cache.set(rotate_image_key, pickle.dumps(image_resized), nx=True) 
+            cache.expire(rotate_image_key, 3600)
+            print("set cache:%s" % rotate_image_key)
+            return image_rotated
+        else:
+            print("bingo:%s" % rotate_image_key)
+            return pickle.loads(image_rotate_str)
+
+    @staticmethod
+    def achieveGrayImageRotated(user, image, degree_to_rotate, width=0, height=0):
+        rotate_image_key = "gray_image_rotated_resized_%s_%s_%.2f_%d_%d" % (user, image.id, degree_to_rotate,width,height)
+        image_rotate_str = cache.get(rotate_image_key)
+        if image_rotate_str is None:
+            #读取原始图像
+            cv_image = cv.imread(image.data_byte)
+            cv_gray = cv.cvtColor(cv_image, cv.COLOR_RGB2GRAY)
+            if height==0 or width==0:
+                height, width = cv_gray.shape
+            if abs(degree_to_rotate)>0.000001:
+                matrotate = cv.getRotationMatrix2D((cv_gray.shape[1]*0.5, cv_gray.shape[0]*0.5), degree_to_rotate, 1)
+                image_rotated = cv.warpAffine(cv_gray, matrotate, (cv_gray.shape[1], cv_gray.shape[0]))
+            else:
+                image_rotated = cv_gray
+            image_resized = cv.resize(image_rotated, (width, height), interpolation=cv.INTER_LINEAR)
+            cache.set(rotate_image_key, pickle.dumps(image_resized), nx=True) 
+            cache.expire(rotate_image_key, 3600)
+            print("set cache:%s" % rotate_image_key)
+            return image_rotated
+        else:
+            print("bingo:%s" % rotate_image_key)
+            return pickle.loads(image_rotate_str)
+
+
     @method_decorator(login_required)
     def rough_labeling(self, request):
         try:
@@ -2538,27 +2577,11 @@ class OcrView(View):
                     delete_info.append({'polygon_id':polygon.id, 'rect_info':rect_candidate})
                     polygon.delete()
 
-            # rect = OcrView.get_rect_info(points_rotate[0],points_rotate[2])
-
-            #pil_image = Image.open(image.data_byte)
-            cv_image = cv.imread(image.data_byte)
-            cv_gray = cv.cvtColor(cv_image, cv.COLOR_RGB2GRAY)
-            #gray_image = pil_image.convert('F')
-
-            if abs(rotate_degree)>0.0001:
-                #image_rotated = gray_image.rotate(rotate_degree)
-                (height, width) = cv_gray.shape
-                print(height, width, rotate_degree)
-                matrotate = cv.getRotationMatrix2D((width*0.5, height*0.5), rotate_degree, 1)
-                image_rotated = cv.warpAffine(cv_gray, matrotate, (width, height))
-                print(image_rotated.shape)
-            else:
-                #image_rotated = gray_image
-                image_rotated = cv_gray
+            # 应加入缓存机制
+            image_rotated = OcrView.achieveGrayImageRotated(str(request.user), image, rotate_degree, width=0, height=0)
             box = (rect_region['x'],rect_region['y'],rect_region['x_'],rect_region['y_'])
             print(box)
             region_select = image_rotated[box[1]:box[3],box[0]:box[2]]
-            #region_select = image_rotated.crop(box)
             print(region_select)
             array_image = 1-region_select/255.0  # 选定区域图片数组
             # get projection
@@ -2570,7 +2593,7 @@ class OcrView(View):
                 projection = projection*2
 
             # get entropy
-            gray_mean = (1-cv_gray/255.0).mean()  # 区域灰度平均值
+            gray_mean = (1-image_rotated/255.0).mean()  # 区域灰度平均值
             background_modification = max(0.0000000001,0.16-gray_mean)
             array_image = array_image + background_modification  # Background entropy solidification
             if is_vertical is True:

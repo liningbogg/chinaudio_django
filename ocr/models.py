@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.db import models
 from datetime import datetime
 
@@ -120,7 +122,7 @@ class ChineseElem(BaseModel):
     image_bytes: 元素实例图像
     desc: 相关描述
     """
-    image_bytes = models.BinaryField(null=False)
+    image_bytes = models.CharField(max_length=256, null=True)
     height = models.IntegerField(null=False, default=128)
     width = models.IntegerField(null=False, default=128)
     desc_info = models.TextField(null=False, default="")

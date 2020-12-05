@@ -56,13 +56,15 @@ export default {
     
     mounted() {
         this.docid = this.$route.query.docid;
-        this.timer = setInterval(this.polygonnumFromBackend, 100);
+        this.timer = setInterval(this.polygonnumFromBackend, 10000);
     },
     watch: {
         currentframe:{
             handler:function(value){
                 console.log(value);
-                this.polygonnumFromBackend();
+                if(value!=null){
+                    this.polygonnumFromBackend();
+                }
             },
         } 
     },
