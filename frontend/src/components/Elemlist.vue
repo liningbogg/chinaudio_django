@@ -4,11 +4,20 @@
             <div class="elemitem"
                 v-for="item in elemset" :key="item.elemid" :style="item.style" v-show="item.show"
             >
-                <elemimg :elemid="item.elemid" />
+                <elemimg :elemid="item.elemid" :polygonid="polygonid"/>
             </div>
         </div>
         <div id="pagenavi">
-
+            <el-pagination
+                background
+                @current-change="handleCurrentChange"
+                :current-page="pageid"
+                :page-sizes="80"
+                :page-size="80"
+                layout="total, prev, pager, next, jumper"
+                :total="elemnum">
+                style="height:100%"
+            </el-pagination>
         </div>
     </div>
 </template>
@@ -25,7 +34,8 @@ export default {
     data() {
         return {
             elemset:[],
-            pageid:0,
+            elemnum:null,
+            pageid:1,
         }
     },
     mounted() {
@@ -34,6 +44,13 @@ export default {
     beforeDestroy() {
     },
     methods: {
+        handleCurrentChange(val){
+            for(let key in this.elemset){
+                this.pageid = val;
+                let show = Math.floor(key / 80)==(this.pageid-1)?true:false;
+                this.elemset[key].show = show;
+            }
+        },
         elemselectedFromBackend(){
             this.axios.get('ocr/getElemselected/?polygonid='+this.polygonid).then(
                 response => {
@@ -57,14 +74,15 @@ export default {
                     if(response){
                         if(response.data.status==="success"){
                             let elems = response.data.body.elemset;
+                            this.elemnum = elems.length;
+                            let elemset = new Array();
                             for(let key in elems){
                                 let _left = key % 80 % 10 * 4.5;
                                 let _top = Math.floor(key % 80 / 10) * 4.5;
-                                let show = Math.floor(key / 80)==this.pageid?true:false;
-                                this.elemset.push({"elemid":elems[key], "style":"left:"+_left+"rem;top:"+_top+"rem;", "show":show})
+                                let show = Math.floor(key / 80)==(this.pageid-1)?true:false;
+                                elemset.push({"elemid":elems[key], "style":"left:"+_left+"rem;top:"+_top+"rem;", "show":show})
                             }
-
-                            console.log(this.elemset);
+                            this.elemset=elemset;
                         }else{
                             this.msg = "获取elem出错,原因:"+response.data.tip;
                             console.log(this.msg);
@@ -120,9 +138,6 @@ export default {
     top:calc(36rem + 2px);
     height:28px;
     width:100%;
-    border-color:red;
-    border-width:0.01rem;
-    border-style:solid;
 }
 
 </style>

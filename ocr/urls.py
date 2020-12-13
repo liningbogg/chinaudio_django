@@ -19,8 +19,7 @@ urlpatterns = [
     path('labeling/', ocr_view.labeling),
     path('getYolov3Data/', ocr_view.getYolov3Data),
     path('labeling/get_image/', ocr_view.ocr_get_image),
-    path('labeling/get_polygon_image/', ocr_view.get_polygon_image),
-    path('labeling/get_elem_image/', ocr_view.get_elem_image),
+    path('labeling/get_elem_image/', ocr_view.get_elem_image_old),
     path('labeling/direction_select/', ocr_view.direction_select),
     path('labeling/set_filter_size/', ocr_view.set_filter_size),
     path('labeling/set_entropy_thr/', ocr_view.set_entropy_thr),
@@ -77,4 +76,8 @@ urlpatterns = [
     path('getElemset/', ocr_view.get_elemset),
     path('nextpolygoninfo/', ocr_view.nextpolygoninfo),
     path('getElemselected/', ocr_view.get_elemselected),
+    path('getElemImage/', ocr_view.get_elem_image),
+    path('getPolygonImageInfo/', ocr_view.get_polygon_image_info),
+    path('getPolygonImage/', ocr_view.get_polygon_image),
+    path('alter_elem_selected/', ocr_view.alter_elem_selected),
 ]

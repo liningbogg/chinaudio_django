@@ -26,7 +26,7 @@ from django.core.cache import cache
 import pickle
 from pitch.np_encoder import NpEncoder
 from pitch.check_auth import check_login
-from PIL import Image
+# from PIL import Image
 import traceback
 
 
@@ -827,6 +827,64 @@ class OcrView(View):
             return JsonResponse(result)
 
 
+    @method_decorator(check_login)
+    def get_polygon_image_info(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            polygonid = int(request.GET.get('polygonid'))
+            polygon_label = OcrLabelingPolygon.objects.get(id=polygonid)
+            image = polygon_label.pdfImage
+            imageuserconf = image.imageuserconf_set.get(create_user_id=str(request.user))
+            rotate_degree = imageuserconf.rotate_degree
+            image_height = image.height
+            image_width = image.width
+            polygon = str(polygon_label.polygon,'utf-8')
+            points = json.loads(polygon)
+            rect_info = OcrView.get_rect_info(points[0], points[2])
+            rect = (round(rect_info['x']), round(rect_info['y']), round(rect_info['x_']), round(rect_info['y_']))
+            area = (rect_info['x_']-rect_info['x'])*(rect_info['y_']-rect_info['y'])
+            if area <= 0:
+                polygon_label.delete()
+                result = {"status":"notice" , "username":str(request.user), "tip":"面积过小已经被删除，刷新即可"}
+                return JsonResponse(result)
+            # 求取偏移
+            w = abs(points[1]['x']-points[0]['x'])
+            h = abs(points[3]['y']-points[0]['y'])
+            size = max(h, w)
+            size = max(size*2, 9)  # 贡献50%视野
+            padding_size = 128
+            relative_l = (size-w) // 2
+            relative_t = (size-h) // 2
+            relative_r = int(relative_l + w)
+            relative_b = int(relative_t + h)
+            relative_box = (relative_l, relative_t, relative_r, relative_b)
+
+            body={
+                "username":str(request.user),
+                "current_rotate":rotate_degree,
+                "image_height":image_height,
+                "image_width":image_width,  # 图片尺寸
+                "ori_width":size,
+                "ori_height":size,
+                "shiftx":points[0]['x'] - ((size-w) // 2),
+                "shifty":points[0]['y'] - ((size-h) // 2),
+                "shiftxWithPadding":points[0]['x'] - ((size-w) // 2) +padding_size,
+                "shiftyWithPadding":points[0]['y'] - ((size-h) // 2) +padding_size,
+                "relative_box":relative_box,
+                "isDone":polygon_label.labeling_content,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取elemselected成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
     @method_decorator(login_required)
     def content_labeling(self, request):
         try:
@@ -1200,6 +1258,24 @@ class OcrView(View):
             traceback.print_exc()
             return None
 
+
+    @method_decorator(login_required)
+    def get_elem_image(self, request):
+        try:
+            elemid = int(request.GET.get('elemid'))
+            elem = ChineseElem.objects.get(id=elemid)
+            elemimage = OcrView.achieveElemImage(str(request.user), elem)
+            img_encode = cv.imencode('.jpg', elemimage)  # 可以看出第二个元素是矩阵 print(img_encode)
+            data_encode = np.array(img_encode[1])
+            str_encode = data_encode.tostring()
+            data_byte = BytesIO(str_encode).getvalue()
+            return HttpResponse(data_byte, 'image/jpeg')
+
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+            return None
+
     @method_decorator(login_required)
     def labeling(self, request):
         try:
@@ -1282,19 +1358,19 @@ class OcrView(View):
             return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return None
 
     @method_decorator(login_required)
     def get_polygon_image(self, request):
         try:
-            polygon_id = request.GET.get("polygon_id")
-            image_id = request.GET.get("image_id")
+            polygon_id = request.GET.get("polygonid")
             tar_width = int(request.GET.get("tar_width"))
             tar_height = int(request.GET.get("tar_height"))
             is_extend = str(request.GET.get("is_extend"))
-            ocrimage = PDFImage.objects.get(id=image_id)
             polygon_item = OcrLabelingPolygon.objects.get(id=polygon_id)
+            ocrimage = polygon_item.pdfImage
             points = json.loads(str(polygon_item.polygon, 'utf-8'))
             padding_size = 128
             image_width = ocrimage.width
@@ -1328,7 +1404,7 @@ class OcrView(View):
                 tar_width = int(w // ratio)
                 tar_height = int(h // ratio)
             # 获取旋转过的padding图像
-            rotate_image_key = "%s_%s_%.2f_%d" % (str(request.user), image_id, degree_to_rotate, padding_size)
+            rotate_image_key = "%s_%s_%.2f_%d" % (str(request.user), ocrimage.id, degree_to_rotate, padding_size)
             image_rotate_padding = cache.get(rotate_image_key)
             if image_rotate_padding is None:
                 #读取原始图像
@@ -1358,6 +1434,7 @@ class OcrView(View):
             return HttpResponse(map_bytes, 'image/jpeg')
 
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return None
 
@@ -1412,6 +1489,7 @@ class OcrView(View):
             return HttpResponse(map_bytes, 'image/jpeg')
 
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return None
 
@@ -1496,6 +1574,7 @@ class OcrView(View):
             map_bytes = mapIO.getvalue()
             return HttpResponse(map_bytes, 'image/jpeg')
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return None
 
@@ -1523,11 +1602,12 @@ class OcrView(View):
 
             return HttpResponse(json.dumps(id_set))
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse("err")
 
     @method_decorator(login_required)
-    def get_elem_image(self, request):
+    def get_elem_image_old(self, request):
         try:
             image_id = request.GET.get("image_id")
             ocrimage = PDFImage.objects.get(id=image_id)
@@ -1633,6 +1713,7 @@ class OcrView(View):
             return HttpResponse(character_add)
             
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse("err")
 
@@ -1655,6 +1736,7 @@ class OcrView(View):
 
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
 
@@ -1677,6 +1759,7 @@ class OcrView(View):
             
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
 
@@ -1691,6 +1774,7 @@ class OcrView(View):
                 character_str += character_elem.character
             return HttpResponse(character_str)
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse("err")
 
@@ -1702,6 +1786,7 @@ class OcrView(View):
             return HttpResponse(elem_set.count())
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
 
@@ -1723,6 +1808,7 @@ class OcrView(View):
                 return HttpResponse("ok");
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse(str(e))
 
 
@@ -1741,8 +1827,44 @@ class OcrView(View):
                 image_user_conf.save()
                 return HttpResponse("ok");
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse(str(e))
+
+    @method_decorator(check_login)
+    def alter_elem_selected(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            elem_list = str(request.GET.get('elem_list'))
+            polygonid = str(request.GET.get('polygonid'))
+            elem_list = json.loads(elem_list)
+            polygon = OcrLabelingPolygon.objects.get(id=polygonid)
+            elem_add = []
+            elem_remove = []
+            for elem in elem_list:
+                elemid = elem["elemid"]
+                elemoper = elem["oper"]
+                elem = ChineseElem.objects.get(id=elemid)
+                if elemoper == "add":
+                    PolygonElem(polygon=polygon, elem=elem, create_user_id=str(request.user), desc_info="created_auto").save()
+                    elem_add.append(elemid)
+                else:
+                    PolygonElem.objects.get(polygon=polygon,elem=elem).delete()
+                    elem_remove.append(elemid)
+            body={
+                "elem_add":elem_add,
+                "elem_remove":elem_remove,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "更新标注内容成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
 
     @method_decorator(login_required)
@@ -1755,6 +1877,7 @@ class OcrView(View):
             PolygonElem(polygon=polygon, elem=elem, create_user_id=str(request.user), desc_info="created_auto").save()
             return HttpResponse("ok")
         except Exception as e:
+            traceback.print_exc()
             return HttpResponse(str(e))
 
 
@@ -1769,6 +1892,7 @@ class OcrView(View):
 
             return HttpResponse("ok")
         except Exception as e:
+            traceback.print_exc()
             return HttpResponse(str(e))
 
 
@@ -1820,6 +1944,7 @@ class OcrView(View):
             return HttpResponse(json.dumps(context))
 
         except Exception as e:
+            traceback.print_exc()
             return HttpResponse("err")
 
     # 设置文字方向
@@ -1836,6 +1961,7 @@ class OcrView(View):
             image_user_conf.save()
             return HttpResponse("ok")
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse("err")
 
@@ -1860,6 +1986,7 @@ class OcrView(View):
             else:
                 return HttpResponse("err")
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse("err")
 
@@ -1879,6 +2006,7 @@ class OcrView(View):
                 return HttpResponse("err")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
             
 
@@ -1897,6 +2025,7 @@ class OcrView(View):
                 return HttpResponse("err")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
 
@@ -1915,6 +2044,7 @@ class OcrView(View):
             image_user_conf.save()
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
 
@@ -1935,6 +2065,7 @@ class OcrView(View):
             return HttpResponse("ok")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
     # 设置当前帧
@@ -1987,6 +2118,7 @@ class OcrView(View):
             return HttpResponse("ok")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
     @method_decorator(login_required)
@@ -2030,6 +2162,7 @@ class OcrView(View):
             return HttpResponse(json.dumps(evaluate_info, cls=NpEncoder))
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
     @staticmethod
@@ -2059,6 +2192,7 @@ class OcrView(View):
             return HttpResponse("ok")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
 
@@ -2134,6 +2268,7 @@ class OcrView(View):
             return HttpResponse(json.dumps(context))
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
     @staticmethod
@@ -2154,6 +2289,7 @@ class OcrView(View):
              return {'x':x, 'y':y, 'x_':x_, 'y_':y_, 'w':w, 'h':h, 'area':area}
         except Exception as e:
             print(e)
+            traceback.print_exc()
 
     # caculate intersection ratio
     @staticmethod
@@ -2168,6 +2304,7 @@ class OcrView(View):
             intersection_ratio_b = area_intersection / (rect_b['area']*1.0)
             return {'ratio_a':intersection_ratio_a, 'ratio_b':intersection_ratio_b, 'area':area_intersection}
         except Exception as e:
+            traceback.print_exc()
             print(rect_a)
             print(rect_b)
             print("cal_intersection_ratio")
@@ -2186,6 +2323,7 @@ class OcrView(View):
             return HttpResponse(count)
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
     
@@ -2203,6 +2341,7 @@ class OcrView(View):
             return HttpResponse("ok")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse(e)
 
     # 修改指定IP的多边形标注
@@ -2219,6 +2358,7 @@ class OcrView(View):
                 item_alter.save()
                 return HttpResponse("ok")
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse(e)
 
@@ -2236,6 +2376,7 @@ class OcrView(View):
                 return HttpResponse("ok")
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse(e)
 
     # 删除指定ip的多边形标注
@@ -2288,6 +2429,7 @@ class OcrView(View):
                 }
                 return HttpResponse(json.dumps(context))
         except Exception as e:
+            traceback.print_exc()
             print(e)
             return HttpResponse(e)
 
@@ -2315,6 +2457,7 @@ class OcrView(View):
             return HttpResponse(json.dumps(delete_info))
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
     @method_decorator(check_login)
@@ -2415,6 +2558,7 @@ class OcrView(View):
             return HttpResponse(json.dumps(merge_labeling_info))
         except Exception as e:
             print(e)
+            traceback.print_exc()
             return HttpResponse("err")
 
 
@@ -2509,6 +2653,27 @@ class OcrView(View):
         else:
             print("bingo:%s" % rotate_image_key)
             return pickle.loads(image_rotate_str)
+
+
+    @staticmethod
+    def achieveElemImage(user, elem):
+        try:
+            elemimage_key = "elemimage_%s_%d" % (user, elem.id)
+            elemimage_str = cache.get(elemimage_key)
+            if elemimage_str is None:
+                #读取原始图像
+                cv_image = cv.imread(elem.image_bytes)
+                cache.set(elemimage_key, pickle.dumps(cv_image), nx=True) 
+                cache.expire(elemimage_key, 3600)
+                print("set cache:%s" % elemimage_key)
+                return cv_image
+            else:
+                print("bingo:%s" % elemimage_key)
+                return pickle.loads(elemimage_str)
+        except Exception as e:
+            traceback.print_exc()
+            print(e)
+
 
     @staticmethod
     def achieveGrayImageRotated(user, image, degree_to_rotate, width=0, height=0):

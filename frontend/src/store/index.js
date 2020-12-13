@@ -11,13 +11,18 @@ export default new Vuex.Store({
         Recommenttip_option:null,
         Messagetip:[],
         Elemselected:[],
+        Contentlabelingmode:"labeling",  // labeling:标注模式;configure:配置模式  内容标注模块
     },
     getters: {
+
         getAILabelmode(state){
             return state.AILabelmode
         },
         getAIToolmode(state){
             return state.AIToolmode
+        },
+        getContentlabelingmode(state){
+            return state.Contentlabelingmode
         },
         getMessagetip(state){
             let tip="";
@@ -53,6 +58,9 @@ export default new Vuex.Store({
         setAIToolmode(state, AIToolmode){
             state.AIToolmode=AIToolmode
         },
+        setContentlabelingmode(state, Contentlabelingmode){
+            state.Contentlabelingmode=Contentlabelingmode
+        },
         addMessagetip(state, Message){
             if(state.Messagetip.length>19){
                 state.Messagetip.shift();
@@ -62,14 +70,19 @@ export default new Vuex.Store({
         setRecommenttip_option(state, option){
             state.Recommenttip_option=option;
         },
-        changeElemSelected(state, elem){
+        changeElemSelected(state, item){
+            let isSelect = item.isSelect;
+            let elem = item.elem
             let index = state.Elemselected.indexOf(elem);
-            if(index<0){
-                state.Elemselected.push(elem);
-                console.log("push");
+            console.log(isSelect, index);
+            if(isSelect==true){
+                if(index<0){
+                    state.Elemselected.push(elem);
+                }
             }else{
-                state.Elemselected.splice(index, 1);
-                console.log("pop");
+                if(index>=0){
+                    state.Elemselected.splice(index, 1);
+                }
             }
         },
         initElemSelected(state, elemset){

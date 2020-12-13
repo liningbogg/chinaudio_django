@@ -4,7 +4,7 @@
             OCR标注:{{title}}
         </div>
         <div id="contentlabeling">
-            <router-link :to="{path:'/Contentlabeling',query: {docid: this.docid, currentframe:this.current_frame, title:this.title}}">内容标注</router-link>
+            <router-link :to="{path:'/Contentlabeling',query: {docid: this.docid,currentframe:this.current_frame, title:this.title}}">内容标注</router-link>
         </div>
         <div id="content">
             <!--图像信息-->
@@ -19,7 +19,7 @@
                 <el-pagination
                     background
                     @current-change="handleCurrentChange"
-                    :current-page="current_frame"
+                    :current-page="current_frame+1"
                     :page-sizes="1"
                     :page-size="1"
                     layout="total, prev, pager, next, jumper"
@@ -82,7 +82,7 @@ export default {
     },
     methods:{
         handleCurrentChange(val){
-           this.current_frame = val; 
+           this.current_frame = val-1; 
         },
         nextframeFromBackend(){
             this.axios.get('ocr/nextframe/?docid='+this.docid).then(

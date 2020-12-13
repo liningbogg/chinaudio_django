@@ -1,5 +1,8 @@
 <template>
     <div id="imageinfo">
+        <div id="currentframe">
+            currentframe:{{currentframe}}
+        </div>
         <div id="tarwidth">
             tarwidth:{{tarwidth}}
         </div>
@@ -78,7 +81,7 @@ export default {
     width:100%;
     height:100%;
 }
-#tarwidth{
+#currentframe{
     position:absolute;
     top:0rem;
     left:0rem;
@@ -88,17 +91,17 @@ export default {
     display: grid;
     align-items: center;
 }
-#tarheight{
+#tarwidth{
     position:absolute;
     top:0rem;
     left:10%;
     width:10%;
-    line-height:100%;
     height:100%;
+    line-height:100%;
     display: grid;
     align-items: center;
 }
-#polygonnumall{
+#tarheight{
     position:absolute;
     top:0rem;
     left:20%;
@@ -108,10 +111,20 @@ export default {
     display: grid;
     align-items: center;
 }
-#polygonnumuser{
+#polygonnumall{
     position:absolute;
     top:0rem;
     left:30%;
+    width:10%;
+    line-height:100%;
+    height:100%;
+    display: grid;
+    align-items: center;
+}
+#polygonnumuser{
+    position:absolute;
+    top:0rem;
+    left:40%;
     width:10%;
     line-height:100%;
     height:100%;

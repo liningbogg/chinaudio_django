@@ -12,6 +12,7 @@
             </div>
             <!--图像标注-->
             <div id="pageimage">
+                <polygonadjust :polygonid="polygonid" />
             </div>
             <!-- 偏旁部首列表 -->
             <div id="elemdisp">
@@ -20,13 +21,15 @@
                     <elemlist :currentframe="currentframe" :polygonid="polygonid"/>
                 </div>
             </div>
+            <!-- 工具页 -->
             <div id="tools">
-                <div id="ocrmodediv">
+                <div id="contentmodediv">
+                    <contentlabelingmode />
                 </div>
                 <div id="processtip">
+                    <messagebox />
                 </div>
                 <div id="recomment">
-                    <recommenttip :currentframe="current_frame"/>                    
                 </div>
                 <div id="rotation">
                 </div>
@@ -43,6 +46,8 @@ import Messagebox from '@/components/Messagebox.vue'
 import Recommenttip from '@/components/Recommenttip.vue'
 import Imageinfo from '@/components/Imageinfo.vue'
 import Elemlist from '@/components/Elemlist.vue'
+import Polygonadjust from '@/components/Polygonadjust.vue'
+import Contentlabelingmode from '@/components/Contentlabelingmode.vue'
 
 export default {
     name: 'Contentlabeling',
@@ -52,6 +57,8 @@ export default {
         Recommenttip,
         Imageinfo,
         Elemlist,
+        Polygonadjust,
+        Contentlabelingmode,
     },
     data() {
         return {
@@ -138,28 +145,23 @@ export default {
     left:0.1rem;
     width:calc(100% - 0.2rem);
     height:2rem;
+    border-color:blue;
+    border-width:0.05rem;
+    border-style:solid;
 }
 #pageimage{
     position:absolute;
     left:0.1rem;
     top:2.1rem;
-    width:41rem;
-    height:calc(100% - 2.2rem);
+    width:30rem;
+    height:30rem;
     border-color:red;
     border-width:0.01rem;
     border-style:solid;
 }
-
-/*
-#page_navi{
-    position:absolute;
-    left:0.1rem;
-    top:calc(100% - 30px);
-    height:28px;
-}*/
 #elemdisp{
     position:absolute;
-    left:41.2rem;
+    left:30.2rem;
     top:2.1rem;
     width:45rem;
     height:calc(100% - 2.2rem);
@@ -175,30 +177,30 @@ export default {
 #tools{
     position:absolute;
     top:2.1rem;
-    left:86.3rem;
+    left:75.3rem;
     height:calc(100% - 2.2rem);
-    width:calc(100% - 86.4rem);
+    width:calc(100% - 75.4rem);
     border-color:blue;
     border-width:0.05rem;
     border-style:solid;
 }
-#ocrmodediv{
+#contentmodediv{
     position:absolute;
     left:0.1rem;
     top:0.1rem;
-    width:calc(50% - 0.2rem);
-    height:calc(24% - 0.2rem);
+    width:calc(100% - 0.2rem);
+    height:2rem;
     border-color:green;
     border-width:0.05rem;
     border-style:solid;
 }
 #processtip{
     position:absolute;
-    left:calc(50% + 0.1rem);
-    top:0.1rem;
-    width:calc(50% - 0.2rem);
-    height:calc(24% - 0.2rem);
-    border-color:green;
+    left:0.1rem;
+    top:2.2rem;
+    width:calc(100% - 0.2rem);
+    height:calc(12% - 0.2rem);
+    border-color:red;
     border-width:0.05rem;
     border-style:solid;
 }
