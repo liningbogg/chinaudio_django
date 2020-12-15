@@ -105,7 +105,7 @@ export default {
             handler:function(value){
                 if(value!=null){
                     console.log("当前polygonid:"+value);
-                    this.elemselectedFromBackend();
+                    //this.elemselectedFromBackend();
                 }
             },
             immediate: true,

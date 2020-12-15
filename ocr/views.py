@@ -2514,11 +2514,61 @@ class OcrView(View):
         ]
         return rect_merged
 
+    @method_decorator(check_login)
+    def merge_labeling(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            polygon_add = None
+            delete_info = []
+            points_rotate_str = request.GET.get("rotate_points_str")
+            points_rotate = json.loads(points_rotate_str)
+            image_id = request.GET.get("image_id")
+            image = PDFImage.objects.get(id=image_id)
+            conf = image.imageuserconf_set.get(create_user_id=str(request.user))
+            w = image.width
+            h = image.height
+            user_polygon_set = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user))  # all label related belonging to this user
+            rect_region = OcrView.get_rect_info(points_rotate[0], points_rotate[2])
+            for polygon in user_polygon_set:
+                points = json.loads(polygon.polygon)
+                OcrView.rotate_points(points,conf.rotate_degree,w,h)
+                rect_candidate = OcrView.get_rect_info(points[0], points[2])
+                intersection = OcrView.cal_intersection_ratio(rect_region, rect_candidate)
+                intersection_ratio = intersection['ratio_b']
+                if intersection_ratio > 0.75:
+                    delete_info.append({'polygon_id':polygon.id, 'rect_info':copy.deepcopy(rect_candidate)})
+                    polygon.delete()
+            if delete_info != []:
+                rect_merged = OcrView.merge_rects(delete_info)
+                OcrView.rotate_points(rect_merged, -conf.rotate_degree, w, h)
+                polygon = OcrLabelingPolygon(pdfImage=image, polygon=json.dumps(rect_merged).encode("utf-8"), create_user_id=str(request.user))
+                polygon.save()
+                polygon_add= {
+                    "image_id":image_id,
+                    "create_user_id":str(request.user),
+                    "polygon_id":polygon.id,
+                    "points":str(polygon.polygon,"utf-8"),
+                }
+            body={
+                "delete_info":delete_info,
+                "polygon_add":polygon_add,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "区域融合成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+            
+
     # 融合选定区域内的标注
     @method_decorator(login_required)
-    def merge_labeling(self, request):
+    def merge_labeling_old(self, request):
         try:
-            delete_info = None
             polygon_add = None
             tip = []
             points_rotate_str = request.GET.get("rotate_points_str")

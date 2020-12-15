@@ -29,7 +29,8 @@
                 <div id="processtip">
                     <messagebox />
                 </div>
-                <div id="recomment">
+                <div id="elemselected">
+                    <elemselected :currentframe="currentframe" :polygonid="polygonid"/>
                 </div>
                 <div id="rotation">
                 </div>
@@ -48,6 +49,7 @@ import Imageinfo from '@/components/Imageinfo.vue'
 import Elemlist from '@/components/Elemlist.vue'
 import Polygonadjust from '@/components/Polygonadjust.vue'
 import Contentlabelingmode from '@/components/Contentlabelingmode.vue'
+import Elemselected from '@/components/Elemselected.vue'
 
 export default {
     name: 'Contentlabeling',
@@ -59,6 +61,7 @@ export default {
         Elemlist,
         Polygonadjust,
         Contentlabelingmode,
+        Elemselected,
     },
     data() {
         return {
@@ -204,12 +207,12 @@ export default {
     border-width:0.05rem;
     border-style:solid;
 }
-#recomment{
+#elemselected{
     position:absolute;
     left:0.1rem;
-    top:calc(24%+ 0.1rem);
+    top:calc(12%+ 2.2rem);
     width:calc(100% - 0.2rem);
-    height:calc(28% - 0.2rem);
+    height: 4.6rem;
 }
 #rotation{
     position:absolute;

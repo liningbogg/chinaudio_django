@@ -194,6 +194,40 @@ export default {
                 }
             ); 
         },
+        /*融合*/
+        merge_labeling(image_id, points, gFeatureLayer, gFetureStyle){
+            let pointsStr=JSON.stringify(points);
+            this.axios.get('ocr/merge_labeling/?image_id='+image_id+"&rotate_points_str="+pointsStr).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            let delete_info = response.data.body.delete_info;
+                            let polygon_add = response.data.body.polygon_add;
+                            let polygon_points = JSON.parse(polygon_add.points);
+                            let polygon_id = polygon_add.polygon_id;
+                            //rotate the label
+                            let rotate=this.current_rotate;
+                            let polygon_rotated = this.rotate_polygon(polygon_points,rotate,this.ori_width,this.ori_height);
+                            //map it into feature layer
+                            let polygon_map = this.img2gdbox_map(polygon_rotated, this.tar_width, this.tar_height, this.ori_width, this.ori_height);
+                            this.add_polygon_disp(gFeatureLayer, gFetureStyle, polygon_map, polygon_id, polygon_add.create_user_id);
+                            for(let elem of delete_info){
+                                //delete feature related
+                                gFeatureLayer.removeFeatureById(elem.polygon_id+"");
+                                //在polygon_dict中移除元素
+                                delete this.polygonList[elem.polygon_id];
+                            }
+
+
+                        }else{
+                            this.msg = "区域融合出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }
+                }
+            );
+        },
+
         /*粗标注*/
         rough_labeling(image_id, points, gFeatureLayer, gFetureStyle){
             let pointsStr=JSON.stringify(points);
@@ -205,7 +239,6 @@ export default {
                             console.log(info_rough);
                             for(let elem of info_rough.delete_info){
                                 //delete feature related
-                                gFeatureLayer.getFeatureById(elem.polygon_id+"");
                                 gFeatureLayer.removeFeatureById(elem.polygon_id+"");
                                 //在polygon_dict中移除元素
                                 delete this.polygonList[elem.polygon_id];
@@ -492,6 +525,11 @@ export default {
                     case "delete":
                     {
                         this.region_delete(image_id, rotate_points, this.gdboxConfigure.get_layer(this.username));
+                        break;
+                    }
+                    case "merge":
+                    {
+                        this.merge_labeling(image_id, rotate_points, this.gdboxConfigure.get_layer(this.username), this.gdboxConfigure.get_style(this.username, false));
                         break;
                     }
 

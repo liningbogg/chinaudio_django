@@ -50,6 +50,9 @@ export default new Vuex.Store({
                 }
             };
         },
+        getElemSelected(state){
+            return state.Elemselected;
+        },
     },
     mutations: {
         setAILabelmode(state, AILabelmode){
