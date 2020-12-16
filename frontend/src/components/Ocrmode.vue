@@ -43,9 +43,18 @@ export default {
     mounted() {
         this.ocrlabelmode=this.$store.getters.getAILabelmode;
         this.ocrtoolmode=this.$store.getters.getAIToolmode;
-        window.addEventListener('keydown', event => {
+        window.addEventListener('keydown', this.capMode, true);
+    },
+    beforeDestroy() {
+        window.removeEventListener('keydown', this.capMode, true);
+    },
+    methods: {
+        capMode(event){
             const e = event||window.event||arguments.callee.caller.arguments[0];
             if(!e) return;
+            if(e.repeat){
+                return ;
+            }
             const {ctrlKey, key} = e;
             if(ctrlKey && key=='f'){
                 if(this.ocrlabelmode=="pan"){
@@ -103,15 +112,7 @@ export default {
                 this.ocrlabelmode="draw";
                 e.preventDefault();
             }
-        });
-    },
-    beforeDestroy() {
-        window.removeEventListener('keydown', event => {
-            event.preventDefault()
-        });
-    },
-    methods: {
-
+        },
     },
     watch: {
         ocrlabelmode:{

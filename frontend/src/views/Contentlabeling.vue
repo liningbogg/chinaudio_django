@@ -9,10 +9,29 @@
         <div id="content">
             <!--图像信息-->
             <div id="imageinfo">
+                <div style="left:0;width:12.5%;height:100%;line-height:100%;position:absolute;top:0;display:grid;align-items:center;">
+                    currentframe:{{currentframe}}
+                </div>
+                <div style="left:12.5%;width:12.5%;height:100%;line-height:100%;position:absolute;top:0;display:grid;align-items:center;">
+                    framenum:{{framenum}}
+                </div>
+                <div style="left:25%;width:12.5%;height:100%;line-height:100%;position:absolute;top:0;display:grid;align-items:center;">
+                    polygonid:{{polygonid}}
+                </div>
+                <div style="left:37.5%;width:12.5%;height:100%;line-height:100%;position:absolute;top:0;display:grid;align-items:center;">
+                    tarwidth:{{tarwidth}}
+                </div>
+                <div style="left:50%;width:12.5%;height:100%;line-height:100%;position:absolute;top:0;display:grid;align-items:center;">
+                    tarheight:{{tarheight}}
+                </div>
             </div>
             <!--图像标注-->
             <div id="pageimage">
                 <polygonadjust :polygonid="polygonid" />
+            </div>
+            <!-- 标注翻页 -->
+            <div id="polygonpagetool">
+                <polygonpagetool :polygonid="polygonid" @nextPolygonFromBackend="nextPolygonFromBackend"/>
             </div>
             <!-- 偏旁部首列表 -->
             <div id="elemdisp">
@@ -32,7 +51,8 @@
                 <div id="elemselected">
                     <elemselected :currentframe="currentframe" :polygonid="polygonid"/>
                 </div>
-                <div id="rotation">
+                <div id="elemassist">
+                    <elemassist :currentframe="currentframe" :polygonid="polygonid"/>
                 </div>
                 <div id="statistic">
                 </div>
@@ -50,6 +70,8 @@ import Elemlist from '@/components/Elemlist.vue'
 import Polygonadjust from '@/components/Polygonadjust.vue'
 import Contentlabelingmode from '@/components/Contentlabelingmode.vue'
 import Elemselected from '@/components/Elemselected.vue'
+import Elemassist from '@/components/Elemassist.vue'
+import Polygonpagetool from '@/components/Polygonpagetool.vue'
 
 export default {
     name: 'Contentlabeling',
@@ -62,6 +84,8 @@ export default {
         Polygonadjust,
         Contentlabelingmode,
         Elemselected,
+        Elemassist,
+        Polygonpagetool,
     },
     data() {
         return {
@@ -90,7 +114,11 @@ export default {
                         if(response.data.status==="success"){
                             let polygoninfo = response.data.body;
                             this.polygonid = polygoninfo.polygonid;
-                            console.log(this.polygonid);
+                            let message={
+                                "type":"notice",
+                                "text":"当前polygonid:"+this.polygonid,
+                            }
+                            this.$store.commit("addMessagetip",message);
                         }else{
                             this.msg = "获取标记polygonid出错,原因:"+response.data.tip;
                             console.log(this.msg);
@@ -102,9 +130,11 @@ export default {
     },
     mounted(){
         this.currentframe = this.$route.query.currentframe;
+        this.framenum = this.$route.query.framenum;
+        this.is_vertical_pdf = this.$route.query.is_vertical_pdf;
+        console.log(this.is_vertical_pdf);
         this.docid = this.$route.query.docid;
         this.title = this.$route.query.title;
-        console.log(this.currentframe, this.docid, this.title);
         this.nextPolygonFromBackend();
         let div_page = document.getElementById("pageimage");
         this.tarwidth = div_page.offsetWidth;
@@ -148,9 +178,6 @@ export default {
     left:0.1rem;
     width:calc(100% - 0.2rem);
     height:2rem;
-    border-color:blue;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #pageimage{
     position:absolute;
@@ -161,6 +188,13 @@ export default {
     border-color:red;
     border-width:0.01rem;
     border-style:solid;
+}
+#polygonpagetool{
+    position:absolute;
+    left:0.1rem;
+    top:34.2rem;
+    width:30rem;
+    height:3rem;
 }
 #elemdisp{
     position:absolute;
@@ -183,9 +217,6 @@ export default {
     left:75.3rem;
     height:calc(100% - 2.2rem);
     width:calc(100% - 75.4rem);
-    border-color:blue;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #contentmodediv{
     position:absolute;
@@ -193,9 +224,6 @@ export default {
     top:0.1rem;
     width:calc(100% - 0.2rem);
     height:2rem;
-    border-color:green;
-    border-width:0.05rem;
-    border-style:solid;
 }
 #processtip{
     position:absolute;
@@ -214,15 +242,12 @@ export default {
     width:calc(100% - 0.2rem);
     height: 4.6rem;
 }
-#rotation{
+#elemassist{
     position:absolute;
     left:0.1rem;
-    top:calc(52%+ 0.1rem);
+    top:calc(12%+ 7rem);
     width:calc(100% - 0.2rem);
-    height:calc(24% - 0.2rem);
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
+    height:7.3rem;
 }
 #statistic{
     position:absolute;
@@ -230,8 +255,5 @@ export default {
     top:calc(76%+ 0.1rem);
     width:calc(100% - 0.2rem);
     height:calc(24% - 0.2rem);
-    border-color:red;
-    border-width:0.05rem;
-    border-style:solid;
 }
 </style>

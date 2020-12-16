@@ -21,7 +21,8 @@ const routes = [
     path: '/Wavelabeling',
     name: 'Wavelabeling',
     meta: {
-        requireAuth: true
+        requireAuth: true,
+        keepAlive: false,
     },
 
     // route level code-splitting
@@ -33,7 +34,8 @@ const routes = [
     path: '/Ocrlabeling',
     name: 'Ocrlabeling',
     meta: {
-        requireAuth: true
+        requireAuth: true,
+        keepAlive: false,
     },
 
     // route level code-splitting
@@ -45,7 +47,8 @@ const routes = [
     path: '/Contentlabeling',
     name: 'Contentlabeling',
     meta: {
-        requireAuth: true
+        requireAuth: true,
+        keepAlive: false,
     },
 
     // route level code-splitting

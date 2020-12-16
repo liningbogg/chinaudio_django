@@ -11,7 +11,6 @@ import math
 from pitch.np_encoder import NpEncoder
 import json
 import redis
-from PIL import Image, ImageOps
 from django.db.models import Max
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
@@ -26,7 +25,6 @@ from django.core.cache import cache
 import pickle
 from pitch.np_encoder import NpEncoder
 from pitch.check_auth import check_login
-# from PIL import Image
 import traceback
 
 
@@ -1247,7 +1245,6 @@ class OcrView(View):
             tar_height = int(request.GET.get('tar_height'))
             (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
             image_rotated = OcrView.achieveImageRotated(str(request.user), ocrimage, image_user_conf.rotate_degree, width=tar_width, height=tar_height)
-            print(image_rotated.shape)
             img_encode = cv.imencode('.jpg', image_rotated)  # 可以看出第二个元素是矩阵 print(img_encode)
             data_encode = np.array(img_encode[1])
             str_encode = data_encode.tostring()
@@ -1404,34 +1401,17 @@ class OcrView(View):
                 tar_width = int(w // ratio)
                 tar_height = int(h // ratio)
             # 获取旋转过的padding图像
-            rotate_image_key = "%s_%s_%.2f_%d" % (str(request.user), ocrimage.id, degree_to_rotate, padding_size)
-            image_rotate_padding = cache.get(rotate_image_key)
-            if image_rotate_padding is None:
-                #读取原始图像
-                pil_image = Image.open(ocrimage.data_byte)
-                width, height = pil_image.size
-                if abs(degree_to_rotate)>0.000001:
-                    image_rotate_padding = pil_image.rotate(degree_to_rotate)
-                else:
-                    image_rotate_padding = pil_image
-                w_l_extend = padding_size
-                w_r_extend = padding_size
-                h_t_extend = padding_size
-                h_b_extend = padding_size
-                # expend
-                image_rotate_padding = ImageOps.expand(image_rotate_padding, border=(w_l_extend, h_t_extend, w_r_extend, h_b_extend) ,fill=0)
-                cache.set(rotate_image_key, pickle.dumps(image_rotate_padding), nx=True) 
-                cache.expire(rotate_image_key, 3600)
-            else:
-                image_rotate_padding = pickle.loads(image_rotate_padding)
-            image_crop = image_rotate_padding.crop(relative_box)
-            image_map = image_crop.resize((tar_width, tar_height), Image.ANTIALIAS)
-
-            # 最终文件流
-            mapIO = BytesIO()
-            image_map.save(mapIO, "JPEG")
-            map_bytes = mapIO.getvalue()
-            return HttpResponse(map_bytes, 'image/jpeg')
+            image_rotated = OcrView.achieveImageRotated(str(request.user), ocrimage, degree_to_rotate, paddingsize=padding_size)
+            # 取框
+            image_crop = image_rotated[relative_box[1]:relative_box[3],relative_box[0]:relative_box[2]]
+            print(relative_box[1], relative_box[3], relative_box[0], relative_box[2])
+            # resize
+            image_map = cv.resize(image_crop, (tar_width, tar_height), interpolation=cv.INTER_LINEAR)
+            img_encode = cv.imencode('.jpg', image_map)  # 可以看出第二个元素是矩阵 print(img_encode)
+            data_encode = np.array(img_encode[1])
+            str_encode = data_encode.tostring()
+            data_byte = BytesIO(str_encode).getvalue()
+            return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
             traceback.print_exc()
@@ -1740,6 +1720,38 @@ class OcrView(View):
             return HttpResponse("err")
 
 
+    @method_decorator(check_login)
+    def get_elem_related(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            characters = request.GET.get("characters")
+            elemrelated = set()
+            for character in characters:
+                if character!= " ":
+                    try:
+                        characterelem_set = CharacterElem.objects.filter(create_user_id = str(request.user), character=character)
+                        for characterelem in characterelem_set:
+                            elemrelated.add(characterelem.elem.id)
+                    except Exception as e:
+                        print(e)
+                        pass
+            elemrelated = list(elemrelated)
+            elemrelated_str = json.dumps(elemrelated, cls=NpEncoder)
+            body={
+                "elemrelated_str":elemrelated_str,
+            }
+            result = {"status":"success" , "username":str(request.user), "tip": "获取字相关偏旁成功", "body":body}
+            return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
     @method_decorator(login_required)
     def delete_character(self, request):
         try:
@@ -1798,8 +1810,6 @@ class OcrView(View):
             polygon_id = request.GET.get("polygon_id")
             image = image_user_conf.image
             id_max = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__lt=polygon_id).aggregate(Max('id'))
-            print(type(id_max))
-            print(id_max)
             if(id_max['id__max'] is None):
                 return HttpResponse("已经是最前边的标注")
             else:
@@ -1810,6 +1820,32 @@ class OcrView(View):
             print(e)
             traceback.print_exc()
             return HttpResponse(str(e))
+
+
+    @method_decorator(check_login)
+    def polygonid_prior(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            polygonid = request.GET.get("polygonid")
+            polygon = OcrLabelingPolygon.objects.get(id=polygonid)
+            image = polygon.pdfImage
+            id_max = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__lt=polygonid).aggregate(Max('id'))
+            if(id_max['id__max'] is None):
+                result = {"status":"failure" , "username":str(request.user), "tip":"已经是最前边的标注"}
+            else:
+                image_user_conf = image.imageuserconf_set.get(create_user_id=str(request.user))
+                image_user_conf.polygon_id_thr=id_max['id__max']-1
+                image_user_conf.save()
+                result = {"status":"success" , "username":str(request.user), "tip": "设置prior成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
 
     @method_decorator(login_required)
@@ -1830,6 +1866,32 @@ class OcrView(View):
             traceback.print_exc()
             print(e)
             return HttpResponse(str(e))
+
+
+    @method_decorator(check_login)
+    def polygonid_next(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            polygonid = request.GET.get("polygonid")
+            polygon = OcrLabelingPolygon.objects.get(id=polygonid)
+            image = polygon.pdfImage
+            id_set_num = image.ocrlabelingpolygon_set.filter(create_user_id=str(request.user), id__gt=polygonid).count()
+            if id_set_num<1:
+                result = {"status":"failure" , "username":str(request.user), "tip":"已经是最后一个标注"}
+            else:
+                image_user_conf = image.imageuserconf_set.get(create_user_id=str(request.user))
+                image_user_conf.polygon_id_thr=polygonid
+                image_user_conf.save()
+                result = {"status":"success" , "username":str(request.user), "tip": "设置prior成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @method_decorator(check_login)
     def alter_elem_selected(self, request):
@@ -2346,7 +2408,7 @@ class OcrView(View):
 
     # 修改指定IP的多边形标注
     @method_decorator(login_required)
-    def alter_polygon_by_id(self, request):
+    def alter_polygon_by_id_old(self, request):
         try:
             polygon_id = request.GET.get("polygon_id")
             points = request.GET.get("points")
@@ -2362,6 +2424,31 @@ class OcrView(View):
             print(e)
             return HttpResponse(e)
 
+    @method_decorator(check_login)
+    def alter_polygon_by_id(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body=None
+            polygonid = request.GET.get("polygonid")
+            points = request.GET.get("points")
+            item_alter = OcrLabelingPolygon.objects.get(id=polygonid)
+            if str(request.user)!=item_alter.create_user_id:
+                result = {"status":"failure" , "username":str(request.user), "tip": "polygon不属于当前用户"}
+                return JsonResponse(result)
+            else:
+                item_alter.polygon = points.encode("utf-8")
+                item_alter.save()
+                body={
+                }
+                result = {"status":"success" , "username":str(request.user), "tip": "更改polygon成功", "body":body}
+                return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     # 删除指定IP的多边形标注
     @method_decorator(login_required)
@@ -2682,26 +2769,30 @@ class OcrView(View):
             return HttpResponse("err")
 
     @staticmethod
-    def achieveImageRotated(user, image, degree_to_rotate, width=0, height=0):
-        rotate_image_key = "image_rotated_resized_%s_%s_%.2f_%d_%d" % (user, image.id, degree_to_rotate,width,height)
+    def achieveImageRotated(user, image, degree_to_rotate, width=0, height=0, paddingsize=0):
+        rotate_image_key = "image_rotated_resized_%s_%s_%.2f_%d_%d_padding(%d)" % (user, image.id, degree_to_rotate,width,height,paddingsize)
         image_rotate_str = cache.get(rotate_image_key)
         if image_rotate_str is None:
             #读取原始图像
             cv_image = cv.imread(image.data_byte)
-            if height==0 or width==0:
-                height, width = cv_image.shape
             if abs(degree_to_rotate)>0.000001:
                 matrotate = cv.getRotationMatrix2D((cv_image.shape[1]*0.5, cv_image.shape[0]*0.5), degree_to_rotate, 1)
                 image_rotated = cv.warpAffine(cv_image, matrotate, (cv_image.shape[1], cv_image.shape[0]))
             else:
                 image_rotated = cv_image
-            image_resized = cv.resize(image_rotated, (width, height), interpolation=cv.INTER_LINEAR)
+            if height==0 or width==0:
+                height, width, deep = cv_image.shape
+                image_resized = image_rotated
+            else:
+                image_resized = cv.resize(image_rotated, (width, height), interpolation=cv.INTER_LINEAR)
+            if paddingsize > 0:
+                image_resized = cv.copyMakeBorder(image_resized,paddingsize,paddingsize,paddingsize,paddingsize,cv.BORDER_CONSTANT,value=[0, 0, 0])
+
             cache.set(rotate_image_key, pickle.dumps(image_resized), nx=True) 
             cache.expire(rotate_image_key, 3600)
             print("set cache:%s" % rotate_image_key)
-            return image_rotated
+            return image_resized
         else:
-            print("bingo:%s" % rotate_image_key)
             return pickle.loads(image_rotate_str)
 
 
@@ -2718,7 +2809,6 @@ class OcrView(View):
                 print("set cache:%s" % elemimage_key)
                 return cv_image
             else:
-                print("bingo:%s" % elemimage_key)
                 return pickle.loads(elemimage_str)
         except Exception as e:
             traceback.print_exc()
@@ -2746,7 +2836,6 @@ class OcrView(View):
             print("set cache:%s" % rotate_image_key)
             return image_rotated
         else:
-            print("bingo:%s" % rotate_image_key)
             return pickle.loads(image_rotate_str)
 
 

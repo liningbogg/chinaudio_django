@@ -4,7 +4,7 @@
             OCR标注:{{title}}
         </div>
         <div id="contentlabeling">
-            <router-link :to="{path:'/Contentlabeling',query: {docid: this.docid,currentframe:this.current_frame, title:this.title}}">内容标注</router-link>
+            <router-link :to="{path:'/Contentlabeling',query: {docid: this.docid,currentframe:this.current_frame, title:this.title, framenum:this.framenum}}" >内容标注</router-link>
         </div>
         <div id="content">
             <!--图像信息-->
@@ -69,7 +69,6 @@ export default {
             gMap:null,
             current_frame:null,
             framenum:null,
-            is_vertical_pdf:null,
             msg:null,
             boxwidth:"calc(70% - 0.2rem)",
             toolleft:"calc(70% + 0.1rem)",
@@ -91,7 +90,6 @@ export default {
                         if(response.data.status==="success"){
                             this.current_frame = response.data.body.current_frame;
                             this.framenum = response.data.body.framenum;
-                            this.is_vertical_pdf = response.data.body.is_vertical_pdf;
                         }else{
                             this.msg = "获取待标记帧号出错,原因:"+response.data.tip;
                             console.log(this.msg);

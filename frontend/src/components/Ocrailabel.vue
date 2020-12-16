@@ -218,7 +218,6 @@ export default {
                                 delete this.polygonList[elem.polygon_id];
                             }
 
-
                         }else{
                             this.msg = "区域融合出错,原因:"+response.data.tip;
                             console.log(this.msg);
@@ -506,7 +505,7 @@ export default {
             this.gdboxConfigure = new GdboxConfigure(this.username, this.gMap);
             this.gMap.setMode('drawRect', gFetureStyle);
             // 图片层实例\添加
-            const gImageLayer = new gDBox.Layer.Image('img', "ocr/getImage/?image_id="+image_id+"&tar_width="+tar_width+"&tar_height="+tar_height, {w: tar_width, h: tar_height}, {zIndex: 1});
+            const gImageLayer = new gDBox.Layer.Image('img', "ocr/getImage/?image_id="+image_id+"&tar_width="+tar_width+"&tar_height="+tar_height+"&time="+new Date().getTime(), {w: tar_width, h: tar_height}, {zIndex: 1});
             this.gMap.addLayer(gImageLayer);
             this.gMap.events.on('geometryDrawDone', (type, points) => {
                 let select_points = this.gdbox2img_map(points, tar_width, tar_height,ori_width,ori_height);

@@ -18,7 +18,7 @@ export default {
             return this.$store.getters.isElemSelected(this.elemid);
         },
         imgpath:function(){
-            return "/ocr/getElemImage/?elemid="+this.elemid;
+            return "/ocr/getElemImage/?elemid="+this.elemid+"&time="+new Date().getTime();
         },
         borderwidth:function(){
             if(this.isChecked==true){

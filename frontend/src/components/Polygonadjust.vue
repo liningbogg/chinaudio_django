@@ -84,7 +84,7 @@ export default {
         delete_polygon_by_id(polygon_id, gFeatureLayer, gMap){
             this.axios.get('ocr/deletePolygonById/?polygon_id='+polygon_id).then(
                 response => {
-                    if(response){var feature_layer = new gDBox.Layer.Feature("{{title}}", {zIndex: 2, transparent: true})
+                    if(response){
                         if(response.data.status==="success"){
                             gFeatureLayer.removeFeatureById(polygon_id+"");
                             gMap.mLayer.removeAllMarkers();
@@ -96,6 +96,32 @@ export default {
                 }
             ); 
         },
+        alter_polygon_by_id(points){
+            let image_points = this.gdbox2img_map(points, this.tar_width, this.tar_height, this.ori_width, this.ori_height);
+            image_points[0]['x'] += this.shiftx;
+            image_points[1]['x'] += this.shiftx;
+            image_points[2]['x'] += this.shiftx;
+            image_points[3]['x'] += this.shiftx;
+            image_points[0]['y'] += this.shifty;
+            image_points[1]['y'] += this.shifty;
+            image_points[2]['y'] += this.shifty;
+            image_points[3]['y'] += this.shifty;
+            let rotate_points = this.rotate_polygon(image_points, -1.0*this.current_rotate, this.image_width, this.image_height);
+            let rotate_points_str = JSON.stringify(rotate_points);
+            this.axios.get('ocr/alterPolygonById/?polygonid='+this.polygonid+'&points='+rotate_points_str).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            console.log(response.data.body);
+                        }else{
+                            this.msg = "更改多边形出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }   
+                }
+            ); 
+
+        },
         add_polygon_disp(gFeatureLayer,gFetureStyle,points, polygon_id, create_user_id){
             // 元素添加展示
             let fea = new gDBox.Feature.Polygon(
@@ -106,6 +132,7 @@ export default {
                     },
                     gFetureStyle
                 );
+            console.log(gFeatureLayer);
             gFeatureLayer.addFeature(fea);
             return fea;
         },
@@ -117,12 +144,8 @@ export default {
             //this.gdboxConfigure = new GdboxConfigure(this.username, this.gMap);
             this.gMap.setMode('drawRect', gFetureStyle);
             // 图片层实例\添加
-            const gImageLayer = new gDBox.Layer.Image('img', "ocr/getPolygonImage/?polygonid="+this.polygonid+"&tar_width="+this.tar_width+"&tar_height="+this.tar_height+"&is_extend=true", {w: this.tar_width, h: this.tar_height}, {zIndex: 1});
+            const gImageLayer = new gDBox.Layer.Image('img', "ocr/getPolygonImage/?polygonid="+this.polygonid+"&tar_width="+this.tar_width+"&tar_height="+this.tar_height+"&is_extend=true&time="+new Date().getTime(), {w: this.tar_width, h: this.tar_height}, {zIndex: 1});
             this.gMap.addLayer(gImageLayer);
-            this.gMap.events.on('geometryEditDone', (type, activeFeature, points) => {
-                activeFeature.update({points});
-                activeFeature.show();
-            });
             let relative_points = [
                 {'x':this.relative_box[0], 'y':this.relative_box[1]},
                 {'x':this.relative_box[2], 'y':this.relative_box[1]},
@@ -130,6 +153,7 @@ export default {
                 {'x':this.relative_box[0], 'y':this.relative_box[3]},
             ];
             let polygon_map = this.img2gdbox_map(relative_points, this.tar_width, this.tar_height, this.ori_width, this.ori_height);
+            console.log(polygon_map);
             // 标注容器
             let feature_layer = new gDBox.Layer.Feature(this.polygonid, {zIndex: 2, transparent: true});
             this.gMap.addLayer(feature_layer);
@@ -149,12 +173,21 @@ export default {
                 this.fea_modify.hide()
                 this.fea_elem.show()
             }
+            this.gMap.events.on('geometryEditDone', (type, feature, points) => {
+                feature.update({points});
+                feature.show();
+                if(feature.data.create_user_id=="modify"){
+                    this.alter_polygon_by_id(points);
+                }
+                if(feature.data.create_user_id=="elem"){
+                }
+            });
 
-            /*this.gMap.events.on('geometryEditing', (type, feature, points) => {var feature_layer = new gDBox.Layer.Feature("{{title}}", {zIndex: 2, transparent: true})
+            /*this.gMap.events.on('geometryEditing', (type, feature, points) => {
                 if (!this.gMap.mLayer) return;
                 const marker = this.gMap.mLayer.getMarkerById(`marker-${feature.id}`);
                 if (!marker) return;
-            var feature_layer = new gDBox.Layer.Feature("{{title}}", {zIndex: 2, transparent: true})    const bounds = gDBox.Util.getBounds(points);
+                const bounds = gDBox.Util.getBounds(points);
                 const leftTopPoint = bounds[0]; // 边界坐上角坐标
                 marker.update({x: leftTopPoint.x, y: leftTopPoint.y});
             });
@@ -191,12 +224,15 @@ export default {
         },
         // 获取image信息，然后调整box大小
         updatebox(){
+            if(this.polygonid==null){
+                return;
+            }
             let div_img=document.getElementById("polygonbox");
             this.tar_width=div_img.offsetWidth;
             this.tar_height=div_img.offsetHeight;
             this.axios.get('ocr/getPolygonImageInfo/?polygonid='+this.polygonid).then(
                 response => {
-                    if(response){var feature_layer = new gDBox.Layer.Feature("{{title}}", {zIndex: 2, transparent: true})
+                    if(response){
                         if(response.data.status==="success"){
                             let imageinfo = response.data.body;
                             if(this.gMap!=null){

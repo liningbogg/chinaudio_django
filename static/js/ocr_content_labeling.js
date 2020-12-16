@@ -652,10 +652,6 @@ function change_check_status(feature_layer, fea, polygon_id){
 function alter_polygon_by_id(polygon_id, points, tar_width, tar_height, ori_width, ori_height, current_rotate, x_shift, y_shift, size_width, size_height){
     var xhr = new XMLHttpRequest();
     image_points = gdbox2img_map(points, tar_width, tar_height,size_width,size_height);
-    console.log(image_points);
-    console.log(current_rotate);
-    console.log(ori_width);
-    console.log(ori_height);
     image_points[0]['x'] += x_shift;
     image_points[0]['y'] += y_shift;
     image_points[1]['x'] += x_shift;

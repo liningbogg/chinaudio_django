@@ -33,7 +33,7 @@ urlpatterns = [
     path('labeling/add_labeling_polygon/', ocr_view.add_labeling_polygon_old),
     path('labeling/delete_all_polygon/', ocr_view.delete_all_polygon),
     path('labeling/entropy_thr_reset/', ocr_view.entropy_thr_reset),
-    path('labeling/alter_polygon_by_id/', ocr_view.alter_polygon_by_id),
+    path('labeling/alter_polygon_by_id/', ocr_view.alter_polygon_by_id_old),
     path('labeling/delete_polygon_by_id/', ocr_view.delete_polygon_by_id),
     path('labeling/delete_region/', ocr_view.delete_region),
     path('labeling/merge_labeling/', ocr_view.merge_labeling_old),
@@ -81,4 +81,8 @@ urlpatterns = [
     path('getPolygonImageInfo/', ocr_view.get_polygon_image_info),
     path('getPolygonImage/', ocr_view.get_polygon_image),
     path('alter_elem_selected/', ocr_view.alter_elem_selected),
+    path('getElemRelated/', ocr_view.get_elem_related),
+    path('polygonidPrior/', ocr_view.polygonid_prior),
+    path('polygonidNext/', ocr_view.polygonid_next),
+    path('alterPolygonById/', ocr_view.alter_polygon_by_id),
 ]

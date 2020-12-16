@@ -116,6 +116,13 @@ class OcrLabelingPolygon(BaseModel):
     labeling_content = models.BooleanField(null=False, default=False)
 
 
+class ElemGroup(BaseModel):
+    name  =  models.CharField(max_length=255, null=False)
+    desc  =  models.CharField(max_length=255, null=False)
+    class Meta:
+        unique_together = ["name", "create_user_id"]
+    
+
 class ChineseElem(BaseModel):
     """
     组成汉字的元素

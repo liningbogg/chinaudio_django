@@ -2,10 +2,10 @@
     <div id="main">
         <div id="labelmode">
             <div id="drawdiv">
-                <el-radio v-model="contentLabelingmode" label="labeling">labeling(ctrl-e)</el-radio>
+                <el-radio v-model="contentLabelingmode" label="labeling">labeling(ctrl+e)</el-radio>
             </div>
             <div id="pandiv">
-                <el-radio v-model="contentLabelingmode" label="configure">configure(ctrl-p)</el-radio>
+                <el-radio v-model="contentLabelingmode" label="configure">configure(ctrl+c)</el-radio>
             </div>
         </div>
         <div id="tip">
@@ -28,7 +28,13 @@ export default {
     },
     mounted() {
         this.contentLabelingmode=this.$store.getters.getContentlabelingmode;
-        window.addEventListener('keydown', event => {
+        window.addEventListener('keydown', this.capMode, true);
+    },
+    beforeDestroy() {
+        window.removeEventListener('keydown', this.capMode, true);
+    },
+    methods: {
+        capMode(event){
             const e = event||window.event||arguments.callee.caller.arguments[0];
             if(!e) return;
             const {ctrlKey, key} = e;
@@ -40,15 +46,7 @@ export default {
                 this.contentLabelingmode="configure";
                 e.preventDefault();
             }
-        });
-    },
-    beforeDestroy() {
-        window.removeEventListener('keydown', event => {
-            event.preventDefault()
-        });
-    },
-    methods: {
-
+        },
     },
     watch: {
         contentLabelingmode:{
