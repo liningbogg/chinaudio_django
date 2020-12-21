@@ -96,6 +96,24 @@ export default {
                 }
             ); 
         },
+        updateelemregion(points){
+            let image_points = this.gdbox2img_map(points, this.tar_width, this.tar_height, this.ori_width, this.ori_height);
+            image_points[0]['x'] += this.shiftxWithPadding;
+            image_points[1]['x'] += this.shiftxWithPadding;
+            image_points[2]['x'] += this.shiftxWithPadding;
+            image_points[3]['x'] += this.shiftxWithPadding;
+            image_points[0]['y'] += this.shiftyWithPadding;
+            image_points[1]['y'] += this.shiftyWithPadding;
+            image_points[2]['y'] += this.shiftyWithPadding;
+            image_points[3]['y'] += this.shiftyWithPadding;
+            let image_points_str = JSON.stringify(image_points);
+            let roi={
+                "image_points_str":image_points_str,
+                "current_rotate":this.current_rotate,
+                "imageid":this.imageid,
+            };
+            this.$store.commit("setRoi", roi);
+        },
         alter_polygon_by_id(points){
             let image_points = this.gdbox2img_map(points, this.tar_width, this.tar_height, this.ori_width, this.ori_height);
             image_points[0]['x'] += this.shiftx;
@@ -136,7 +154,62 @@ export default {
             gFeatureLayer.addFeature(fea);
             return fea;
         },
-
+        updateDone(isDone){
+            if(isDone){
+                this.fea_modify.style.strokeColor="#00ff00";
+                this.feature_layer.renew();
+            }else{
+                this.fea_modify.style.strokeColor="#0000ff";
+                this.feature_layer.renew();
+            }
+            this.isDone = isDone;
+        },
+        next(){
+            this.axios.get('ocr/polygonidNext/?polygonid='+this.polygonid).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            this.$emit('nextPolygonFromBackend');
+                        }else{
+                            this.msg = "切换polygon出错,原因:"+response.data.tip;
+                            let message={
+                                "type":"notice",
+                                "text":this.msg,
+                            }
+                            this.$store.commit("addMessagetip",message);
+                        }
+                    }
+                }
+            )
+        },
+        setDone(){
+            if(this.isDone){
+                // 已经标注，直接下一个标注
+                this.next();
+            }else{
+                this.axios.get('ocr/setCheckStatus/?polygonid='+this.polygonid+'&status=true').then(
+                    response => {
+                        if(response){
+                            if(response.data.status==="success"){
+                                console.log(response.data.body);
+                                this.isDone = response.data.body.isDone;
+                                if(this.isDone){
+                                    this.fea_modify.style.strokeColor="#00ff00";
+                                    this.feature_layer.renew();
+                                }else{
+                                    this.fea_modify.style.strokeColor="#0000ff";
+                                    this.feature_layer.renew();
+                                }
+                                this.next();
+                            }else{
+                                this.msg = "更改多边形出错,原因:"+response.data.tip;
+                                console.log(this.msg);
+                            }
+                        }   
+                    }
+                ); 
+            }
+        },
         initMap(){
             const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 1});
             // js声明-容器声明（参数：zoom: 缩放比; {cx: cy:}：初始中心点位置；zoomMax、zoomMin：缩放的比例限制）
@@ -155,17 +228,17 @@ export default {
             let polygon_map = this.img2gdbox_map(relative_points, this.tar_width, this.tar_height, this.ori_width, this.ori_height);
             console.log(polygon_map);
             // 标注容器
-            let feature_layer = new gDBox.Layer.Feature(this.polygonid, {zIndex: 2, transparent: true});
-            this.gMap.addLayer(feature_layer);
+            this.feature_layer = new gDBox.Layer.Feature(this.polygonid, {zIndex: 2, transparent: true});
+            this.gMap.addLayer(this.feature_layer);
             let style_modify = new gDBox.Style({strokeColor: "#0000ff", lineWeight: 1});  // 未标记样式
             let style_modify_done = new gDBox.Style({strokeColor: "#00ff00", lineWeight: 1});  // 已经标记样式
             let style_elem = new gDBox.Style({strokeColor: "#ff0000", lineWeight: 1});  // 偏旁部首配置样式
             if(this.isDone){
-                this.fea_modify = this.add_polygon_disp(feature_layer, style_modify_done, polygon_map, this.polygonid, "modify");
+                this.fea_modify = this.add_polygon_disp(this.feature_layer, style_modify_done, polygon_map, this.polygonid, "modify");
             }else{
-                this.fea_modify = this.add_polygon_disp(feature_layer, style_modify, polygon_map, this.polygonid, "modify");
+                this.fea_modify = this.add_polygon_disp(this.feature_layer, style_modify, polygon_map, this.polygonid, "modify");
             }
-            this.fea_elem = this.add_polygon_disp(feature_layer, style_elem, polygon_map, this.polygonid, "elem");
+            this.fea_elem = this.add_polygon_disp(this.feature_layer, style_elem, polygon_map, this.polygonid, "elem");
             if(this.contentlabelingmode == "labeling"){
                 this.fea_modify.show()
                 this.fea_elem.hide()
@@ -180,8 +253,11 @@ export default {
                     this.alter_polygon_by_id(points);
                 }
                 if(feature.data.create_user_id=="elem"){
+                    // 更新elem位置信息
+                    this.updateelemregion(points);
                 }
             });
+
 
             /*this.gMap.events.on('geometryEditing', (type, feature, points) => {
                 if (!this.gMap.mLayer) return;
@@ -250,6 +326,23 @@ export default {
                             this.shiftxWithPadding = imageinfo.shiftxWithPadding;
                             this.shiftyWithPadding = imageinfo.shiftyWithPadding;
                             this.isDone = imageinfo.isDone;
+                            this.imageid = imageinfo.imageid;
+                            let points = imageinfo.points;
+                            points[0]['x'] += 128;
+                            points[1]['x'] += 128;
+                            points[2]['x'] += 128;
+                            points[3]['x'] += 128;
+                            points[0]['y'] += 128;
+                            points[1]['y'] += 128;
+                            points[2]['y'] += 128;
+                            points[3]['y'] += 128;
+                            let image_points_str = JSON.stringify(points);
+                            let roi={
+                                "image_points_str":image_points_str,
+                                "current_rotate":this.current_rotate,
+                                "imageid":this.imageid,
+                            };
+                            this.$store.commit("setRoi",roi);
                             this.initMap();
                         }else{
                             this.msg = "获取polygon image信息出错,原因:"+response.data.tip;

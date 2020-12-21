@@ -97,6 +97,7 @@ export default {
         },
     },
     beforeDestroy() {
+        this.updateAnchor(this.currentframe);
     },
     methods: {
         //w_box为div原始尺寸
@@ -498,12 +499,34 @@ export default {
             gFeatureLayer.addFeature(fea);
             return fea;
         },
+        alter_polygon_by_id(feature, points){
+            let image_points = this.gdbox2img_map(points, this.tar_width, this.tar_height,this.ori_width, this.ori_height);
+            let rotate_points = this.rotate_polygon(image_points, -1.0*this.current_rotate, this.ori_width, this.ori_height);
+            let rotate_points_str = JSON.stringify(rotate_points);
+            this.axios.get('ocr/alterPolygonById/?polygonid='+feature.id+'&points='+rotate_points_str).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            console.log(response.data.body);
+                        }else{
+                            this.msg = "更改多边形出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }
+                }
+            );
+
+        },
         initMap(image_id, tar_width, tar_height, ori_width, ori_height, zoom_scale, center_x, center_y){
             const gFetureStyle = new gDBox.Style({strokeColor: '#0000FF', lineWeight: 1});
             // js声明-容器声明（参数：zoom: 缩放比; {cx: cy:}：初始中心点位置；zoomMax、zoomMin：缩放的比例限制）
             this.gMap = new gDBox.Map('imagebox', {w: tar_width , zoom: zoom_scale*tar_width, cx: center_x*tar_width, cy: center_y*tar_height, zoomMax: tar_width * 10, zoomMin: tar_width / 10, autoFeatureSelect: true});
             this.gdboxConfigure = new GdboxConfigure(this.username, this.gMap);
-            this.gMap.setMode('drawRect', gFetureStyle);
+            if(this.labelmode=="draw"){
+                this.gMap.setMode("drawRect",gFetureStyle);
+            }else{
+                this.gMap.setMode("pan",gFetureStyle);
+            }
             // 图片层实例\添加
             const gImageLayer = new gDBox.Layer.Image('img', "ocr/getImage/?image_id="+image_id+"&tar_width="+tar_width+"&tar_height="+tar_height+"&time="+new Date().getTime(), {w: tar_width, h: tar_height}, {zIndex: 1});
             this.gMap.addLayer(gImageLayer);
@@ -538,8 +561,13 @@ export default {
 
             });
             this.gMap.events.on('geometryEditDone', (type, activeFeature, points) => {
-                activeFeature.update({points});
-                activeFeature.show();
+                if(activeFeature.data.create_user_id!=this.username){
+                    activeFeature.show();
+                }else{
+                    this.alter_polygon_by_id(activeFeature, points);
+                    activeFeature.update({points});
+                    activeFeature.show();
+                }
             });
             this.gMap.events.on('geometryEditing', (type, feature, points) => {
                 if (!this.gMap.mLayer) return;
@@ -626,12 +654,34 @@ export default {
                 }
             ) 
         },
+        // 更新锚点
+        updateAnchor(currentframe){
+            if(this.docid=="null") return;
+            let center_x = this.gMap.cx/this.tar_width;
+            let center_y = this.gMap.cy/this.tar_height;
+            let zoom_scale = this.gMap.zoom/this.tar_width;
+            this.axios.get('ocr/saveAnchor/?docid='+this.docid+'&currentframe='+currentframe+"&center_x="+center_x+"&center_y="+center_y+"&zoom_scale="+zoom_scale).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            console.log(response.data.body);
+                        }else{
+                            this.msg = "更新出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }
+                }
+            );
+        },
     },
     
     watch: {
         currentframe:{
-            handler:function(value){
-                console.log(value);
+            handler:function(newval, oldval){
+                console.log(newval, oldval);
+                if(this.gMap && oldval!=null){
+                    this.updateAnchor(oldval);
+                }
                 this.adjustbox();
             },
         }, 

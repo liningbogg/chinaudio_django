@@ -382,8 +382,6 @@ class OcrView(View):
             print(e.__traceback__.tb_lineno)
             return HttpResponse("获取yolov3数据失败.")
             
-    # pvz0用户植物大战僵尸数据
-    # 
     def getYolov3Data(self, request):
         try:
             class_type = [
@@ -2074,7 +2072,7 @@ class OcrView(View):
 
     # 更改标注偏旁完成状态
     @method_decorator(login_required)
-    def change_check_status_old(self, request):
+    def change_check_status(self, request):
         try:
             polygon_id = request.GET.get("polygon_id")
             polygon = OcrLabelingPolygon.objects.get(id=polygon_id)
@@ -2095,77 +2093,6 @@ class OcrView(View):
             print(e)
             return HttpResponse("err")
 
-    @method_decorator(check_login)
-    def set_check_status(self, request):
-        """
-        :param request:
-        :return:
-        """
-        try:
-            polygonid = request.GET.get("polygonid")
-            status = request.GET.get("status")
-            polygon = OcrLabelingPolygon.objects.get(id=polygonid)
-            if polygon.create_user_id == str(request.user):
-                if status == "true":
-                    polygon.labeling_content = True
-                    polygon.save()
-                    body = {
-                        "isDone":True,
-                    }
-                    result = {"status":"success" , "username":str(request.user), "tip": "改变标注状态成功", "body":body}
-                    return JsonResponse(result)
-                else:
-                    polygon.labeling_content = False
-                    polygon.save()
-                    body = {
-                        "isDone":False,
-                    }
-                    result = {"status":"success" , "username":str(request.user), "tip": "改变标注状态成功", "body":body}
-                    return JsonResponse(result)
-            else:
-                result = {"status":"failure" , "username":str(request.user), "tip":"标注不属于当前用户"}
-                return JsonResponse(result)
-            
-        except Exception as e:
-            traceback.print_exc()
-            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
-            return JsonResponse(result)
-
-    @method_decorator(check_login)
-    def change_check_status(self, request):
-        """
-        :param request:
-        :return:
-        """
-        try:
-            polygonid = request.GET.get("polygonid")
-            polygon = OcrLabelingPolygon.objects.get(id=polygonid)
-            if polygon.create_user_id == str(request.user):
-                if polygon.labeling_content is False:
-                    polygon.labeling_content = True
-                    polygon.save()
-                    body = {
-                        "isDone":True,
-                    }
-                    result = {"status":"success" , "username":str(request.user), "tip": "改变标注状态成功", "body":body}
-                    return JsonResponse(result)
-
-                if polygon.labeling_content is True:
-                    polygon.labeling_content = False
-                    polygon.save()
-                    body = {
-                        "isDone":False,
-                    }
-                    result = {"status":"success" , "username":str(request.user), "tip": "改变标注状态成功", "body":body}
-                    return JsonResponse(result)
-            else:
-                result = {"status":"failure" , "username":str(request.user), "tip":"标注不属于当前用户"}
-                return JsonResponse(result)
-            
-        except Exception as e:
-            traceback.print_exc()
-            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
-            return JsonResponse(result)
 
     # 设置filter_size
     @method_decorator(login_required)
@@ -2251,6 +2178,25 @@ class OcrView(View):
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
+    @method_decorator(login_required)
+    def ocr_move_page(self, request):
+        try:
+            page_apointed = int(request.GET.get("page_apointed"))
+            ocr_pdf_id = int(request.GET.get("ocr_pdf"))
+            ocr_pdf=OcrPDF.objects.get(id=ocr_pdf_id)
+            if str(request.user) == ocr_pdf.create_user_id:
+                ocr_pdf.current_frame = page_apointed
+                ocr_pdf.save()
+            else:
+                ocr_assist = ocr_pdf.ocrassist_set.get(assist_user_name=str(request.user))
+                ocr_assist.current_frame = page_apointed
+                ocr_assist.save()
+
+            return HttpResponse("ok")
+        except Exception as e:
+            print(e)
+            traceback.print_exc()
+            return HttpResponse("err")
 
     # 设置当前帧
     @method_decorator(check_login)

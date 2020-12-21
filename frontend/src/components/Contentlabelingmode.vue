@@ -2,7 +2,7 @@
     <div id="main">
         <div id="labelmode">
             <div id="drawdiv">
-                <el-radio v-model="contentLabelingmode" label="labeling">labeling(ctrl+e)</el-radio>
+                <el-radio v-model="contentLabelingmode" label="labeling">labeling(ctrl+l)</el-radio>
             </div>
             <div id="pandiv">
                 <el-radio v-model="contentLabelingmode" label="configure">configure(ctrl+c)</el-radio>

@@ -14,6 +14,9 @@ export default {
         }
     },
     computed:{
+        contentlabelingmode:function(){
+            return this.$store.getters.getContentlabelingmode;
+        },
         isChecked:function(){
             return this.$store.getters.isElemSelected(this.elemid);
         },
@@ -41,34 +44,41 @@ export default {
     },
     methods: {
         handleSelect(){
-            let elem_list = new Array();
-            if(this.isChecked == true){
-                elem_list.push({"elemid":this.elemid, "oper":"remove"});
-            }else{
-                elem_list.push({"elemid":this.elemid, "oper":"add"});
-            }
-            this.axios.get('ocr/alter_elem_selected/?polygonid='+this.polygonid+"&elem_list="+JSON.stringify(elem_list)).then(
-                response => {
-                    if(response){
-                        if(response.data.status==="success"){
-                            let alter_info = response.data.body;
-                            let elem_add = alter_info.elem_add;
-                            let elem_remove = alter_info.elem_remove;
-                            console.log(elem_add);
-                            console.log(elem_remove);
-                            for(let elem of elem_add){
-                                this.$store.commit("changeElemSelected", {"elem":elem, "isSelect":true});
-                            }
-                            for(let elem of elem_remove){
-                                this.$store.commit("changeElemSelected", {"elem":elem, "isSelect":false});
-                            }
-                        }else{
-                            this.msg = "增添elem出错,原因:"+response.data.tip;
-                            console.log(this.msg);
-                        }
-                    }   
+            if(this.contentlabelingmode=="labeling"){
+                let elem_list = new Array();
+                if(this.isChecked == true){
+                    elem_list.push({"elemid":this.elemid, "oper":"remove"});
+                }else{
+                    elem_list.push({"elemid":this.elemid, "oper":"add"});
                 }
-            ) 
+                this.axios.get('ocr/alter_elem_selected/?polygonid='+this.polygonid+"&elem_list="+JSON.stringify(elem_list)).then(
+                    response => {
+                        if(response){
+                            if(response.data.status==="success"){
+                                let alter_info = response.data.body;
+                                let elem_add = alter_info.elem_add;
+                                let elem_remove = alter_info.elem_remove;
+                                console.log(elem_add);
+                                console.log(elem_remove);
+                                for(let elem of elem_add){
+                                    this.$store.commit("changeElemSelected", {"elem":elem, "isSelect":true});
+                                }
+                                for(let elem of elem_remove){
+                                    this.$store.commit("changeElemSelected", {"elem":elem, "isSelect":false});
+                                }
+                            }else{
+                                this.msg = "增添elem出错,原因:"+response.data.tip;
+                                console.log(this.msg);
+                            }
+                        }   
+                    }
+                ) 
+                return;
+            }
+            if(this.contentlabelingmode=="configure"){
+                this.$store.commit("setElemtoconfigure", this.elemid);
+                return;
+            }
         },
         ploygonFromBackend(){
             this.axios.get('ocr/getPloygons/?currentframe='+this.currentframe+"&docid="+this.docid).then(

@@ -27,17 +27,23 @@
             </div>
             <!--图像标注-->
             <div id="pageimage">
-                <polygonadjust :polygonid="polygonid" />
+                <polygonadjust :polygonid="polygonid" ref="adjust" @nextPolygonFromBackend="nextPolygonFromBackend"/>
             </div>
             <!-- 标注翻页 -->
             <div id="polygonpagetool">
-                <polygonpagetool :polygonid="polygonid" @nextPolygonFromBackend="nextPolygonFromBackend"/>
+                <polygonpagetool :polygonid="polygonid" @nextPolygonFromBackend="nextPolygonFromBackend" @updateDone="updateDone" @setDone="setDone"/>
             </div>
             <!-- 偏旁部首列表 -->
             <div id="elemdisp">
                 <!--分页的elem-->
                 <div id="elempage">
                     <elemlist :currentframe="currentframe" :polygonid="polygonid"/>
+                </div>
+                <div id="elemcreate">
+                    <elemcreate />
+                </div>
+                <div id="elemconfigure">
+                    <elemconfigure />
                 </div>
             </div>
             <!-- 工具页 -->
@@ -72,6 +78,8 @@ import Contentlabelingmode from '@/components/Contentlabelingmode.vue'
 import Elemselected from '@/components/Elemselected.vue'
 import Elemassist from '@/components/Elemassist.vue'
 import Polygonpagetool from '@/components/Polygonpagetool.vue'
+import Elemconfigure from '@/components/Elemconfigure.vue'
+import Elemcreate from '@/components/Elemcreate.vue'
 
 export default {
     name: 'Contentlabeling',
@@ -86,6 +94,8 @@ export default {
         Elemselected,
         Elemassist,
         Polygonpagetool,
+        Elemconfigure,
+        Elemcreate,
     },
     data() {
         return {
@@ -107,6 +117,12 @@ export default {
     computed:{
     },
     methods:{
+        updateDone(isDone){
+            this.$refs.adjust.updateDone(isDone);
+        },
+        setDone(){
+            this.$refs.adjust.setDone();
+        },
         nextPolygonFromBackend(){
             this.axios.get('ocr/nextpolygoninfo/?docid='+this.docid+"&current_frame="+this.currentframe).then(
                 response => {
@@ -137,8 +153,10 @@ export default {
         this.title = this.$route.query.title;
         this.nextPolygonFromBackend();
         let div_page = document.getElementById("pageimage");
-        this.tarwidth = div_page.offsetWidth;
-        this.tarheight = div_page.offsetHeight;
+        if(div_page){
+            this.tarwidth = div_page.offsetWidth;
+            this.tarheight = div_page.offsetHeight;
+        }
     },
 }
 </script>
@@ -209,6 +227,26 @@ export default {
     top:0;
     width:100%;
     height:calc(36rem + 32px);
+}
+#elemcreate{
+    position:absolute;
+    left:0;
+    top:calc(36rem + 36px);
+    height:calc(50% - 18rem -20px);
+    width:100%;
+    border-color:red;
+    border-width:0.01rem;
+    border-style:solid;
+}
+#elemconfigure{
+    position:absolute;
+    left:0;
+    top:calc(50% + 18rem + 18px);
+    height:calc(50% - 18rem -20px);
+    width:100%;
+    border-color:green;
+    border-width:0.01rem;
+    border-style:solid;
 }
 
 #tools{

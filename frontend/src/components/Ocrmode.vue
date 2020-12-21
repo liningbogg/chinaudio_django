@@ -38,6 +38,7 @@ export default {
             ocrtoolmode:"manual",
         }
     },
+    props: ['currentframe', 'docid'],
     computed() {
     },
     mounted() {
@@ -49,6 +50,23 @@ export default {
         window.removeEventListener('keydown', this.capMode, true);
     },
     methods: {
+        yolo_labeling(){
+            this.axios.get('ocr/yoloLabeling/?docid='+this.docid+"&currentframe="+this.currentframe).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            console.log(response.data.body);
+                            // 通知父组件已经更新标注
+                            this.$emit('refresh');
+                        }else{
+                            this.msg = "yolo labeling出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }
+                }
+            )
+        },
+
         capMode(event){
             const e = event||window.event||arguments.callee.caller.arguments[0];
             if(!e) return;
@@ -110,6 +128,10 @@ export default {
             }
             if(ctrlKey && key=='e'){
                 this.ocrlabelmode="draw";
+                e.preventDefault();
+            }
+            if(ctrlKey && key=='y'){
+                this.yolo_labeling();
                 e.preventDefault();
             }
         },

@@ -13,7 +13,7 @@
             </div>
             <!--图像标注-->
             <div id="pageimage" :style="{width:boxwidth}">
-                <ocrailabel :currentframe="current_frame" @adjustDiv="adjustDiv"/>
+                <ocrailabel :currentframe="current_frame" @adjustDiv="adjustDiv" ref="ailabel"/>
             </div>
             <div id="page_navi" :style="{width:boxwidth}">
                 <el-pagination
@@ -29,7 +29,7 @@
             </div>
             <div id="tools" :style="{left:toolleft,width:toolwidth}">
                 <div id="ocrmodediv">
-                    <ocrmode />
+                    <ocrmode :currentframe="current_frame" :docid="docid" @refresh="refresh"/>
                 </div>
                 <div id="processtip">
                     <messagebox />
@@ -97,6 +97,11 @@ export default {
                     }
                 }
             )
+        },
+        // 刷新显示
+        refresh(){
+            // 通知组件进行刷新
+            this.$refs.ailabel.adjustbox();
         },
         //响应子组件div调整"tools"请求
         adjustDiv(tar_width){

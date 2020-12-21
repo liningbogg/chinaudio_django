@@ -12,6 +12,8 @@ export default new Vuex.Store({
         Messagetip:[],
         Elemselected:[],
         Contentlabelingmode:"labeling",  // labeling:标注模式;configure:配置模式  内容标注模块
+        Elemtoconfigure: null,  // 正要被设置的elem
+        Roi:null,
     },
     getters: {
 
@@ -37,6 +39,9 @@ export default new Vuex.Store({
             }
             return tip;
         },
+        getElemtoconfigure(state){
+            return state.Elemtoconfigure;
+        },
         getRecommenttip_option(state){
             return state.Recommenttip_option;
         },
@@ -49,6 +54,9 @@ export default new Vuex.Store({
                     return true;
                 }
             };
+        },
+        getRoi(state){
+            return state.Roi;
         },
         getElemSelected(state){
             return state.Elemselected;
@@ -70,8 +78,14 @@ export default new Vuex.Store({
             }
             state.Messagetip.push(Message);
         },
+        setElemtoconfigure(state, option){
+            state.Elemtoconfigure=option;
+        },
         setRecommenttip_option(state, option){
             state.Recommenttip_option=option;
+        },
+        setRoi(state, roi){
+            state.Roi=roi;
         },
         changeElemSelected(state, item){
             let isSelect = item.isSelect;

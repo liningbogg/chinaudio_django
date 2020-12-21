@@ -59,6 +59,14 @@ export default {
                 this.next();
                 e.preventDefault();
             }
+            if(ctrlKey && key=='m'){
+                this.changeDone();
+                e.preventDefault();
+            }
+            if(ctrlKey && key=='Enter'){
+                this.setDone();
+                e.preventDefault();
+            }
         },
         prior(){
             this.axios.get('ocr/polygonidPrior/?polygonid='+this.polygonid).then(
@@ -95,6 +103,29 @@ export default {
                     }   
                 }
             ) 
+        },
+        changeDone(){
+            this.axios.get('ocr/changeCheckStatus/?polygonid='+this.polygonid).then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            console.log(response.data.body);
+                            let isDone = response.data.body.isDone;
+                            this.$emit('updateDone',isDone);
+                        }else{
+                            this.msg = "切换polygon状态出错,原因:"+response.data.tip;
+                            let message={
+                                "type":"notice",
+                                "text":this.msg,
+                            }
+                            this.$store.commit("addMessagetip",message);
+                        }
+                    }   
+                }
+            ) 
+        },
+        setDone(){
+            this.$emit("setDone");
         },
 
     },

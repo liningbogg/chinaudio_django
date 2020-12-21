@@ -26,7 +26,6 @@ urlpatterns = [
     path('labeling/save_anchor/', ocr_view.save_anchor),
     path('labeling/get_polygon_statistic/', ocr_view.get_polygon_statistic),
     path('labeling/get_polygon_elem_statistic/', ocr_view.get_polygon_elem_statistic),
-    path('labeling/move_page/', ocr_view.ocr_move_page),
     path('labeling/direction_pdf/', ocr_view.direction_pdf),
     path('labeling/rotate_degree_evaluate/', ocr_view.rotate_degree_evaluate),
     path('labeling/rotate_degree_reset/', ocr_view.rotate_degree_reset),
@@ -85,4 +84,9 @@ urlpatterns = [
     path('polygonidPrior/', ocr_view.polygonid_prior),
     path('polygonidNext/', ocr_view.polygonid_next),
     path('alterPolygonById/', ocr_view.alter_polygon_by_id),
+    path('getSubImage/', ocr_view.get_sub_image),
+    path('yoloLabeling/', ocr_view.yolo_labeling),
+    path('saveAnchor/', ocr_view.save_anchor),
+    path('changeCheckStatus/', ocr_view.change_check_status),
+    path('setCheckStatus/', ocr_view.set_check_status),
 ]
