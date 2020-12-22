@@ -11,6 +11,7 @@ urlpatterns = [
     path('accounts/login/', web_view.login),
     path('accounts/logout/', web_view.logout),
     path('accounts/register/', web_view.register),
+    path('accounts/retrieve/', web_view.retrieve),
     url(r'^captcha', include('captcha.urls')),
     url('^$', web_view.index),
 ]

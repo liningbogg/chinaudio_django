@@ -11,6 +11,8 @@
             <div id="docassist_table">
                 <docassisttable />
             </div>
+            <div id="group">
+            </div>
         </div>
     </div>
 </template>
@@ -53,14 +55,21 @@ export default {
 #doc_table{
     position:absolute;
     left:4rem;
-    width:calc(80% - 4.2rem);
+    width:calc(60% - 4.2rem);
     height:calc(50% - 0.2rem);
 }
 #docassist_table{
     position:absolute;
     left:4rem;
     top:50%;
-    width:calc(80% - 4.2rem);
+    width:calc(60% - 4.2rem);
     height:calc(30% - 0.2rem);
+}
+#group_table{
+    position:absolute;
+    left:calc(60% + 0.1rem);
+    top:0;
+    width:calc(40% - 0.2rem);
+    height:calc(80% - 0.2rem);
 }
 </style>

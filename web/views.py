@@ -8,11 +8,16 @@ from .forms import *
 from web.models import *
 from pitch.check_auth import check_login
 import traceback
+import smtplib
 import jwt
 from django.http import JsonResponse
+from email.mime.text import MIMEText
 
 
 class WebView(View):
+    msg_from = '1214397815@qq.com'  # 发送方邮箱
+    passwd = 'ruzdcenkznfhhijf'  # 填入发送方邮箱的授权码
+    msg_to = '1214397815@qq.com'  # 收件人邮箱
 
     @classmethod
     def index(cls, request):
@@ -46,6 +51,34 @@ class WebView(View):
         except Exception as e:
             traceback.print_exc()
             result = {"status":"failure", "username":username, "tip":"登录失败,服务器内部错误"}
+            return JsonResponse(result)
+
+    def retrieve(self, request):
+        try:
+            body = None
+            username = str(request.GET.get("username"))
+            user = PitchUser.objects.filter(username=username)
+            if user.count()>0:
+                email = user[0].email
+                msg = MIMEText('验证码用于找回密码','plain','utf-8')
+                msg['Subject'] = "找回密码功能验证码"
+                msg['From'] = self.msg_from
+                msg['To'] = email
+                self.sender = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 邮件服务器及端口号
+                self.sender.login(self.msg_from, self.passwd)
+                self.sender.sendmail(self.msg_from, email, msg.as_string())
+
+                email = email[0:5]+"***"+email[-8:]
+                body = {"email": email}
+                result = {"status":"success", "username":str(request.user), "tip":"获取邮箱缩略信息成功", "body":body}
+                return JsonResponse(result)
+            else:
+                result = {"status":"failure", "username":str(request.user), "tip":"用户名不存在"}
+                return JsonResponse(result)
+
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure", "username":str(request.user), "tip":"获取邮箱缩略新信息错误"}
             return JsonResponse(result)
 
     # 用户退出登录
@@ -93,3 +126,4 @@ class WebView(View):
         # 将req 、页面 、以及context{}（要传入html文件中的内容包含在字典里）返回
         return render(request, 'register.html',  {'register_form': form, 'message': message})
 
+    
