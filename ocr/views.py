@@ -98,7 +98,6 @@ class OcrView(View):
         try:
             query = ChineseElem.objects.all()
             all_num = query.count()
-            print(all_num)
             delete_count = 0
             for elem in query:
                 create_user = elem.create_user_id
@@ -133,6 +132,83 @@ class OcrView(View):
 
         except Exception as e:
             print(e)
+
+
+    @method_decorator(check_login)
+    def update_ocrmodel(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            ocrmodelid = int(request.GET.get("id"))
+            desc = request.GET.get("desc")
+            name = request.GET.get("name")
+            pdfselected = json.loads(str(request.GET.get("pdfselected")))
+            ocrmodel = Ocrmodel.objects.get(id=ocrmodelid)
+            ocrmodel.desc = desc
+            ocrmodel.name = name
+            ocrmodel.save()
+            # 删除列表中没有的doc
+            modeldocs = ocrmodel.modeldoc_set.all()
+            for modeldoc in modeldocs:
+                if modeldoc.doc.id not in pdfselected:
+                    modeldoc.delete()
+                else:
+                    pdfselected.remove(modeldoc.doc.id)
+            # 添加不存在的doc
+            for pdf in pdfselected:
+                doc = OcrPDF.objects.get(id=pdf)
+                Modeldoc.objects.create(create_user_id=str(request.user), ocrmodel=ocrmodel, doc=doc)
+            
+            result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+
+    @method_decorator(check_login)
+    def testtmp(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            username = str(request.user)
+            ocrmodel = Ocrmodel.objects.get(name="ddg_doc", create_user_id=str(request.user))
+            elemset = ChineseElem.objects.filter(create_user_id=str(request.user))
+            for elem in elemset:
+                elem.ocrmodel=ocrmodel
+                elem.save()
+
+            result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+    @method_decorator(check_login)
+    def create_ocrmodel(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            username = str(request.user)
+            desc = request.GET.get("desc")
+            name = request.GET.get("name")
+            Ocrmodel.objects.create(name=name, desc=desc, create_user_id=username)
+            result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @method_decorator(check_login)
     def get_docs(self, request):
@@ -1190,6 +1266,33 @@ class OcrView(View):
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
+    @method_decorator(check_login)
+    def get_ocrmodels(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            ocrmodels = Ocrmodel.objects.filter(create_user_id=request.user)
+            docs = OcrPDF.objects.filter(create_user_id=request.user)
+            pdfs=[]
+            for doc in docs:
+                pdfs.append({"id":doc.id, "title":doc.title})
+            body = []
+            for ocrmodel in ocrmodels:
+                modeldocs = ocrmodel.modeldoc_set.all()
+                pdfselected = []
+                for modeldoc in modeldocs:
+                    pdfselected.append(modeldoc.doc.id)
+                ocrmodelitem = {"name":ocrmodel.name, "id":ocrmodel.id, "desc":ocrmodel.desc, "pdfs":pdfs, "pdfselected":pdfselected, "status":"edit"}
+                body.append(ocrmodelitem)
+            body.append({"status":"add"})
+            result = {"status":"success" , "username":str(request.user), "tip": "获取models成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            traceback.print_exc()
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
 
     @method_decorator(check_login)
     def get_imageinfo(self, request):
@@ -1380,17 +1483,12 @@ class OcrView(View):
             # 获取旋转过的padding图像
             if padding=="true":
                 paddingsize=128
-                print("padding")
                 image_rotated = OcrView.achieveImageRotated(str(request.user), ocrimage, current_rotate, paddingsize=paddingsize)
             else:
                 image_rotated = OcrView.achieveImageRotated(str(request.user), ocrimage, current_rotate)
 
             # 取框
-            print("!!!!!!!!!!!!!!1111")
-            print(rect_region)
-            print(image_rotated.shape)
             image_crop = image_rotated[rect_region['y']:rect_region['y_'], rect_region['x']:rect_region['x_']]
-            print(image_crop)
             img_encode = cv.imencode('.jpg', image_crop)  # 可以看出第二个元素是矩阵 print(img_encode)
             data_encode = np.array(img_encode[1])
             str_encode = data_encode.tostring()
@@ -1524,10 +1622,15 @@ class OcrView(View):
         :return:
         """
         try:
-            elemset = ChineseElem.objects.filter(create_user_id=str(request.user))
+            docid = request.GET.get("docid")
+            doc = OcrPDF.objects.get(id=docid)
+            modeldocset = doc.modeldoc_set.all()
             elemids=[]
-            for elem in elemset:
-                elemids.append(elem.id)
+            for modeldoc in modeldocset:
+                ocrmodel = modeldoc.ocrmodel
+                elemset = ocrmodel.chineseelem_set.all()
+                for elem in elemset:
+                    elemids.append(elem.id)
             body={
                 "elemset":elemids,
             }

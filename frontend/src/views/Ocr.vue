@@ -11,7 +11,8 @@
             <div id="docassist_table">
                 <docassisttable />
             </div>
-            <div id="group">
+            <div id="model_table">
+                <ocrmodeltable />
             </div>
         </div>
     </div>
@@ -20,12 +21,14 @@
 <script>
 import Doctable from '@/components/Doctable.vue'
 import Docassisttable from '@/components/Docassisttable.vue'
+import Ocrmodeltable from '@/components/Ocrmodeltable.vue'
 
 export default {
     name: 'Ocr',
     components:{
         Doctable,
         Docassisttable,
+        Ocrmodeltable,
     },
     data() {
         return {
@@ -55,21 +58,21 @@ export default {
 #doc_table{
     position:absolute;
     left:4rem;
-    width:calc(60% - 4.2rem);
+    width:calc(50% - 4.2rem);
     height:calc(50% - 0.2rem);
 }
 #docassist_table{
     position:absolute;
     left:4rem;
     top:50%;
-    width:calc(60% - 4.2rem);
+    width:calc(50% - 4.2rem);
     height:calc(30% - 0.2rem);
 }
-#group_table{
+#model_table{
     position:absolute;
-    left:calc(60% + 0.1rem);
+    left:calc(50% + 0.1rem);
     top:0;
-    width:calc(40% - 0.2rem);
+    width:calc(50% - 0.2rem);
     height:calc(80% - 0.2rem);
 }
 </style>

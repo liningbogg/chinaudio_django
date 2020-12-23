@@ -89,4 +89,8 @@ urlpatterns = [
     path('saveAnchor/', ocr_view.save_anchor),
     path('changeCheckStatus/', ocr_view.change_check_status),
     path('setCheckStatus/', ocr_view.set_check_status),
+    path('getOcrmodels/', ocr_view.get_ocrmodels),
+    path('createOcrmodel/', ocr_view.create_ocrmodel),
+    path('updateOcrmodel/', ocr_view.update_ocrmodel),
+    path('testtmp/', ocr_view.testtmp),
 ]

@@ -27,7 +27,7 @@ import Elemimg from '@/components/Elemimg.vue'
 
 export default {
 	name: "Elemlist",
-    props: ['currentframe', 'polygonid'],
+    props: ['currentframe', 'polygonid', 'docid'],
     components:{
         Elemimg,
     },
@@ -39,7 +39,9 @@ export default {
         }
     },
     mounted() {
-        this.elemFromBackend();
+        this.$nextTick(() => {
+            this.elemFromBackend();
+        });
     },
     beforeDestroy() {
     },
@@ -69,7 +71,7 @@ export default {
             ) 
         },
         elemFromBackend(){
-            this.axios.get('ocr/getElemset/').then(
+            this.axios.get('ocr/getElemset/?docid='+this.docid).then(
                 response => {
                     if(response){
                         if(response.data.status==="success"){

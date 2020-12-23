@@ -13,6 +13,15 @@
                 </template>
             </el-table-column>
         </el-table>
+        <!--
+        <el-button
+            type="text"
+            icon="el-icon-update"
+            @click="handleUpdate()"
+            >
+            更新
+        </el-button>
+        -->
     </div>
 </template>
 
@@ -34,6 +43,21 @@ export default {
     beforeDestroy() {
     },
     methods: {
+        handleUpdate(){
+            this.axios.get('ocr/testtmp/').then(
+                response => {
+                    if(response){
+                        if(response.data.status==="success"){
+                            console.log(response.data.body);
+                        }else{
+                            this.msg = "临时测试出错,原因:"+response.data.tip;
+                            console.log(this.msg);
+                        }
+                    }   
+                }
+            ) 
+            
+        },
         docsassistFromBackend(){
             this.axios.get('ocr/get_docsassist/').then(
                 response => {

@@ -37,7 +37,7 @@
             <div id="elemdisp">
                 <!--分页的elem-->
                 <div id="elempage">
-                    <elemlist :currentframe="currentframe" :polygonid="polygonid"/>
+                    <elemlist :currentframe="currentframe" :polygonid="polygonid" :docid="docid"/>
                 </div>
                 <div id="elemcreate">
                     <elemcreate />
@@ -148,7 +148,6 @@ export default {
         this.currentframe = this.$route.query.currentframe;
         this.framenum = this.$route.query.framenum;
         this.is_vertical_pdf = this.$route.query.is_vertical_pdf;
-        console.log(this.is_vertical_pdf);
         this.docid = this.$route.query.docid;
         this.title = this.$route.query.title;
         this.nextPolygonFromBackend();

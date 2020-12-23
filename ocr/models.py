@@ -116,12 +116,22 @@ class OcrLabelingPolygon(BaseModel):
     labeling_content = models.BooleanField(null=False, default=False)
 
 
-class ElemGroup(BaseModel):
+class Ocrmodel(BaseModel):
     name  =  models.CharField(max_length=255, null=False)
     desc  =  models.CharField(max_length=255, null=False)
     class Meta:
         unique_together = ["name", "create_user_id"]
     
+
+class Modeldoc(BaseModel):
+    """
+    ocrmodel: 对应的模型
+    doc: 对应的文档
+    """
+    ocrmodel = models.ForeignKey('Ocrmodel', on_delete=models.CASCADE) 
+    doc = models.ForeignKey('OcrPDF', on_delete=models.CASCADE) 
+    class Meta:
+        unique_together = ["ocrmodel", "doc"]
 
 class ChineseElem(BaseModel):
     """
@@ -129,6 +139,7 @@ class ChineseElem(BaseModel):
     image_bytes: 元素实例图像
     desc: 相关描述
     """
+    ocrmodel = models.ForeignKey('Ocrmodel', null=True, on_delete=models.CASCADE)
     image_bytes = models.CharField(max_length=256, null=True)
     height = models.IntegerField(null=False, default=128)
     width = models.IntegerField(null=False, default=128)
