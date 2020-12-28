@@ -2,7 +2,7 @@
     <div class="login-wrap">
         <div class="ms-login">
             <div class="ms-title">密码找回</div>
-            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="6rem" class="ms-content">
+            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="8rem" class="ms-content">
                 <el-form-item prop="name" label="用户名">
                     <el-input v-model="ruleForm.name" placeholder="name" readonly>
                     </el-input>
@@ -14,16 +14,21 @@
                         {{pushmessage}}
                     </el-button>
                 </el-form-item>
-                <el-form-item prop="password" label="新密码" v-if="this.ruleForm.verification.length==6">
+                <el-form-item prop="password" label="新密码">
                     <el-input
-                        type="password" placeholder="password" v-model="ruleForm.password" @keyup.enter.native="submitForm('ruleForm')"
+                        type="password" placeholder="password" v-model="ruleForm.password"
+                    >
+                    </el-input>
+                </el-form-item>
+                <el-form-item prop="conform" label="密码确认">
+                    <el-input
+                        type="password" placeholder="password" v-model="ruleForm.conform"
                     >
                     </el-input>
                 </el-form-item>
                 <el-form-item prop="operator" label="">
-                    <el-button type="primary" @click="submitForm('ruleForm')" style="width:100%">提交</el-button>
+                    <el-button type="primary" @click="submitForm('ruleForm')" style="width:100%"> 提交</el-button>
                 </el-form-item>
-                <router-link :to="{path:'/Retrieve',query: {name: this.name}}" v-if="loginfailure">找回密码</router-link>
             </el-form>
         </div>
     </div>
@@ -41,6 +46,7 @@ export default {
             ruleForm: {
                 name: '',
                 password: '',
+                conform: '',
                 verification: '',
             },
             rules: { //验证规则
@@ -53,6 +59,22 @@ export default {
                     { required: true, message: '请输入密码', trigger: 'blur' },
                     { min:6 , max:16, message : '请输入6到16位字母、英文符号或数字',trigger : 'blur'}
                 ],
+                conform:[
+                    { required: true, message: '请确认密码', trigger: 'blur' },
+                    { min:6 , max:16, message : '请输入6到16位字母、英文符号或数字',trigger : 'blur'},
+                    {
+                        validator:(rule,value,callback)=>{
+                            if(value===''){
+                                callback(new Error('请再次输入密码'))
+                            }else if(value!==this.ruleForm.password){
+                                callback(new Error('两次输入密码不一致'))
+                            }else{
+                                callback( )
+                            }
+                        },
+                        trigger: 'blur'
+                    },
+                ],
             }
         }
     },
@@ -60,6 +82,8 @@ export default {
     mounted() {
         this.ruleForm.name = this.$route.query.name;
         this.pushmessage = "获取验证码";
+    },
+    computed:{
     },
     beforeDestroy() {
     },
@@ -97,31 +121,17 @@ export default {
         submitForm(formName) {
             this.$refs[formName].validate((valid) => {
                 if (valid) {
-                    let param = {//可能还有验证码或者其他，这里只写两个
-                        username: this.ruleForm.name,
-                        password: this.ruleForm.password,
-                    }
-                    this.axios.get('web/accounts/login?username='+param.username+'&password='+param.password).then(
+                    this.axios.get('web/accounts/passwordReset?username='+this.ruleForm.name+'&password='+this.ruleForm.password+"&checkcode="+this.ruleForm.verification).then(
                         response => {
                             if(response){
                                 let status = response.data.status;
                                 let tip = response.data.tip;
                                 if(status=="failure"){
-                                    alert("用户名或者密码错误");
-                                    this.loginfailure=true;
+                                    alert("请检查输入项:"+tip);
                                 }
                                 if(status=="success"){
-                                    let token = response.data.token;
-                                    this.$store.state.token = token;
-                                    this.$store.state.username = response.data.username;
-                                    localStorage.setItem("username", response.data.username);
-                                    localStorage.setItem("token", token);
-                                    if(this.$route.query.redirect){
-                                        let redirect = this.$route.query.redirect;
-                                        this.$router.push(redirect);
-                                    }else{
-                                        this.$router.push("/");
-                                    }
+                                    alert("密码已经重置，请重新登录。");
+                                    this.$router.push("/login");
                                 }
                             }
                         }

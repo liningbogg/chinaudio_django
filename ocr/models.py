@@ -169,3 +169,26 @@ class PolygonElem(BaseModel):
     class Meta:
         unique_together = ["polygon", "elem", "create_user_id"]
 
+class Training(BaseModel):
+    trainmodel = models.ForeignKey('Ocrmodel', on_delete=models.CASCADE, null=False) 
+    docs = models.TextField(blank=True, null=False)
+    name  =  models.CharField(max_length=255, null=False)
+    status = models.TextField(blank=True, null=False)
+    isrotated = models.BooleanField(null=False, default=False)
+    isresized = models.BooleanField(null=False, default=False)
+    imagewidth = models.IntegerField(null=False, default=640)
+    imageheight = models.IntegerField(null=False, default=640)
+    fittype  =  models.CharField(max_length=32, null=False, default="contain")
+    issplit = models.BooleanField(null=False, default=False)
+    splitwidth = models.IntegerField(null=False, default=640)
+    splitheight = models.IntegerField(null=False, default=640)
+    splitoverlap = models.FloatField(null=False, default=0.25)  
+    trainsize = models.IntegerField(null=False, default=640)
+    trainbatch = models.IntegerField(null=False, default=8)
+    trainepoch = models.IntegerField(null=False, default=4000)
+    trainscale = models.CharField(null=False, default="yolov5m", max_length=32)
+    device = models.CharField(null=False, default="gpu", max_length=32)
+
+    
+    class Meta:
+        unique_together = ["trainmodel", "name", "create_user_id"]

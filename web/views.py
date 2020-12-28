@@ -12,12 +12,15 @@ import smtplib
 import jwt
 from django.http import JsonResponse
 from email.mime.text import MIMEText
-
+import logging
+import random
+from django.core.cache import cache
 
 class WebView(View):
     msg_from = '1214397815@qq.com'  # 发送方邮箱
     passwd = 'ruzdcenkznfhhijf'  # 填入发送方邮箱的授权码
     msg_to = '1214397815@qq.com'  # 收件人邮箱
+    logger = logging.getLogger('pitch')
 
     @classmethod
     def index(cls, request):
@@ -57,29 +60,68 @@ class WebView(View):
         try:
             body = None
             username = str(request.GET.get("username"))
-            user = PitchUser.objects.filter(username=username)
-            if user.count()>0:
-                email = user[0].email
-                msg = MIMEText('验证码用于找回密码','plain','utf-8')
-                msg['Subject'] = "找回密码功能验证码"
+            users = PitchUser.objects.filter(username=username)
+            if users.count()>0:
+                seed = '23456789abcdefghijkmnpqrstuvwxyz'
+                checkcode = ''.join(random.choice(seed) for _ in range(6))
+                # 将验证信息写入redis
+                retrieve_key = "retrieve_%s" % username
+                cache.set(retrieve_key, checkcode, nx=True)
+                cache.expire(retrieve_key, 300)
+                user=users[0]
+                email = user.email
+                msg = MIMEText('验证码:'+checkcode+'(请不要泄漏给任何人，验证码将用来重设密码, 5分钟内有效。)','plain','utf-8')
+                msg['Subject'] = "古琴数据库验证码"+checkcode
                 msg['From'] = self.msg_from
                 msg['To'] = email
                 self.sender = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 邮件服务器及端口号
                 self.sender.login(self.msg_from, self.passwd)
                 self.sender.sendmail(self.msg_from, email, msg.as_string())
-
                 email = email[0:5]+"***"+email[-8:]
                 body = {"email": email}
                 result = {"status":"success", "username":str(request.user), "tip":"获取邮箱缩略信息成功", "body":body}
                 return JsonResponse(result)
             else:
+                WebView.logger.error(e)
                 result = {"status":"failure", "username":str(request.user), "tip":"用户名不存在"}
                 return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            WebView.logger.error(e)
             result = {"status":"failure", "username":str(request.user), "tip":"获取邮箱缩略新信息错误"}
             return JsonResponse(result)
+
+
+    def password_reset(self, request):
+        try:
+            body = None
+            username = str(request.GET.get("username"))
+            password = str(request.GET.get("password"))
+            checkcode = str(request.GET.get("checkcode"))
+            users = PitchUser.objects.filter(username=username)
+            retrieve_key = "retrieve_%s" % username
+            codepre = cache.get(retrieve_key)
+            if codepre==checkcode:
+                if users.count()>0:
+                    user=users[0]
+                    user.set_password(password)
+                    user.save()
+                    result = {"status":"success", "username":str(request.user), "tip":"获取邮箱缩略信息成功", "body":body}
+                    return JsonResponse(result)
+                else:
+                    WebView.logger.info("用户名不存在")
+                    result = {"status":"failure", "username":str(request.user), "tip":"用户名不存在"}
+                    return JsonResponse(result)
+            else:
+                WebView.logger.info("验证码错误");
+                result = {"status":"failure", "username":str(request.user), "tip":"验证码错误"}
+                return JsonResponse(result)
+
+        except Exception as e:
+            WebView.logger.error(e)
+            result = {"status":"failure", "username":str(request.user), "tip":"获取邮箱缩略新信息错误"}
+            return JsonResponse(result)
+
 
     # 用户退出登录
     def logout(self, request):
@@ -126,4 +168,3 @@ class WebView(View):
         # 将req 、页面 、以及context{}（要传入html文件中的内容包含在字典里）返回
         return render(request, 'register.html',  {'register_form': form, 'message': message})
 
-    

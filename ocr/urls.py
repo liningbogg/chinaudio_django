@@ -58,6 +58,7 @@ urlpatterns = [
     path('content_labeling/update_polygon_id_thr_next/', ocr_view.update_polygon_id_thr_next),
     path('content_labeling/delete_polygon_by_id/', ocr_view.delete_polygon_by_id),
     path('get_docs/', ocr_view.get_docs),
+    path('get_traindocs/', ocr_view.get_traindocs),
     path('get_docsassist/', ocr_view.get_docsassist),
     path('nextframe/', ocr_view.nextframe),
     path('getImageinfo/', ocr_view.get_imageinfo),
@@ -92,5 +93,7 @@ urlpatterns = [
     path('getOcrmodels/', ocr_view.get_ocrmodels),
     path('createOcrmodel/', ocr_view.create_ocrmodel),
     path('updateOcrmodel/', ocr_view.update_ocrmodel),
+    path('getDocframelist/', ocr_view.get_docframelist),
+    path('trainSubmit/', ocr_view.train_submit),
     path('testtmp/', ocr_view.testtmp),
 ]

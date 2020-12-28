@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, FormItem, Input, Table, TableColumn, Radio, Select, Option, Switch, Pagination} from 'element-ui';
+import { Button, Form, FormItem, Input, Table, TableColumn, Radio, Select, Option, Switch, Pagination, Message, MessageBox} from 'element-ui'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import ECharts from "vue-echarts"
@@ -31,6 +31,8 @@ import 'echarts/lib/component/visualMap'
 import 'echarts/lib/component/legend'
 import 'echarts/lib/component/title'
 Vue.component('v-chart', ECharts)
+Vue.prototype.$confirm = MessageBox.confirm;
+Vue.prototype.$message = Message;
 
 axios.interceptors.request.use(config =>{
   /*为请求头对象添加Token验证的Authorization对象，就不用每次都在要传送的字段上加token了*/

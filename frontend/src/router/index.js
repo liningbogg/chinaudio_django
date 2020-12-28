@@ -105,6 +105,17 @@ const routes = [
     component: () => import(/* webpackChunkName: "retrieve" */ '../views/Retrieve.vue')
   },
   {
+    path: '/train',
+    name: 'Train',
+    meta: {
+        requireAuth: true
+    },
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "train" */ '../views/Train.vue')
+  },
+  {
     path: '/about',
     name: 'About',
     // route level code-splitting

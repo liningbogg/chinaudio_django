@@ -27,6 +27,8 @@ import pickle
 from pitch.np_encoder import NpEncoder
 from pitch.check_auth import check_login
 import traceback
+import sys
+import logging
 
 
 # 归一化函数
@@ -88,6 +90,7 @@ def bounding_points(points):
 
 # Create your views here.
 class OcrView(View):
+    logger = logging.getLogger('pitch')
 
     def __init__(self):
         super(View, self).__init__()
@@ -109,29 +112,27 @@ class OcrView(View):
                 file_blob = open(path,"wb")
                 file_blob.write(blob)
                 file_blob.close()
-                print(path)
+                OcrView.logger.info(path)
 
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
 
     @staticmethod
     def moveData():
         try:
             query = ChineseElem.objects.all()
             all_num = query.count()
-            print(all_num)
             delete_count = 0
             for elem in query:
                 create_user = elem.create_user_id
                 user_list = ['root', 'pi', 'test']
-
                 path = "/home/liningbo/data_chinaudio/elemimage/%s_%d.jpg" % ("elemimage", elem.id)
                 elem.image_bytes=path
                 elem.save()
-                print(path)
+                OcrView.logger.info(path)
 
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
 
 
     @method_decorator(check_login)
@@ -165,7 +166,6 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -188,7 +188,7 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
     @method_decorator(check_login)
@@ -206,7 +206,124 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    
+    @method_decorator(check_login)
+    def get_traindocs(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            userid = str(request.user)
+            ocrmodelid = request.GET.get("ocrmodelid")
+            ocrmodel = Ocrmodel.objects.get(id=ocrmodelid)
+            modeldocs = ocrmodel.modeldoc_set.all()
+            # ocrDocList = OcrPDF.objects.filter(create_user_id=userid, is_deleted=False)
+            for modeldoc in modeldocs:
+                count_all = 0
+                count_user = 0
+                ocrdoc = modeldoc.doc
+                assistset = ocrdoc.ocrassist_set.all()
+                assist = []
+                for assistelem in assistset:
+                    assist.append({"id":assistelem.assist_user_name, "value":assistelem.assist_user_name})
+                image_set = PDFImage.objects.filter(ocrPDF=ocrdoc)
+                imageselected = [-2]
+                for image in image_set:
+                    count_all_inc = OcrLabelingPolygon.objects.filter(pdfImage=image).count()
+                    count_all = count_all_inc + count_all
+                    if count_all_inc > 0:
+                        count_user_inc = OcrLabelingPolygon.objects.filter(pdfImage=image, create_user_id = userid).count()
+                        count_user = count_user + count_user_inc
+                        count_checked = OcrLabelingPolygon.objects.filter(pdfImage=image, create_user_id = userid, labeling_content=True).count()
+                        if count_checked>0:
+                            imageselected.append(int(image.frame_id))
+                imageselected.append(100000000)
+                imageselected.sort()
+                frameselected="["
+                startcurrent = 10000000
+                for current in range(1, len(imageselected)):
+                    step = imageselected[current]-imageselected[current-1]
+                    if step>1:
+                        if imageselected[current-1]>startcurrent:
+                            frameselected = frameselected+"-"+str(imageselected[current-1])+","
+                        if imageselected[current-1]==startcurrent:
+                            frameselected = frameselected + ","
+                        if imageselected[current]<1000000:
+                            frameselected = frameselected+str(imageselected[current])
+                            startcurrent = imageselected[current]
+                frameselected = frameselected + "]"
+
+                data = {"id":ocrdoc.id,"title":ocrdoc.title,"frameNum":ocrdoc.frame_num,"currentframe":ocrdoc.current_frame,"assist":assist ,"labelNum":count_all,"userlabelNum":count_user, "frameselected":frameselected, "contented":True}
+                body.append(data)
+            
+            result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            OcrView.logger.error(e)
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+
+    @method_decorator(check_login)
+    def get_docframelist(self, request):
+        """
+        :param request:
+        :return:
+        """
+        try:
+            body = []
+            userid = str(request.user)
+            docid = request.GET.get("docid")
+            assistselect = json.loads(request.GET.get("assistselected"))
+            contented = request.GET.get("contented")=="true"
+            doc = OcrPDF.objects.get(id=docid)
+            image_set = PDFImage.objects.filter(ocrPDF=doc)
+            imageselected=set()
+            imageselected.add(-2)
+            OcrView.logger.info(contented)
+            for image in image_set:
+                if contented:
+                    count_user = OcrLabelingPolygon.objects.filter(pdfImage=image, create_user_id = userid, labeling_content=contented).count()
+                else:
+                    count_user = OcrLabelingPolygon.objects.filter(pdfImage=image, create_user_id = userid).count()
+                if count_user>0:
+                    imageselected.add(int(image.frame_id))
+                for username in assistselect:
+                    if contented:
+                        count_assist = OcrLabelingPolygon.objects.filter(pdfImage=image, create_user_id = username, labeling_content=contented).count()
+                    else:
+                        count_assist = OcrLabelingPolygon.objects.filter(pdfImage=image, create_user_id = username).count()
+                    if count_assist>0:
+                        imageselected.add(int(image.frame_id))
+            OcrView.logger.info(imageselected)
+
+            imageselected = list(imageselected)
+            imageselected.append(100000000)
+            imageselected.sort()
+            frameselected="["
+            startcurrent = 10000000
+            for current in range(1, len(imageselected)):
+                step = imageselected[current]-imageselected[current-1]
+                if step>1:
+                    if imageselected[current-1]>startcurrent:
+                        frameselected = frameselected+"-"+str(imageselected[current-1])+","
+                    if imageselected[current-1]==startcurrent:
+                        frameselected = frameselected + ","
+                    if imageselected[current]<1000000:
+                        frameselected = frameselected+str(imageselected[current])
+                        startcurrent = imageselected[current]
+            frameselected = frameselected + "]"
+            OcrView.logger.info(frameselected)
+            body={"frameselected":frameselected}
+            result = {"status":"success" , "username":str(request.user), "tip": "获取docframes成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -236,7 +353,7 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -268,7 +385,7 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "获取docs成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -302,7 +419,7 @@ class OcrView(View):
             context = {"assist_request_in_set":assist_request_in_set,"assist_request_out_set":assist_request_out_set,"ocr_assist_set":ocr_assist_set,"statistic":statistic}
             return render(request,'ocr_index.html',context)
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
 
 
     @method_decorator(check_login)
@@ -328,7 +445,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -360,8 +477,7 @@ class OcrView(View):
             return HttpResponse(json.dumps(context))
 
         except Exception as e:
-            print(e)
-
+            OcrView.logger.error(e)
 
     @classmethod
     @method_decorator(login_required)
@@ -395,7 +511,7 @@ class OcrView(View):
             context = {"count_all":count_all,"count_user":count_user, "latest_number":latest_number, "latest_distribute": list(latest_distribute)}
             return HttpResponse(json.dumps(context))
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     def getYolov3DataDDG(self, request):
@@ -454,8 +570,7 @@ class OcrView(View):
                     red.rpush("yolov3AchieveTask", json.dumps(args))  # 此处不做重复性检查
             return HttpResponse("/home/liningbo/yolov3/data")
         except Exception as e:
-            print(e)
-            print(e.__traceback__.tb_lineno)
+            OcrView.logger.error(e)
             return HttpResponse("获取yolov3数据失败.")
             
     # pvz0用户植物大战僵尸数据
@@ -532,8 +647,7 @@ class OcrView(View):
                     red.rpush("yolov3AchieveTask", json.dumps(args))  # 此处不做重复性检查
             return HttpResponse("/home/liningbo/yolov3/data")
         except Exception as e:
-            print(e)
-            print(e.__traceback__.tb_lineno)
+            OcrView.logger.error(e)
             return HttpResponse("获取yolov3数据失败.")
 
     def getYolov3DataOld(self, request):
@@ -564,7 +678,7 @@ class OcrView(View):
             shape_size = json.loads(request.GET.get("shape_size"))
             labeling_dict = {}
             polygon_set = OcrLabelingPolygon.objects.filter(create_user_id=username, labeling_content=True)
-            print(polygon_set.count())
+            OcrView.logger.info(polygon_set.count())
             for polygon in polygon_set:
                 elem_set = polygon.polygonelem_set.all()
                 if elem_set.count() == 0:
@@ -612,7 +726,7 @@ class OcrView(View):
                 padding_t = labeling_dict[image]["padding_t"]    
                 ratio = labeling_dict[image]["ratio"]    
                 polygonarr = json.loads(polygon.polygon)
-                print(class_type)
+                OcrView.logger.info(class_type)
                 elem = {
                     "class": classtype, 
                     "box":[
@@ -631,7 +745,7 @@ class OcrView(View):
                     polygon_list = labeling_dict[labeling]["polygon_list"]
                     for polygon in polygon_list:
                         class_index = class_type.index(polygon['class'])
-                        print(class_index)
+                        OcrView.logger.info(class_index)
                         box = polygon['box']
                         line = " %d,%d,%d,%d,%d" % (box[0], box[1], box[2], box[3], class_index)
                         file_train.write(line)
@@ -650,8 +764,7 @@ class OcrView(View):
                     red.rpush("yolov3AchieveTask", json.dumps(args))  # 此处不做重复性检查
             return HttpResponse("/home/liningbo/yolov3/data")
         except Exception as e:
-            print(e)
-            print(e.__traceback__.tb_lineno)
+            OcrView.logger.error(e)
             return HttpResponse("获取yolov3数据失败.")
     
     @classmethod
@@ -673,7 +786,7 @@ class OcrView(View):
                 if assist.ocrPDF in pdfs_dict:
                     pdfs_dict.pop(assist.ocrPDF)
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
         context = {'pdfs': pdfs_dict}
         return render(request, 'ocr_ocrPDF_assist_request.html', context)
 
@@ -692,7 +805,7 @@ class OcrView(View):
                     OcrAssistRequest(owner=owner_name,title=pdf_title,create_user_id=user_id,status="pushed").save()
                     success_str=success_str+"\n    "+owner_name+"/"+pdf_title+";";
                 except Exception as e:
-                    print(e)
+                    OcrView.logger.error(e)
                     fault_str=fault_str+"\n   "+owner_name+"/"+pdf_title+";"
             return HttpResponse(context_str+success_str+fault_str)
         except Exception as e:
@@ -720,7 +833,7 @@ class OcrView(View):
             ocrAssistRequest.status="accepted"
             ocrAssistRequest.save()
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
         finally:
             return redirect('/ocr/index')
 
@@ -742,7 +855,7 @@ class OcrView(View):
             ocrAssistRequest.save()
 
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
         finally:
             return redirect('/ocr/index')
 
@@ -767,9 +880,9 @@ class OcrView(View):
                 ocrassistuser.is_deleted = True
                 ocrassistuser.save()
             else:
-                print(class_type)
+                OcrView.logger.info(class_type)
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
         finally:
             return redirect('/ocr/index')
 
@@ -791,14 +904,15 @@ class OcrView(View):
             ocrAssistRequest.delete()
 
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
         finally:
             return redirect('/ocr/index')
     
     def handle_upload_file_pdf(self, upload_file, path, user_id):
         if not os.path.exists(path):
             os.makedirs(path)
-            print("文件夹已经创建:"+path)
+            OcrView.logger.info("文件夹已经创建:"+path)
+
         file_name = path + upload_file.name
         base_name = upload_file.name.split(".")[0]
         already = OcrPDF.objects.filter(create_user_id=user_id, title=base_name)  # 已经存在的pdf
@@ -827,10 +941,11 @@ class OcrView(View):
                 red.rpush("pdfUnpackTask", json.dumps(args))  # 此处不做重复性检查
 
             except Exception as e:
-                print(e)
+                OcrView.logger.error(e)
                 return "err"
         else:
             print(base_name + " already existed")
+            OcrView.logger.warning(base_name + " already existed")
             return "err"
 
 
@@ -873,7 +988,7 @@ class OcrView(View):
                 return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -899,7 +1014,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -961,7 +1076,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1107,7 +1222,7 @@ class OcrView(View):
                 }
                 return render(request, 'ocr_content_labeling.html', context)
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
             return render(request, 'ocr_content_labeling.html',None)
 
     @method_decorator(check_login)
@@ -1135,7 +1250,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1166,7 +1281,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1198,7 +1313,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1230,7 +1345,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1262,7 +1377,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1290,7 +1405,7 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "获取models成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1341,7 +1456,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1354,14 +1469,14 @@ class OcrView(View):
             tar_height = int(request.GET.get('tar_height'))
             (image_user_conf,isCreate) = ocrimage.imageuserconf_set.get_or_create(create_user_id=str(request.user),defaults={"rotate_degree":0})
             image_rotated = OcrView.achieveImageRotated(str(request.user), ocrimage, image_user_conf.rotate_degree, width=tar_width, height=tar_height)
-            img_encode = cv.imencode('.jpg', image_rotated)  # 可以看出第二个元素是矩阵 print(img_encode)
+            img_encode = cv.imencode('.jpg', image_rotated)  # 可以看出第二个元素是矩阵 
             data_encode = np.array(img_encode[1])
             str_encode = data_encode.tostring()
             data_byte = BytesIO(str_encode).getvalue()
             return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return None
 
 
@@ -1378,8 +1493,7 @@ class OcrView(View):
             return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return None
 
     @method_decorator(login_required)
@@ -1440,7 +1554,7 @@ class OcrView(View):
             }
             return render(request, 'ocr_labeling.html', context)
         except Exception as e:
-            print("ocr_labeling:"+str(e))
+            OcrView.logger.error(e)
             return render(request, 'ocr_labeling.html', None)
 
     @method_decorator(login_required)
@@ -1464,8 +1578,7 @@ class OcrView(View):
             return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return None
 
     @method_decorator(login_required)
@@ -1479,7 +1592,6 @@ class OcrView(View):
             bounding_points(points)
             rect_region = OcrView.get_rect_info(points[0], points[2])
             ocrimage = PDFImage.objects.get(id=imageid)
-            print(rect_region)
             # 获取旋转过的padding图像
             if padding=="true":
                 paddingsize=128
@@ -1496,8 +1608,7 @@ class OcrView(View):
             return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return None
 
     @method_decorator(login_required)
@@ -1545,7 +1656,6 @@ class OcrView(View):
             image_rotated = OcrView.achieveImageRotated(str(request.user), ocrimage, degree_to_rotate, paddingsize=padding_size)
             # 取框
             image_crop = image_rotated[relative_box[1]:relative_box[3],relative_box[0]:relative_box[2]]
-            print(relative_box[1], relative_box[3], relative_box[0], relative_box[2])
             # resize
             image_map = cv.resize(image_crop, (tar_width, tar_height), interpolation=cv.INTER_LINEAR)
             img_encode = cv.imencode('.jpg', image_map)  # 可以看出第二个元素是矩阵 print(img_encode)
@@ -1555,8 +1665,7 @@ class OcrView(View):
             return HttpResponse(data_byte, 'image/jpeg')
 
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return None
 
 
@@ -1610,8 +1719,7 @@ class OcrView(View):
             return HttpResponse(map_bytes, 'image/jpeg')
 
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return None
 
 
@@ -1638,7 +1746,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1700,8 +1808,7 @@ class OcrView(View):
             map_bytes = mapIO.getvalue()
             return HttpResponse(map_bytes, 'image/jpeg')
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return None
 
 
@@ -1728,8 +1835,7 @@ class OcrView(View):
 
             return HttpResponse(json.dumps(id_set))
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @method_decorator(login_required)
@@ -1783,7 +1889,7 @@ class OcrView(View):
             return HttpResponse(map_bytes, 'image/jpeg')
 
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
             return None
 
 
@@ -1819,7 +1925,7 @@ class OcrView(View):
             map_bytes = mapIO.getvalue()
             return HttpResponse(map_bytes, 'image/jpeg')
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
             return None
 
     @method_decorator(login_required)
@@ -1839,8 +1945,7 @@ class OcrView(View):
             return HttpResponse(character_add)
             
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @method_decorator(login_required)
@@ -1856,13 +1961,12 @@ class OcrView(View):
                             for characterelem in characterelem_set:
                                 elem_list.append(characterelem.elem.id)
                     except Exception as e:
-                        print(e)
+                        OcrView.logger.error(e)
 
             return HttpResponse(json.dumps(elem_list))
 
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -1882,7 +1986,7 @@ class OcrView(View):
                         for characterelem in characterelem_set:
                             elemrelated.add(characterelem.elem.id)
                     except Exception as e:
-                        print(e)
+                        OcrView.logger.error(e)
                         pass
             elemrelated = list(elemrelated)
             elemrelated_str = json.dumps(elemrelated, cls=NpEncoder)
@@ -1893,7 +1997,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -1916,8 +2020,7 @@ class OcrView(View):
             return HttpResponse(character_add)
             
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -1932,8 +2035,7 @@ class OcrView(View):
                 character_str += character_elem.character
             return HttpResponse(character_str)
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -1943,8 +2045,7 @@ class OcrView(View):
             elem_set = ChineseElem.objects.filter(create_user_id=str(request.user))
             return HttpResponse(elem_set.count())
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -1963,8 +2064,7 @@ class OcrView(View):
                 image_user_conf.save()
                 return HttpResponse("ok");
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse(str(e))
 
 
@@ -1989,7 +2089,7 @@ class OcrView(View):
                 result = {"status":"success" , "username":str(request.user), "tip": "设置prior成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2009,8 +2109,7 @@ class OcrView(View):
                 image_user_conf.save()
                 return HttpResponse("ok");
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse(str(e))
 
 
@@ -2035,7 +2134,7 @@ class OcrView(View):
                 result = {"status":"success" , "username":str(request.user), "tip": "设置prior成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2070,7 +2169,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2085,7 +2184,7 @@ class OcrView(View):
             PolygonElem(polygon=polygon, elem=elem, create_user_id=str(request.user), desc_info="created_auto").save()
             return HttpResponse("ok")
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse(str(e))
 
 
@@ -2100,7 +2199,7 @@ class OcrView(View):
 
             return HttpResponse("ok")
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse(str(e))
 
 
@@ -2152,7 +2251,7 @@ class OcrView(View):
             return HttpResponse(json.dumps(context))
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     # 设置文字方向
@@ -2169,8 +2268,7 @@ class OcrView(View):
             image_user_conf.save()
             return HttpResponse("ok")
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -2194,8 +2292,7 @@ class OcrView(View):
             else:
                 return HttpResponse("err")
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @method_decorator(check_login)
@@ -2230,7 +2327,7 @@ class OcrView(View):
                 return JsonResponse(result)
             
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2266,7 +2363,7 @@ class OcrView(View):
                 return JsonResponse(result)
             
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2284,8 +2381,7 @@ class OcrView(View):
             else:
                 return HttpResponse("err")
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
             
 
@@ -2303,8 +2399,7 @@ class OcrView(View):
             else:
                 return HttpResponse("err")
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -2322,8 +2417,7 @@ class OcrView(View):
             image_user_conf.zoom_scale = zoom_scale
             image_user_conf.save()
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -2350,7 +2444,7 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "重设锚点成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2377,7 +2471,7 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "设置当前页成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2404,8 +2498,7 @@ class OcrView(View):
                 ocr_pdf.save()
             return HttpResponse("ok")
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @method_decorator(login_required)
@@ -2448,8 +2541,7 @@ class OcrView(View):
             }
             return HttpResponse(json.dumps(evaluate_info, cls=NpEncoder))
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @staticmethod
@@ -2478,8 +2570,7 @@ class OcrView(View):
                 image_user_conf.save()
             return HttpResponse("ok")
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
 
@@ -2520,11 +2611,10 @@ class OcrView(View):
                 "delete_info":delete_info,
             }
             result = {"status":"success" , "username":str(request.user), "tip": "添加标注成功", "body":body}
-            print(result)
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2554,8 +2644,7 @@ class OcrView(View):
             context = {"polygon_id":polygon_id,"polygon_create_user_id":polygon_create_user_id, "delete_info":delete_info}
             return HttpResponse(json.dumps(context))
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @staticmethod
@@ -2575,8 +2664,7 @@ class OcrView(View):
              area = w*h
              return {'x':x, 'y':y, 'x_':x_, 'y_':y_, 'w':w, 'h':h, 'area':area}
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
 
     # caculate intersection ratio
     @staticmethod
@@ -2591,10 +2679,7 @@ class OcrView(View):
             intersection_ratio_b = area_intersection / (rect_b['area']*1.0)
             return {'ratio_a':intersection_ratio_a, 'ratio_b':intersection_ratio_b, 'area':area_intersection}
         except Exception as e:
-            traceback.print_exc()
-            print(rect_a)
-            print(rect_b)
-            print("cal_intersection_ratio")
+            OcrView.logger.error(e)
             return {'ratio_a':0, 'ratio_b':0, 'area':0}
 
     
@@ -2609,8 +2694,7 @@ class OcrView(View):
             item_delete.delete()
             return HttpResponse(count)
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     
@@ -2627,8 +2711,7 @@ class OcrView(View):
                 image_user_conf.save()
             return HttpResponse("ok")
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse(e)
 
     # 修改指定IP的多边形标注
@@ -2645,8 +2728,7 @@ class OcrView(View):
                 item_alter.save()
                 return HttpResponse("ok")
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse(e)
 
     @method_decorator(check_login)
@@ -2671,7 +2753,7 @@ class OcrView(View):
                 result = {"status":"success" , "username":str(request.user), "tip": "更改polygon成功", "body":body}
                 return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2687,8 +2769,7 @@ class OcrView(View):
                 item_delete.delete()
                 return HttpResponse("ok")
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse(e)
 
     # 删除指定ip的多边形标注
@@ -2710,7 +2791,7 @@ class OcrView(View):
                 result = {"status":"success" , "username":str(request.user), "tip": "删除polygon成功", "body":body}
                 return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -2741,8 +2822,7 @@ class OcrView(View):
                 }
                 return HttpResponse(json.dumps(context))
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse(e)
 
 
@@ -2768,8 +2848,7 @@ class OcrView(View):
                     polygon.delete()
             return HttpResponse(json.dumps(delete_info))
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @method_decorator(check_login)
@@ -2801,7 +2880,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
             
@@ -2872,7 +2951,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
             
@@ -2919,10 +2998,46 @@ class OcrView(View):
             }
             return HttpResponse(json.dumps(merge_labeling_info))
         except Exception as e:
-            print(e)
-            traceback.print_exc()
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
+    @method_decorator(login_required)
+    def train_submit(self, request):
+        try:
+            body=None
+            docs_str = request.GET.get("docs")  # 训练文档信息字符串
+            modelid = request.GET.get("ocrmodelid")
+            trainname = request.GET.get("trainname")
+            fittype = request.GET.get("fittype")
+            isrotated = request.GET.get("isrotated")=="true"
+            isresized = request.GET.get("isresized")=="true"
+            issplit = request.GET.get("is_split")=="true"
+            imagewidth = int(request.GET.get("image_width"))
+            imageheight = int(request.GET.get("image_height"))
+            splitwidht = int(request.GET.get("split_width"))
+            splitheight = int(request.GET.get("split_height"))
+            splitoverlap = float(request.GET.get("split_overlap"))
+            trainsize = int(request.GET.get("trainsize"))
+            trainepoches = int(request.GET.get("trainepoches"))
+            trainbatch= int(request.GET.get("trainbatch"))
+            device = request.GET.get("device")
+            trainscale = request.GET.get("scale")
+            docs = json.loads(docs_str)
+            trainname = trainname + "_" + time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+            trainmodel = Ocrmodel.objects.get(id=modelid)
+            training = Training(name=trainname, docs=docs_str, create_user_id=str(request.user), trainmodel=trainmodel, status="created", isrotated=isrotated, isresized=isresized, imagewidth=imagewidth, imageheight=imageheight, fittype=fittype, trainbatch=trainbatch, trainsize=trainsize, trainepoch=trainepoches, trainscale=trainscale, device=device)
+            training.save()
+            # 推送任务
+            trainingkey = training.id
+            red = redis.Redis(connection_pool=self.redis_pool)
+            red.rpush("traintask", trainingkey)  # 此处不做重复性检查
+            result = {"status":"success" , "username":str(request.user), "tip": "生成训练成功", "body":body}
+            return JsonResponse(result)
+        except Exception as e:
+            OcrView.logger.error(traceback.format_exc(limit=1))
+            result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
+            return JsonResponse(result)
+        
 
     @method_decorator(check_login)
     def yolo_labeling(self, request):
@@ -2966,8 +3081,6 @@ class OcrView(View):
             }
             pil_image = Image.open(image.data_byte)
             pil_image = np.asarray(pil_image)
-            print(type(cv_image), cv_image.shape, cv_image)
-            print(type(pil_image), pil_image.shape, pil_image)
             red = redis.Redis(connection_pool=self.redis_pool)
             red.rpush("pvzocr", pickle.dumps(args))  # 此处不做重复性检查
             pvz_ocr = []
@@ -3003,7 +3116,7 @@ class OcrView(View):
             return JsonResponse(result)
 
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 
@@ -3072,7 +3185,7 @@ class OcrView(View):
 
             return HttpResponse("ok")
         except Exception as e:
-            print(e)
+            OcrView.logger.error(e)
             return HttpResponse("err")
 
     @staticmethod
@@ -3087,10 +3200,8 @@ class OcrView(View):
                 image_rotated = cv.warpAffine(cv_image, matrotate, (cv_image.shape[1], cv_image.shape[0]))
             else:
                 image_rotated = cv_image
-            print(width, height)
             if height==0 or width==0:
                 height, width, deep = cv_image.shape
-                print(height, width, deep)
                 image_resized = image_rotated
             else:
                 image_resized = cv.resize(image_rotated, (width, height), interpolation=cv.INTER_LINEAR)
@@ -3099,7 +3210,7 @@ class OcrView(View):
 
             cache.set(rotate_image_key, pickle.dumps(image_resized), nx=True) 
             cache.expire(rotate_image_key, 3600)
-            print("set cache:%s" % rotate_image_key)
+            OcrView.logger.info("set cache:%s" % rotate_image_key)
             return image_resized
         else:
             return pickle.loads(image_rotate_str)
@@ -3115,13 +3226,12 @@ class OcrView(View):
                 cv_image = cv.imread(elem.image_bytes)
                 cache.set(elemimage_key, pickle.dumps(cv_image), nx=True) 
                 cache.expire(elemimage_key, 3600)
-                print("set cache:%s" % elemimage_key)
+                OcrView.logger.info("set cache:%s" % elemimage_key)
                 return cv_image
             else:
                 return pickle.loads(elemimage_str)
         except Exception as e:
-            traceback.print_exc()
-            print(e)
+            OcrView.logger.error(e)
 
 
     @staticmethod
@@ -3142,7 +3252,7 @@ class OcrView(View):
             image_resized = cv.resize(image_rotated, (width, height), interpolation=cv.INTER_LINEAR)
             cache.set(rotate_image_key, pickle.dumps(image_resized), nx=True) 
             cache.expire(rotate_image_key, 3600)
-            print("set cache:%s" % rotate_image_key)
+            OcrView.logger.info("set cache:%s" % rotate_image_key)
             return image_rotated
         else:
             return pickle.loads(image_rotate_str)
@@ -3193,9 +3303,7 @@ class OcrView(View):
             # 应加入缓存机制
             image_rotated = OcrView.achieveGrayImageRotated(str(request.user), image, rotate_degree, width=0, height=0)
             box = (rect_region['x'],rect_region['y'],rect_region['x_'],rect_region['y_'])
-            print(box)
             region_select = image_rotated[box[1]:box[3],box[0]:box[2]]
-            print(region_select)
             array_image = 1-region_select/255.0  # 选定区域图片数组
             # get projection
             if is_vertical is True:
@@ -3345,7 +3453,7 @@ class OcrView(View):
             result = {"status":"success" , "username":str(request.user), "tip": "粗标注成功", "body":body}
             return JsonResponse(result)
         except Exception as e:
-            traceback.print_exc()
+            OcrView.logger.error(e)
             result = {"status":"failure" , "username":str(request.user), "tip":"内部错误"}
             return JsonResponse(result)
 

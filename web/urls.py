@@ -12,6 +12,7 @@ urlpatterns = [
     path('accounts/logout/', web_view.logout),
     path('accounts/register/', web_view.register),
     path('accounts/retrieve/', web_view.retrieve),
+    path('accounts/passwordReset/', web_view.password_reset),
     url(r'^captcha', include('captcha.urls')),
     url('^$', web_view.index),
 ]

@@ -6,7 +6,7 @@
                     <el-input v-model="scope.row.name" :data="scope.row.name" ></el-input>
                 </template>
             </el-table-column>
-            <el-table-column prop="desc" label="描述" min-width="32%" align="center">
+            <el-table-column prop="desc" label="描述" min-width="24%" align="center">
                 <template slot-scope="scope">
                     <el-input v-model="scope.row.desc" :data="scope.row.desc"></el-input>
                 </template>
@@ -23,8 +23,16 @@
                     </el-select>
                 </template>
             </el-table-column>
-            <el-table-column label="操作" min-width="20%" align="center">
+            <el-table-column label="操作" min-width="28%" align="center">
                 <template slot-scope="scope">
+                    <el-button
+                        v-if="scope.row.status=='edit'"
+                        type="text"
+                        icon="el-icon-s-data"
+                        @click="handleTrain(scope.row.id, scope.row.name)"
+                        >
+                        训练
+                    </el-button>
                     <el-button
                         v-if="scope.row.status=='edit'"
                         type="text"
@@ -74,6 +82,16 @@ export default {
     beforeDestroy() {
     },
     methods: {
+        handleTrain(ocrmodelid, ocrmodelname){
+            this.$router.push({
+                path:'/train',
+                query:{
+                    ocrmodelid: ocrmodelid,
+                    ocrmodelname: ocrmodelname,
+                }
+            });
+
+        },
         handleChange(){
             console.log(this.ocrmodels);
         },
